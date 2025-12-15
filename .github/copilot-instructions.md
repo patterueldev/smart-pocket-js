@@ -48,8 +48,41 @@ Actual Budget (on same server or nearby)
 
 ## Development Workflow
 
-### Commands
-*Add common commands here as they're defined (e.g., build, test, dev server)*
+### Docker Commands
+
+**Development**:
+```bash
+npm run docker:dev        # Start development stack with hot-reload
+```
+
+**Production**:
+```bash
+npm run docker:prod       # Start production stack
+```
+
+**Testing**:
+```bash
+npm run docker:test       # Run test environment (disposable)
+npm run test:api          # Test API endpoints against running services
+npm run test:build        # Build, test, destroy (full smoke test)
+```
+
+**Deployment**:
+```bash
+npm run docker:build      # Build Docker images
+npm run docker:push       # Push images to registry
+npm run deploy            # Deploy to homeserver
+```
+
+### Package Scripts
+```bash
+npm run dev               # Local development (no Docker)
+npm run build             # Build all packages
+npm run test              # Unit & integration tests
+npm run test:coverage     # Tests with coverage report
+```
+
+**See [DEVOPS.md](../docs/DEVOPS.md) for comprehensive deployment documentation**
 
 ## Code Conventions
 
@@ -158,21 +191,27 @@ Expected monorepo layout:
 2. Camera screen opens for receipt capture
 3. OCR processes image, extracts raw text
 4. Review screen displays:
-   - Raw OCR text (read-only)
-   - Remarks field (editable) for user notes about issues/context
-5. System sends OCR text + remarks to server
-6. Server uses OpenAI to extract structured transaction details
-7. User reviews/enhances extracted data in transaction form
-8. Store complete data: OCR text, remarks, corrections, final transaction
-9. Save to PostgreSQL with full itemization
-10. Sync transaction to Actual Budget server
-
-**Data Model Requirements**:
-- **Transactions**: merchant/payee, date, total, account, currency
-- **Line Items**: code name (store-specific), readable name, quantity, price, currency
-- **Item Code Mapping**: Complex relationship - code names vary by store/merchant
-  - Same product can have different codes at different stores
-  - Auto-suggest existing codes to reduce manual mapping
+   -Docker image: `docker.io/actualbudget/actual-server:latest`
+  - Integration via QL library (primary approach)
+  - Open source project - refer to their documentation for API patterns
+- **OpenAI**: OCR text parsing and data extraction
+  - Extract merchant, date, items, prices from receipt text
+  - Potentially for AI spending insights (optional features)
+- **PostgreSQL**: Relational database for complex data relationships
+  - Docker image: `postgres:16-alpine`
+  - Transactions, line items, price history, OCR metadata
+  - Supports rich querying for trend analysis
+  - Uses JSONB for price objects (exact precision)
+  - Extensions: pg_trgm (fuzzy matching), uuid-ossp
+- **Money/Currency Library**: For accurate monetary calculations
+  - Needed for price arithmetic, totals, multi-currency conversions
+  - Options: dinero.js, currency.js, or similar
+  - Must handle DECIMAL precision correctly
+- **React Native**: Mobile + web UI with camera integration
+  - Web version deployed via nginx in Docker
+- **Docker**: Container deployment for easy homeserver setup
+  - Development, production, and test environments
+  - Docker Compose orchestration
 - **Price History**: track item prices over time for trend analysis
 - **OCR Metadata**: raw text, remarks, confidence scores, correction history
 - **Actual Budget Sync**: mapping between local DB and Actual Budget records
@@ -210,31 +249,47 @@ Expected monorepo layout:
 ## Notes for AI Assistants
 - Project is in early planning/development phase
 - **SDK-based architecture**: Features are independent packages in a monorepo
-- **Build-time exclusions**: Use build config to exclude `/packages/personal/*` from distributed versions
-- **Homeserver deployment model**: Design for single-user instances, not multi-tenant SaaS
-- **Server middleware is essential**: Don't assume React Native can directly talk to Actual Budget
-  - Server provides API compatibility layer
-  - Hides sensitive API keys (OpenAI, etc.)
-  - Handles heavy processing (OCR, AI)
-- **Authentication model**: No traditional user auth - just server connection setup
-  - Mobile app connects to user's personal server with API key
+- **Build-time exclusions**:Two-stage authentication
+  - Stage 1: API key exchange for bearer token (POST /connect)
+  - Stage 2: Bearer token (JWT) for all subsequent requests
+  - Tokens expire after 30 days inactivity
   - One server = one user (no multi-user auth needed)
-  - API key for server-to-app communication, not user sessions
 - Always consider feature modularity - ask "should this be optional?" when implementing features
 - Prefer TypeScript for type safety across all packages
 - When integrating with Actual Budget, consider the abstraction layer carefully
 - **Item code complexity**: Code names are store-specific, same product has different codes at different merchants
-  - Design for code → product mapping per store
+  - Design for code → product mapping per store (via `store_items` table)
   - Auto-suggest existing codes to help users map items efficiently
+  - `payee_id` in `store_items` IS the store reference (no separate store name field)
 - **Currency handling**: Support international receipts (multi-currency consideration)
 - Some features are personal requirements - design them as opt-in/configurable
 - **Monetary calculations**: Always use a proper money library (dinero.js, currency.js, etc.)
   - Never use raw floating-point arithmetic for prices
-  - Database stores DECIMAL, library ensures accurate calculations
+  - Database stores JSONB price objects: `{"amount": "3.99", "currency": "USD"}`
+  - Library ensures accurate calculations
   - Handle multi-currency conversions with proper rounding
 - **OCR workflow is the primary feature** - prioritize this when making architectural decisions
 - Store raw OCR data + corrections for future ML fine-tuning
 - **PostgreSQL schema**: Design for relationships - transactions → line items → price history
+  - products (global items) → store_items (store-specific codes)
+  - 3-phase matching algorithm for product suggestions
+- **OpenAI integration**: Use for parsing OCR text into structured transaction data
+- Sync strategy: PostgreSQL detailed DB → Actual Budget simplified transactions
+- **Docker deployment**: 
+  - 4 services: smart-pocket-server, smart-pocket-web, postgresql, actual-budget
+  - 3 environments: development (hot-reload), production (optimized), test (disposable)
+  - Testing: unit/integration, runtime API tests, build smoke tests
+  - Deployment: Build → push to registry → deploy to homeserver
+- **React Native**: Target both mobile (iOS/Android) and web platforms
+  - Web version built as static site, served via nginx in Docker
+- Mobile app must support configurable server endpoints (user enters their server URL)
+- Package management: pnpm workspaces for monorepo
+- **Documentation references**:
+  - [API.md](../docs/API.md) - API endpoints and workflows
+  - [DATABASE.md](../docs/DATABASE.md) - PostgreSQL schema
+  - [PRICE_OBJECT.md](../docs/PRICE_OBJECT.md) - Price standardization
+  - [MOBILE_SCREENS.md](../docs/MOBILE_SCREENS.md) - UI specifications
+  - [DEVOPS.md](../docs/DEVOPS.md) - Docker, testing, deploymentms → price history
 - **OpenAI integration**: Use for parsing OCR text into structured transaction data
 - Sync strategy: PostgreSQL detailed DB → Actual Budget simplified transactions
 - **Docker deployment**: Docker Compose for server + PostgreSQL + Actual Budget
