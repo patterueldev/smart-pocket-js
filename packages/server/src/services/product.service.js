@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Search for products/store items

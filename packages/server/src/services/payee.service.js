@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Get all payees (with optional search)

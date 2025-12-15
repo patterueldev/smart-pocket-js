@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 const payeeService = require('./payee.service');
 const accountService = require('./account.service');
 const actualBudgetService = require('./actual-budget.service');

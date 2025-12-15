@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 const actualBudgetService = require('./actual-budget.service');
 
 // TODO: Implement Google Sheets API integration

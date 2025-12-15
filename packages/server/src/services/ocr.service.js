@@ -1,5 +1,5 @@
 const OpenAI = require('openai');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -29,7 +29,7 @@ ${remarks ? `User remarks about the receipt: ${remarks}` : ''}`;
     const userPrompt = `Parse this receipt:\n\n${ocrText}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

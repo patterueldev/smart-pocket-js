@@ -20,6 +20,9 @@ build/
 .env.test.local
 .env.production.local
 
+# But keep example files
+!.env.example
+
 # Logs
 logs/
 *.log
