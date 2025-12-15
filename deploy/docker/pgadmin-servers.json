@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Smart Pocket Dev",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "smart_pocket_dev",
+      "Username": "smart_pocket",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpass"
+    }
+  }
+}

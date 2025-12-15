@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./app');
 const { logger } = require('./utils/logger');
 const { connectDatabase } = require('./config/database');
+const { runMigrations } = require('./database/migrations');
 
 const PORT = process.env.PORT || 3001;
 
@@ -10,6 +11,10 @@ async function startServer() {
     // Connect to PostgreSQL
     await connectDatabase();
     logger.info('Database connected successfully');
+
+    // Run database migrations
+    await runMigrations();
+    logger.info('Database schema initialized');
 
     // Start Express server
     app.listen(PORT, () => {

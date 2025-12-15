@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS payees (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_payees_name ON payees(name);
+CREATE INDEX IF NOT EXISTS idx_payees_name ON payees(name);
 
 -- =================================================================
 -- ACCOUNTS TABLE
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_accounts_actual_budget_id ON accounts(actual_budget_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_actual_budget_id ON accounts(actual_budget_id);
 
 -- =================================================================
 -- TRANSACTIONS TABLE
@@ -55,10 +55,10 @@ CREATE TABLE IF NOT EXISTS transactions (
     )
 );
 
-CREATE INDEX idx_transactions_date ON transactions(date);
-CREATE INDEX idx_transactions_payee ON transactions(payee_id);
-CREATE INDEX idx_transactions_account ON transactions(account_id);
-CREATE INDEX idx_transactions_total_amount ON transactions((total->>'amount'));
+CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
+CREATE INDEX IF NOT EXISTS idx_transactions_payee ON transactions(payee_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_total_amount ON transactions((total->>'amount'));
 
 -- =================================================================
 -- PRODUCTS TABLE (Canonical product catalog)
@@ -74,10 +74,10 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_products_name ON products(name);
-CREATE INDEX idx_products_normalized ON products(normalized_name);
-CREATE INDEX idx_products_normalized_trgm ON products USING gin(normalized_name gin_trgm_ops);
-CREATE INDEX idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
+CREATE INDEX IF NOT EXISTS idx_products_normalized ON products(normalized_name);
+CREATE INDEX IF NOT EXISTS idx_products_normalized_trgm ON products USING gin(normalized_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 
 -- =================================================================
 -- STORE_ITEMS TABLE (Store-specific product codes)
@@ -105,10 +105,10 @@ CREATE TABLE IF NOT EXISTS store_items (
     )
 );
 
-CREATE INDEX idx_store_items_product ON store_items(product_id);
-CREATE INDEX idx_store_items_payee ON store_items(payee_id);
-CREATE INDEX idx_store_items_code_name ON store_items(code_name);
-CREATE INDEX idx_store_items_frequency ON store_items(frequency DESC);
+CREATE INDEX IF NOT EXISTS idx_store_items_product ON store_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_store_items_payee ON store_items(payee_id);
+CREATE INDEX IF NOT EXISTS idx_store_items_code_name ON store_items(code_name);
+CREATE INDEX IF NOT EXISTS idx_store_items_frequency ON store_items(frequency DESC);
 
 -- =================================================================
 -- LINE_ITEMS TABLE (Transaction line items)
@@ -130,9 +130,9 @@ CREATE TABLE IF NOT EXISTS line_items (
     )
 );
 
-CREATE INDEX idx_line_items_transaction ON line_items(transaction_id);
-CREATE INDEX idx_line_items_code_name ON line_items(code_name);
-CREATE INDEX idx_line_items_store_item ON line_items(store_item_id);
+CREATE INDEX IF NOT EXISTS idx_line_items_transaction ON line_items(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_line_items_code_name ON line_items(code_name);
+CREATE INDEX IF NOT EXISTS idx_line_items_store_item ON line_items(store_item_id);
 
 -- =================================================================
 -- PRICE_HISTORY TABLE (Track price changes)
@@ -151,9 +151,9 @@ CREATE TABLE IF NOT EXISTS price_history (
     )
 );
 
-CREATE INDEX idx_price_history_store_item ON price_history(store_item_id);
-CREATE INDEX idx_price_history_recorded ON price_history(recorded_at);
-CREATE INDEX idx_price_history_amount ON price_history((price->>'amount'));
+CREATE INDEX IF NOT EXISTS idx_price_history_store_item ON price_history(store_item_id);
+CREATE INDEX IF NOT EXISTS idx_price_history_recorded ON price_history(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_price_history_amount ON price_history((price->>'amount'));
 
 -- =================================================================
 -- OCR_METADATA TABLE (Store OCR data for ML training)
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS ocr_metadata (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_ocr_transaction ON ocr_metadata(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_ocr_transaction ON ocr_metadata(transaction_id);
 
 -- =================================================================
 -- TRIGGER: Auto-update normalized_name on products
@@ -183,7 +183,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_products_normalize
+CREATE OR REPLACE TRIGGER trg_products_normalize
     BEFORE INSERT OR UPDATE ON products
     FOR EACH ROW
     EXECUTE FUNCTION update_normalized_name();
@@ -199,22 +199,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_payees_updated_at
+CREATE OR REPLACE TRIGGER trg_payees_updated_at
     BEFORE UPDATE ON payees
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trg_accounts_updated_at
+CREATE OR REPLACE TRIGGER trg_accounts_updated_at
     BEFORE UPDATE ON accounts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trg_transactions_updated_at
+CREATE OR REPLACE TRIGGER trg_transactions_updated_at
     BEFORE UPDATE ON transactions
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trg_products_updated_at
+CREATE OR REPLACE TRIGGER trg_products_updated_at
     BEFORE UPDATE ON products
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
