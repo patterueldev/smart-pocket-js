@@ -397,7 +397,176 @@ Add Transaction Screen
 
 ---
 
-### 7. Item Edit Screen (Modal/Full Screen)
+### 8. Payee/Account Selection Screen
+
+**Purpose**: Sync Actual Budget account balances to Google Sheets
+
+**When Shown**:
+- User taps "Google Sheets Sync" button from Dashboard
+- Only available if server has this feature enabled (personal feature)
+
+**UI Elements (With Pending Changes)**:
+```
+┌─────────────────────────────────────┐
+│  Google Sheets Sync             [X] │
+│  ⟳ Pull to refresh                  │
+├─────────────────────────────────────┤
+│  Pending Syncs (3)                  │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ 💵 Cash                       │  │
+│  │ Cleared:                      │  │
+│  │   ₱1,234.00 → ₱1,450.00      │  │
+│  │   🔴 old      🟢 new          │  │
+│  │ Last synced: 2 hours ago      │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ 💳 Credit Card                │  │
+│  │ Cleared:                      │  │
+│  │   ₱5,000.00 → ₱4,850.00      │  │
+│  │ Uncleared:                    │  │
+│  │   ₱150.00 → ₱300.00          │  │
+│  │ Last synced: 1 day ago        │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ 💻 Online Wallet              │  │
+│  │ Uncleared:                    │  │
+│  │   ₱0.00 → ₱50.00             │  │
+│  │ Last synced: 5 hours ago      │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│       [Sync to Google Sheets]       │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+**UI Elements (Empty State)**:
+```
+┌─────────────────────────────────────┐
+│  Google Sheets Sync             [X] │
+│  ⟳ Pull to refresh                  │
+├─────────────────────────────────────┤
+│                                     │
+│         ✅                          │
+│                                     │
+│    All accounts are synced          │
+│                                     │
+│  Pull down to check for updates     │
+│                                     │
+│  Last synced: 2 hours ago           │
+```
+
+**Components**:
+
+**Pull to Refresh**:
+- Gesture: Pull down from top
+- Action: Fetch latest balance differences from server
+- Shows loading spinner while checking
+
+**Account List**:
+- Only shows accounts with pending changes
+- If all accounts synced, show empty state
+- Each account card displays:
+  - **Account Name** witext color (🔴)
+    - Arrow (→)
+    - New value in green text color (🟢)
+  - **Uncleared Field** (if different from synced value):
+    - Same format as cleared
+  - **Last Synced Timestamp**: When this account was last synced
+    - Format: "2 hours ago", "1 day ago", etc.
+    - New value in green (🟢)
+  - **Uncleared Field** (if different from synced value):
+    - Same format as cleared
+  - **Rules**:
+    - Don't show cleared field if value matches Google Sheets
+    - Don't show uncleared field if value matches Google Sheets
+    - Don't show account card at all if both fields are synced
+
+**Sync Button**:
+- Only visible when there are pending changes
+- Text: "Sync to Google Sheets"
+- On tap:
+  - Call sync API endpoint
+  - Show loading indicator
+  - On success: Refresh screen (should show empty state)
+  - On error: Show error message, keep changes visible
+
+**Last Synced Timestamp**:
+
+**Initial Load**:
+1. Fetch pending sync data from server
+2. Server compares Actual Budget balances vs. last synced values
+3. Display only accounts with differences
+4. If no differences, show empty state
+
+**Pull to Refresh**:
+1. User pulls down gesture
+2. Show loading spinner
+3. Fetch latest data from server
+4. Update list (may add/remove accounts)
+
+**After Sync**:
+1. Call sync API: `POST /api/google-sheets/sync`
+2. Server updates Google Sheets with latest balances
+3. Return to empty state (all synced)
+4. Update "Last synced" timestamp
+
+**API Response Structure** (from server):
+```json
+{
+  "pendingSyncs": [
+    {
+      "lastSyncedAt": "2025-12-15T08:30:00Z",
+      "cleared": {
+        "current": { "amount": "1450.00", "currency": "PHP" },
+        "synced": { "amount": "1234.00", "currency": "PHP" }
+      },
+      "uncleared": null  // Already synced, don't show
+    },
+    {
+      "accountId": "uuid",
+      "accountName": "Credit Card",
+      "lastSyncedAt": "2025-12-14T10:30:00Z
+      "accountId": "uuid",
+      "accountName": "Credit Card",
+      "cleared": {
+        "current": { "amount": "4850.00", "currency": "PHP" },
+        "synced": { "amount": "5000.00", "currency": "PHP" }
+      },
+      "uncleared": {
+        "current": { "amount": "300.00", "currency": "PHP" },
+        "synced": { "amount": "150.00", "currency": "PHP" }
+      }
+    }
+  ],
+  "lastSyncedAt": "2025-12-15T10:30:00Z"
+}
+```
+
+**Error Handling**:
+- Network error: "Unable to connect. Check your connection."
+- Google Sheets efont color (#D32F2F)
+- New value: Green font color (#388E3C)
+- Arrow: Neutral gray (→)
+- Cards: Subtle border, slight shadow
+- Empty state: Centered icon and text
+- Last synced timestamps: Small, gray
+- New value: Green text (#388E3C)
+- Arrow: Neutral gray (→)
+- Cards: Subtle border, slight shadow
+- Empty state: Centered icon and text
+
+**Notes**:
+- This is a personal feature (excluded from distributed builds)
+- Server must have Google Sheets integration configured
+- Respects server's default currency
+- Simple workflow: check → sync → done
+
+---
+
+### 8. Item Edit Screen (Modal/Full Screen)
 
 **Purpose**: Edit individual line item details
 
@@ -476,7 +645,7 @@ Add Transaction Screen
 
 ---
 
-### 8. Payee/Account Selection Screen
+### 9. Payee/Account Selection Screen
 
 **Purpose**: Select or create payees/accounts
 
