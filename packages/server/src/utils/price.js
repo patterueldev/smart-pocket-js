@@ -130,6 +130,33 @@ function isValidPrice(priceObj) {
   return true;
 }
 
+/**
+ * Calculate total price from line items
+ * Each item should have: { price: { amount, currency }, quantity }
+ */
+function calculateTotal(items) {
+  if (!items || items.length === 0) {
+    return { amount: '0.00', currency: 'USD' };
+  }
+  
+  // Verify all items have same currency
+  const currency = items[0].price.currency;
+  const differentCurrency = items.some(item => item.price.currency !== currency);
+  
+  if (differentCurrency) {
+    throw new Error('Cannot calculate total: items have different currencies');
+  }
+  
+  // Calculate total using Dinero
+  const total = items.reduce((sum, item) => {
+    const itemPrice = toDinero(item.price);
+    const lineTotal = itemPrice.multiply(item.quantity);
+    return sum ? sum.add(lineTotal) : lineTotal;
+  }, null);
+  
+  return fromDinero(total);
+}
+
 module.exports = {
   createPrice,
   toDinero,
@@ -140,4 +167,5 @@ module.exports = {
   comparePrices,
   formatPrice,
   isValidPrice,
+  calculateTotal,
 };
