@@ -1,0 +1,38 @@
+{
+  "name": "smart-pocket",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smart Pocket - Personal finance management with OCR receipt scanning",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @smart-pocket/server dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test -- --coverage",
+    "docker:dev": "./deploy/scripts/dev.sh",
+    "docker:prod": "./deploy/scripts/prod.sh",
+    "docker:test": "./deploy/scripts/test.sh",
+    "docker:build": "./deploy/scripts/build.sh",
+    "docker:push": "./deploy/scripts/push.sh",
+    "deploy": "./deploy/scripts/deploy.sh",
+    "test:api": "./deploy/scripts/test-api.sh",
+    "test:build": "./deploy/scripts/test-build.sh"
+  },
+  "keywords": [
+    "finance",
+    "budget",
+    "ocr",
+    "receipt-scanner"
+  ],
+  "author": "Smart Pocket",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "pnpm": "^8.0.0"
+  }
+}

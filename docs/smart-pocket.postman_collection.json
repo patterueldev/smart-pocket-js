@@ -1,1866 +1,415 @@
 {
-    "item": [
-        {
-            "name": "health",
-            "description": "",
-            "item": [
-                {
-                    "id": "fef291de-183d-4222-8504-6ff93abc2e3f",
-                    "name": "Health check",
-                    "request": {
-                        "name": "Health check",
-                        "description": {},
-                        "url": {
-                            "path": [
-                                "health"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "f1e0e767-5255-4bac-886f-8afd521ddb04",
-                            "name": "Server is healthy",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "health"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"status\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                }
-            ]
-        },
-        {
-            "name": "server-info",
-            "description": "",
-            "item": [
-                {
-                    "id": "0804b961-4473-47c4-ad1b-fd5ba919aae5",
-                    "name": "Get server information and enabled features",
-                    "request": {
-                        "name": "Get server information and enabled features",
-                        "description": {
-                            "content": "Returns server version, enabled features, and configuration",
-                            "type": "text/plain"
-                        },
-                        "url": {
-                            "path": [
-                                "server-info"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "955666c8-4080-414c-b0d2-d8811ebf313b",
-                            "name": "Server information",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "server-info"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"version\": \"<string>\",\n  \"features\": {\n    \"googleSheetsSync\": \"<boolean>\",\n    \"aiInsights\": \"<boolean>\"\n  },\n  \"currency\": \"<string>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        },
-                        {
-                            "id": "098c3e95-01a2-49e1-80e4-0a8683c32866",
-                            "name": "Invalid API key",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "server-info"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "Unauthorized",
-                            "code": 401,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                }
-            ]
-        },
-        {
-            "name": "ocr",
-            "description": "",
-            "item": [
-                {
-                    "name": "extract",
-                    "description": "",
-                    "item": [
-                        {
-                            "id": "e30593fb-7add-4d3e-8101-03655d3d4495",
-                            "name": "Extract text from receipt image",
-                            "request": {
-                                "name": "Extract text from receipt image",
-                                "description": {
-                                    "content": "Processes image and returns raw OCR text",
-                                    "type": "text/plain"
-                                },
-                                "url": {
-                                    "path": [
-                                        "ocr",
-                                        "extract"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"image\": \"<base64>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                },
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "35db2021-6428-4e2d-9fbe-6710bbc70a6f",
-                                    "name": "OCR extraction successful",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "ocr",
-                                                "extract"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": []
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "POST",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"image\": \"<base64>\"\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "OK",
-                                    "code": 200,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"ocrText\": \"<string>\",\n  \"confidence\": \"<float>\",\n  \"processingTime\": \"<integer>\"\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                },
-                                {
-                                    "id": "692029e6-c801-49e9-9be9-2dcc3accdb28",
-                                    "name": "Invalid image data",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "ocr",
-                                                "extract"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": []
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "POST",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"image\": \"<base64>\"\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "Bad Request",
-                                    "code": 400,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "parse",
-                    "description": "",
-                    "item": [
-                        {
-                            "id": "93066db3-fbb6-4dac-b09e-61d1f3bd3235",
-                            "name": "Parse OCR text into structured transaction data",
-                            "request": {
-                                "name": "Parse OCR text into structured transaction data",
-                                "description": {
-                                    "content": "Uses OpenAI to extract transaction details from OCR text",
-                                    "type": "text/plain"
-                                },
-                                "url": {
-                                    "path": [
-                                        "ocr",
-                                        "parse"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"ocrText\": \"<string>\",\n  \"remarks\": \"<string>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                },
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "b43bfb53-9715-4b29-b6a7-fe93e25d319b",
-                                    "name": "Parsing successful",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "ocr",
-                                                "parse"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": []
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "POST",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"ocrText\": \"<string>\",\n  \"remarks\": \"<string>\"\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "OK",
-                                    "code": 200,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"merchant\": \"<string>\",\n  \"date\": \"<date>\",\n  \"total\": \"<number>\",\n  \"currency\": \"<string>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"confidence\": \"<float>\"\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                },
-                                {
-                                    "id": "b83d1689-83a7-4f80-8a34-068bf3f21899",
-                                    "name": "Invalid request",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "ocr",
-                                                "parse"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": []
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "POST",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"ocrText\": \"<string>\",\n  \"remarks\": \"<string>\"\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "Bad Request",
-                                    "code": 400,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "transactions",
-            "description": "",
-            "item": [
-                {
-                    "id": "88331221-1c53-4392-a496-91e463e17598",
-                    "name": "List transactions",
-                    "request": {
-                        "name": "List transactions",
-                        "description": {},
-                        "url": {
-                            "path": [
-                                "transactions"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "limit",
-                                    "value": "50"
-                                },
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "offset",
-                                    "value": "0"
-                                },
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "startDate",
-                                    "value": "<date>"
-                                },
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "endDate",
-                                    "value": "<date>"
-                                },
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "payeeId",
-                                    "value": "<uuid>"
-                                }
-                            ],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "a340b643-0793-4c59-b75b-7fe814555f18",
-                            "name": "List of transactions",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "transactions"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "limit",
-                                            "value": "50"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "offset",
-                                            "value": "0"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "startDate",
-                                            "value": "<date>"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "endDate",
-                                            "value": "<date>"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "payeeId",
-                                            "value": "<uuid>"
-                                        }
-                                    ],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"transactions\": [\n    {\n      \"id\": \"<uuid>\",\n      \"date\": \"<date>\",\n      \"payee\": {\n        \"id\": \"<uuid>\",\n        \"name\": \"<string>\",\n        \"transactionCount\": \"<integer>\"\n      },\n      \"account\": {\n        \"id\": \"<uuid>\",\n        \"name\": \"<string>\",\n        \"actualBudgetId\": \"<string>\"\n      },\n      \"total\": \"<number>\",\n      \"currency\": \"<string>\",\n      \"items\": [\n        {\n          \"id\": \"<uuid>\",\n          \"codeName\": \"<string>\",\n          \"readableName\": \"<string>\",\n          \"price\": \"<number>\",\n          \"quantity\": \"<number>\",\n          \"currency\": \"<string>\"\n        },\n        {\n          \"id\": \"<uuid>\",\n          \"codeName\": \"<string>\",\n          \"readableName\": \"<string>\",\n          \"price\": \"<number>\",\n          \"quantity\": \"<number>\",\n          \"currency\": \"<string>\"\n        }\n      ],\n      \"actualBudgetId\": \"<string>\",\n      \"createdAt\": \"<dateTime>\",\n      \"updatedAt\": \"<dateTime>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"date\": \"<date>\",\n      \"payee\": {\n        \"id\": \"<uuid>\",\n        \"name\": \"<string>\",\n        \"transactionCount\": \"<integer>\"\n      },\n      \"account\": {\n        \"id\": \"<uuid>\",\n        \"name\": \"<string>\",\n        \"actualBudgetId\": \"<string>\"\n      },\n      \"total\": \"<number>\",\n      \"currency\": \"<string>\",\n      \"items\": [\n        {\n          \"id\": \"<uuid>\",\n          \"codeName\": \"<string>\",\n          \"readableName\": \"<string>\",\n          \"price\": \"<number>\",\n          \"quantity\": \"<number>\",\n          \"currency\": \"<string>\"\n        },\n        {\n          \"id\": \"<uuid>\",\n          \"codeName\": \"<string>\",\n          \"readableName\": \"<string>\",\n          \"price\": \"<number>\",\n          \"quantity\": \"<number>\",\n          \"currency\": \"<string>\"\n        }\n      ],\n      \"actualBudgetId\": \"<string>\",\n      \"createdAt\": \"<dateTime>\",\n      \"updatedAt\": \"<dateTime>\"\n    }\n  ],\n  \"total\": \"<integer>\",\n  \"limit\": \"<integer>\",\n  \"offset\": \"<integer>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                },
-                {
-                    "id": "1229647d-a766-4022-add3-e7d4cde28629",
-                    "name": "Create transaction",
-                    "request": {
-                        "name": "Create transaction",
-                        "description": {
-                            "content": "Creates transaction, stores in PostgreSQL, and syncs to Actual Budget",
-                            "type": "text/plain"
-                        },
-                        "url": {
-                            "path": [
-                                "transactions"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "POST",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                            "options": {
-                                "raw": {
-                                    "headerFamily": "json",
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "3245c3cd-b84e-45f5-8ac7-3b79fb5b4811",
-                            "name": "Transaction created",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "transactions"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "Created",
-                            "code": 201,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"id\": \"<uuid>\",\n  \"date\": \"<date>\",\n  \"payee\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"transactionCount\": \"<integer>\"\n  },\n  \"account\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"actualBudgetId\": \"<string>\"\n  },\n  \"total\": \"<number>\",\n  \"currency\": \"<string>\",\n  \"items\": [\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"actualBudgetId\": \"<string>\",\n  \"createdAt\": \"<dateTime>\",\n  \"updatedAt\": \"<dateTime>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        },
-                        {
-                            "id": "612f6652-9d40-4b83-a8fa-f5c85897d690",
-                            "name": "Validation error",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "transactions"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "Bad Request",
-                            "code": 400,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                },
-                {
-                    "name": "{id}",
-                    "description": "",
-                    "item": [
-                        {
-                            "id": "edd97b1d-adce-4b7d-95b5-2dc15c39c076",
-                            "name": "Get transaction by ID",
-                            "request": {
-                                "name": "Get transaction by ID",
-                                "description": {},
-                                "url": {
-                                    "path": [
-                                        "transactions",
-                                        ":id"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": [
-                                        {
-                                            "type": "any",
-                                            "value": "<uuid>",
-                                            "key": "id",
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "(Required) ",
-                                                "type": "text/plain"
-                                            }
-                                        }
-                                    ]
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {},
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "82db771a-12f3-4d5a-a01f-7381b619804f",
-                                    "name": "Transaction details",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "GET",
-                                        "body": {}
-                                    },
-                                    "status": "OK",
-                                    "code": 200,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"id\": \"<uuid>\",\n  \"date\": \"<date>\",\n  \"payee\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"transactionCount\": \"<integer>\"\n  },\n  \"account\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"actualBudgetId\": \"<string>\"\n  },\n  \"total\": \"<number>\",\n  \"currency\": \"<string>\",\n  \"items\": [\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"actualBudgetId\": \"<string>\",\n  \"createdAt\": \"<dateTime>\",\n  \"updatedAt\": \"<dateTime>\"\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                },
-                                {
-                                    "id": "daad8200-4e1c-4061-a0de-1b0b922d3975",
-                                    "name": "Transaction not found",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "GET",
-                                        "body": {}
-                                    },
-                                    "status": "Not Found",
-                                    "code": 404,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        },
-                        {
-                            "id": "8260620d-c09f-45b8-9476-fbdd4bb969b8",
-                            "name": "Update transaction",
-                            "request": {
-                                "name": "Update transaction",
-                                "description": {},
-                                "url": {
-                                    "path": [
-                                        "transactions",
-                                        ":id"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": [
-                                        {
-                                            "type": "any",
-                                            "value": "<uuid>",
-                                            "key": "id",
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "(Required) ",
-                                                "type": "text/plain"
-                                            }
-                                        }
-                                    ]
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "PUT",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                },
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "0ed29db0-ff0e-416e-bad7-edb120f9174c",
-                                    "name": "Transaction updated",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "PUT",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "OK",
-                                    "code": 200,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"id\": \"<uuid>\",\n  \"date\": \"<date>\",\n  \"payee\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"transactionCount\": \"<integer>\"\n  },\n  \"account\": {\n    \"id\": \"<uuid>\",\n    \"name\": \"<string>\",\n    \"actualBudgetId\": \"<string>\"\n  },\n  \"total\": \"<number>\",\n  \"currency\": \"<string>\",\n  \"items\": [\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"actualBudgetId\": \"<string>\",\n  \"createdAt\": \"<dateTime>\",\n  \"updatedAt\": \"<dateTime>\"\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                },
-                                {
-                                    "id": "b0d81818-bfb7-4f51-af70-d6b354c77668",
-                                    "name": "Transaction not found",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Content-Type",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "PUT",
-                                        "body": {
-                                            "mode": "raw",
-                                            "raw": "{\n  \"date\": \"<date>\",\n  \"payeeId\": \"<uuid>\",\n  \"accountId\": \"<uuid>\",\n  \"items\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"price\": \"<number>\",\n      \"quantity\": \"<number>\",\n      \"currency\": \"<string>\"\n    }\n  ],\n  \"currency\": \"<string>\",\n  \"ocrMetadata\": {\n    \"rawText\": \"<string>\",\n    \"remarks\": \"<string>\",\n    \"confidence\": \"<float>\"\n  }\n}",
-                                            "options": {
-                                                "raw": {
-                                                    "headerFamily": "json",
-                                                    "language": "json"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "status": "Not Found",
-                                    "code": 404,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        },
-                        {
-                            "id": "6493d3ec-02a4-4b33-ac0f-a76260108c73",
-                            "name": "Delete transaction",
-                            "request": {
-                                "name": "Delete transaction",
-                                "description": {},
-                                "url": {
-                                    "path": [
-                                        "transactions",
-                                        ":id"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": [
-                                        {
-                                            "type": "any",
-                                            "value": "<uuid>",
-                                            "key": "id",
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "(Required) ",
-                                                "type": "text/plain"
-                                            }
-                                        }
-                                    ]
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "DELETE",
-                                "body": {},
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "7c42117f-3a24-41ec-8b44-ece2347da9b8",
-                                    "name": "Transaction deleted",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "DELETE",
-                                        "body": {}
-                                    },
-                                    "status": "No Content",
-                                    "code": 204,
-                                    "header": [],
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "text"
-                                },
-                                {
-                                    "id": "2f0f2708-9c33-4ce4-9e22-2fee2e64e5b8",
-                                    "name": "Transaction not found",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "transactions",
-                                                ":id"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [],
-                                            "variable": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) ",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "type": "any",
-                                                    "value": "<uuid>",
-                                                    "key": "id"
-                                                }
-                                            ]
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "DELETE",
-                                        "body": {}
-                                    },
-                                    "status": "Not Found",
-                                    "code": 404,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"details\": {}\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "payees",
-            "description": "",
-            "item": [
-                {
-                    "id": "6ff8e57e-ef21-44cd-9856-238dc0ea6350",
-                    "name": "List all payees",
-                    "request": {
-                        "name": "List all payees",
-                        "description": {},
-                        "url": {
-                            "path": [
-                                "payees"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [
-                                {
-                                    "disabled": false,
-                                    "description": {
-                                        "content": "Search payee names",
-                                        "type": "text/plain"
-                                    },
-                                    "key": "search",
-                                    "value": "<string>"
-                                }
-                            ],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "c0da71c5-7b06-46e8-b544-4a39fe23aba6",
-                            "name": "List of payees",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "payees"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "Search payee names",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "search",
-                                            "value": "<string>"
-                                        }
-                                    ],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"payees\": [\n    {\n      \"id\": \"<uuid>\",\n      \"name\": \"<string>\",\n      \"transactionCount\": \"<integer>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"name\": \"<string>\",\n      \"transactionCount\": \"<integer>\"\n    }\n  ]\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                },
-                {
-                    "id": "76da1ce3-8043-484a-8010-e117cdc7ea96",
-                    "name": "Create new payee",
-                    "request": {
-                        "name": "Create new payee",
-                        "description": {},
-                        "url": {
-                            "path": [
-                                "payees"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "POST",
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"<string>\"\n}",
-                            "options": {
-                                "raw": {
-                                    "headerFamily": "json",
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "b99e4e85-12a4-41df-a56b-778bd8085805",
-                            "name": "Payee created",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "payees"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "POST",
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"name\": \"<string>\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "headerFamily": "json",
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            },
-                            "status": "Created",
-                            "code": 201,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"id\": \"<uuid>\",\n  \"name\": \"<string>\",\n  \"transactionCount\": \"<integer>\"\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                }
-            ]
-        },
-        {
-            "name": "accounts",
-            "description": "",
-            "item": [
-                {
-                    "id": "b41e3d68-4e38-4285-b3ae-89225fad2c38",
-                    "name": "List all accounts",
-                    "request": {
-                        "name": "List all accounts",
-                        "description": {},
-                        "url": {
-                            "path": [
-                                "accounts"
-                            ],
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "query": [],
-                            "variable": []
-                        },
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "method": "GET",
-                        "body": {},
-                        "auth": null
-                    },
-                    "response": [
-                        {
-                            "id": "65a8b165-d843-4502-8de4-848df2607064",
-                            "name": "List of accounts",
-                            "originalRequest": {
-                                "url": {
-                                    "path": [
-                                        "accounts"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "description": {
-                                            "content": "Added as a part of security scheme: apikey",
-                                            "type": "text/plain"
-                                        },
-                                        "key": "X-API-Key",
-                                        "value": "<API Key>"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {}
-                            },
-                            "status": "OK",
-                            "code": 200,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"accounts\": [\n    {\n      \"id\": \"<uuid>\",\n      \"name\": \"<string>\",\n      \"actualBudgetId\": \"<string>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"name\": \"<string>\",\n      \"actualBudgetId\": \"<string>\"\n    }\n  ]\n}",
-                            "cookie": [],
-                            "_postman_previewlanguage": "json"
-                        }
-                    ],
-                    "event": [],
-                    "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                    }
-                }
-            ]
-        },
-        {
-            "name": "items",
-            "description": "",
-            "item": [
-                {
-                    "name": "code-suggestions",
-                    "description": "",
-                    "item": [
-                        {
-                            "id": "82e1f3f4-5b09-43d4-94ec-61af7cda3183",
-                            "name": "Get item code suggestions",
-                            "request": {
-                                "name": "Get item code suggestions",
-                                "description": {
-                                    "content": "Auto-suggest item codes based on partial input and historical usage",
-                                    "type": "text/plain"
-                                },
-                                "url": {
-                                    "path": [
-                                        "items",
-                                        "code-suggestions"
-                                    ],
-                                    "host": [
-                                        "{{baseUrl}}"
-                                    ],
-                                    "query": [
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "(Required) Partial code name or readable name",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "query",
-                                            "value": "<string>"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "Filter by payee/merchant context",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "payeeId",
-                                            "value": "<uuid>"
-                                        },
-                                        {
-                                            "disabled": false,
-                                            "description": {
-                                                "content": "",
-                                                "type": "text/plain"
-                                            },
-                                            "key": "limit",
-                                            "value": "10"
-                                        }
-                                    ],
-                                    "variable": []
-                                },
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "method": "GET",
-                                "body": {},
-                                "auth": null
-                            },
-                            "response": [
-                                {
-                                    "id": "790e8ff8-f381-43c9-8944-86334afdc7fd",
-                                    "name": "List of suggestions",
-                                    "originalRequest": {
-                                        "url": {
-                                            "path": [
-                                                "items",
-                                                "code-suggestions"
-                                            ],
-                                            "host": [
-                                                "{{baseUrl}}"
-                                            ],
-                                            "query": [
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "(Required) Partial code name or readable name",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "key": "query",
-                                                    "value": "<string>"
-                                                },
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "Filter by payee/merchant context",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "key": "payeeId",
-                                                    "value": "<uuid>"
-                                                },
-                                                {
-                                                    "disabled": false,
-                                                    "description": {
-                                                        "content": "",
-                                                        "type": "text/plain"
-                                                    },
-                                                    "key": "limit",
-                                                    "value": "10"
-                                                }
-                                            ],
-                                            "variable": []
-                                        },
-                                        "header": [
-                                            {
-                                                "key": "Accept",
-                                                "value": "application/json"
-                                            },
-                                            {
-                                                "description": {
-                                                    "content": "Added as a part of security scheme: apikey",
-                                                    "type": "text/plain"
-                                                },
-                                                "key": "X-API-Key",
-                                                "value": "<API Key>"
-                                            }
-                                        ],
-                                        "method": "GET",
-                                        "body": {}
-                                    },
-                                    "status": "OK",
-                                    "code": 200,
-                                    "header": [
-                                        {
-                                            "key": "Content-Type",
-                                            "value": "application/json"
-                                        }
-                                    ],
-                                    "body": "{\n  \"suggestions\": [\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"frequency\": \"<integer>\",\n      \"lastUsed\": \"<dateTime>\",\n      \"associatedPayees\": [\n        \"<string>\",\n        \"<string>\"\n      ]\n    },\n    {\n      \"codeName\": \"<string>\",\n      \"readableName\": \"<string>\",\n      \"frequency\": \"<integer>\",\n      \"lastUsed\": \"<dateTime>\",\n      \"associatedPayees\": [\n        \"<string>\",\n        \"<string>\"\n      ]\n    }\n  ]\n}",
-                                    "cookie": [],
-                                    "_postman_previewlanguage": "json"
-                                }
-                            ],
-                            "event": [],
-                            "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "auth": {
-        "type": "apikey",
-        "apikey": [
-            {
-                "type": "any",
-                "value": "X-API-Key",
-                "key": "key"
-            },
-            {
-                "type": "any",
-                "value": "{{apiKey}}",
-                "key": "value"
-            },
-            {
-                "type": "any",
-                "value": "header",
-                "key": "in"
-            }
-        ]
+  "info": {
+    "name": "Smart Pocket API",
+    "description": "Smart Pocket personal finance management API with OCR receipt scanning.\n\nAuthentication Flow:\n1. Call POST /connect with X-API-Key to get bearer token\n2. Use bearer token for all subsequent requests\n3. Token expires after 30 days of inactivity",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "smart-pocket-api-v1"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api/v1",
+      "type": "string"
     },
-    "event": [],
-    "variable": [
-        {
-            "key": "baseUrl",
-            "value": "https://smartpocket.example.com/api/v1"
-        }
-    ],
-    "info": {
-        "_postman_id": "fcc5a583-e70d-405f-8e08-d85336cde8ba",
-        "name": "Smart Pocket Server API",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        "description": {
-            "content": "API for Smart Pocket personal finance management system.\nHomeserver deployment model - each instance serves one user.\n\n\nContact Support:\n Name: Smart Pocket",
-            "type": "text/plain"
-        }
+    {
+      "key": "apiKey",
+      "value": "dev_api_key_change_me",
+      "type": "string"
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string"
     }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Connect (Get Bearer Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('bearerToken', response.token);",
+                  "    console.log('Bearer token saved to collection variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceInfo\": {\n    \"platform\": \"iOS\",\n    \"appVersion\": \"1.0.0\",\n    \"deviceId\": \"test-device-123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/connect",
+              "host": ["{{baseUrl}}"],
+              "path": ["connect"]
+            },
+            "description": "Exchange API key for bearer token. The token is automatically saved to the `bearerToken` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Disconnect (Invalidate Token)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/disconnect",
+              "host": ["{{baseUrl}}"],
+              "path": ["disconnect"]
+            },
+            "description": "Invalidate the current bearer token"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints. Use /connect first to get bearer token."
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Public health check endpoint (no authentication required)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OCR",
+      "item": [
+        {
+          "name": "Parse OCR Text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ocrText\": \"WALMART\\nDATE: 12/15/2025\\nMILK 3.99\\nBREAD 2.49\\nTOTAL: 6.48\",\n  \"remarks\": \"Receipt slightly blurry at bottom\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ocr/parse",
+              "host": ["{{baseUrl}}"],
+              "path": ["ocr", "parse"]
+            },
+            "description": "Parse OCR text into structured transaction data using AI"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions?limit=50&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-12-31",
+                  "disabled": true
+                },
+                {
+                  "key": "payeeId",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-12-15\",\n  \"payeeId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"accountId\": \"660e8400-e29b-41d4-a716-446655440000\",\n  \"items\": [\n    {\n      \"codeName\": \"WM-123456\",\n      \"readableName\": \"Nestle Fresh Milk\",\n      \"price\": {\n        \"amount\": \"3.99\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1\n    },\n    {\n      \"codeName\": \"WM-789012\",\n      \"readableName\": \"Organic Bananas\",\n      \"price\": {\n        \"amount\": \"2.49\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1.5\n    }\n  ],\n  \"ocrMetadata\": {\n    \"rawText\": \"WALMART\\nDATE: 12/15/2025\\n...\",\n    \"remarks\": \"Receipt slightly blurry\",\n    \"confidence\": 0.92\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2025-12-15\",\n  \"payeeId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"accountId\": \"660e8400-e29b-41d4-a716-446655440000\",\n  \"items\": [\n    {\n      \"codeName\": \"WM-123456\",\n      \"readableName\": \"Nestle Fresh Milk\",\n      \"price\": {\n        \"amount\": \"3.99\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payees",
+      "item": [
+        {
+          "name": "List Payees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payees?search=walmart",
+              "host": ["{{baseUrl}}"],
+              "path": ["payees"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "walmart"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Walmart\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payees",
+              "host": ["{{baseUrl}}"],
+              "path": ["payees"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/accounts",
+              "host": ["{{baseUrl}}"],
+              "path": ["accounts"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/search?query=WM-123&payeeId=550e8400-e29b-41d4-a716-446655440000&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "WM-123"
+                },
+                {
+                  "key": "payeeId",
+                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Search products by code or name, optionally filtered by store/payee"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Google Sheets (Optional)",
+      "item": [
+        {
+          "name": "Get Sync Draft",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/google-sheets/sync/draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["google-sheets", "sync", "draft"]
+            },
+            "description": "Get pending account balance changes (personal feature)"
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Sync",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/google-sheets/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["google-sheets", "sync"]
+            },
+            "description": "Sync account balances to Google Sheets (personal feature)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Personal feature - only available if enabled on server"
+    }
+  ]
 }
