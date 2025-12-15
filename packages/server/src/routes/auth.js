@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { verifyApiKey, generateToken } = require('../middleware/auth');
+const { verifyApiKey, authenticate, generateToken } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 /**
  * POST /api/v1/connect
  * Exchange API key for bearer token
  */
-router.post('/', verifyApiKey, asyncHandler(async (req, res) => {
+router.post('/connect', verifyApiKey, asyncHandler(async (req, res) => {
   const { deviceInfo } = req.body;
   
   if (!deviceInfo) {
@@ -51,7 +51,7 @@ router.post('/', verifyApiKey, asyncHandler(async (req, res) => {
  * POST /api/v1/disconnect
  * Invalidate session (client-side token removal)
  */
-router.post('/disconnect', asyncHandler(async (req, res) => {
+router.post('/disconnect', authenticate, asyncHandler(async (req, res) => {
   // In a stateless JWT setup, we can't truly invalidate tokens
   // The client should remove the token on their end
   // For more security, implement a token blacklist in Redis/database

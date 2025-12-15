@@ -1,9 +1,7 @@
-
-
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: smart-pocket-postgres-test
+    container_name: smart-pocket-postgres-smoke
     environment:
       POSTGRES_DB: smart_pocket_test
       POSTGRES_USER: smart_pocket
@@ -16,11 +14,11 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      - smart-pocket-test-network
+      - smart-pocket-smoke-network
 
   actual-budget:
     image: docker.io/actualbudget/actual-server:latest
-    container_name: smart-pocket-actual-test
+    container_name: smart-pocket-actual-smoke
     tmpfs:
       - /data  # Ephemeral storage
     healthcheck:
@@ -30,16 +28,16 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - smart-pocket-test-network
+      - smart-pocket-smoke-network
 
   smart-pocket-server:
     build:
       context: ../..
       dockerfile: deploy/docker/server/Dockerfile
       target: development
-    container_name: smart-pocket-server-test
+    container_name: smart-pocket-server-smoke
     ports:
-      - "3011:3001"  # Expose on different port to avoid conflicts
+      - "3011:3001"  # Expose on port 3011 for smoke tests
     environment:
       NODE_ENV: test
       PORT: 3001
@@ -48,17 +46,23 @@ services:
       OPENAI_API_KEY: test_key_mock
       API_KEY: test_api_key
       JWT_SECRET: test_jwt_secret
-      LOG_LEVEL: error
+      LOG_LEVEL: info
       GOOGLE_SHEETS_ENABLED: false
     depends_on:
       postgres:
         condition: service_healthy
       actual-budget:
         condition: service_healthy
-    command: ["npm", "run", "test"]
+    command: ["npm", "start"]  # Run server, not tests
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     networks:
-      - smart-pocket-test-network
+      - smart-pocket-smoke-network
 
 networks:
-  smart-pocket-test-network:
+  smart-pocket-smoke-network:
     driver: bridge

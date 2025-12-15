@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+const { pool } = require('../config/database');
 const { logger } = require('../utils/logger');
 const payeeService = require('./payee.service');
 const accountService = require('./account.service');

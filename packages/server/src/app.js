@@ -32,7 +32,8 @@ app.use(requestLogger);
 
 // Public routes (no auth required)
 app.use('/health', healthRoutes);
-app.use('/api/v1/connect', authRoutes);
+// Auth routes (connect and disconnect)
+app.use('/api/v1', authRoutes);
 
 // Protected routes (require bearer token)
 app.use('/api/v1/ocr', authenticate, ocrRoutes);
@@ -41,7 +42,6 @@ app.use('/api/v1/payees', authenticate, payeeRoutes);
 app.use('/api/v1/accounts', authenticate, accountRoutes);
 app.use('/api/v1/products', authenticate, productRoutes);
 app.use('/api/v1/google-sheets', authenticate, googleSheetsRoutes);
-app.use('/api/v1/disconnect', authenticate, authRoutes);
 
 // 404 handler
 app.use((req, res) => {

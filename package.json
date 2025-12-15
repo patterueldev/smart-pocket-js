@@ -18,7 +18,8 @@
     "docker:push": "./deploy/scripts/push.sh",
     "deploy": "./deploy/scripts/deploy.sh",
     "test:api": "./deploy/scripts/test-api.sh",
-    "test:build": "./deploy/scripts/test-build.sh"
+    "test:build": "./deploy/scripts/test-build.sh",
+    "test:smoke": "./deploy/scripts/smoke-test.sh"
   },
   "keywords": [
     "finance",

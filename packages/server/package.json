@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --watch src --exec node src/index.js",
-    "start": "node dist/index.js",
+    "start": "node src/index.js",
     "build": "echo 'Build step - copy src to dist for now'",
     "migrate": "node -e \"require('./src/database/migrations').runMigrations().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })\"",
     "db:test": "node -e \"require('./src/database/migrations').testConnection().then(() => process.exit(0)).catch(() => process.exit(1))\"",
