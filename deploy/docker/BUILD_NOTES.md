@@ -118,7 +118,7 @@ smart-pocket-server   test      ff0ccef099ba   8 seconds ago   272MB
 # Build
 docker build -f deploy/docker/server/Dockerfile -t smart-pocket-server:test .
 
-# Run standalone (without docker-compose)
+# Run standalone (without docker compose)
 docker run --rm \
   -e DATABASE_URL=postgres://user:pass@host:5432/db \
   -e OPENAI_API_KEY=sk-... \

@@ -206,7 +206,7 @@ npm test
 
 4. **Docker Deployment**: Dockerfiles specified in DEVOPS.md, not created yet
    - Need Dockerfile for server
-   - Need docker-compose files (dev/prod/test)
+   - Need docker compose files (dev/prod/test)
 
 5. **Token Blacklist**: JWT invalidation is client-side only
    - For better security, implement Redis/database blacklist

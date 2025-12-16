@@ -75,7 +75,7 @@ npm run docker:dev
 - Logs: Verbose, includes debug statements
 - No authentication required (convenience)
 
-**Docker Compose**: `docker-compose.dev.yml`
+**Docker Compose**: `docker compose.dev.yml`
 
 ### Production Environment
 
@@ -95,7 +95,7 @@ npm run docker:prod
 - Automatic restarts on failure
 - Resource limits defined
 
-**Docker Compose**: `docker-compose.prod.yml`
+**Docker Compose**: `docker compose.prod.yml`
 
 ### Test Environment
 
@@ -114,7 +114,7 @@ npm run docker:test
 - Runs test suites then exits
 - Used by CI/CD scripts
 
-**Docker Compose**: `docker-compose.test.yml`
+**Docker Compose**: `docker compose.test.yml`
 
 ## Directory Structure
 
@@ -127,9 +127,9 @@ npm run docker:test
     /web
       Dockerfile              # React Native Web
       .dockerignore
-    docker-compose.dev.yml    # Development stack
-    docker-compose.prod.yml   # Production stack
-    docker-compose.test.yml   # Testing stack
+    docker compose.dev.yml    # Development stack
+    docker compose.prod.yml   # Production stack
+    docker compose.test.yml   # Testing stack
   /scripts
     dev.sh                    # Start dev environment
     prod.sh                   # Start prod environment
@@ -216,7 +216,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ### Development Stack
 
 ```yaml
-# docker-compose.dev.yml
+# docker compose.dev.yml
 version: '3.8'
 
 services:
@@ -301,7 +301,7 @@ volumes:
 ### Production Stack
 
 ```yaml
-# docker-compose.prod.yml
+# docker compose.prod.yml
 version: '3.8'
 
 services:
@@ -403,7 +403,7 @@ volumes:
 ### Test Stack
 
 ```yaml
-# docker-compose.test.yml
+# docker compose.test.yml
 version: '3.8'
 
 services:
@@ -610,10 +610,10 @@ BASE_URL=https://smartpocket.myserver.com ./deploy/scripts/test-api.sh
 set -e
 
 echo "🏗️  Building images..."
-docker-compose -f deploy/docker/docker-compose.test.yml build
+docker compose -f deploy/docker/docker compose.test.yml build
 
 echo "🚀 Starting test environment..."
-docker-compose -f deploy/docker/docker-compose.test.yml up -d
+docker compose -f deploy/docker/docker compose.test.yml up -d
 
 echo "⏳ Waiting for services to be healthy..."
 sleep 10
@@ -622,7 +622,7 @@ echo "🧪 Running API tests..."
 ./deploy/scripts/test-api.sh
 
 echo "🧹 Cleaning up..."
-docker-compose -f deploy/docker/docker-compose.test.yml down -v
+docker compose -f deploy/docker/docker compose.test.yml down -v
 
 echo "✅ Build test complete!"
 ```
@@ -689,16 +689,16 @@ VERSION=${2:-latest}
 
 echo "Deploying version $VERSION to $HOST..."
 
-# Copy docker-compose file to host
-scp deploy/docker/docker-compose.prod.yml $HOST:~/smart-pocket/docker-compose.yml
+# Copy docker compose file to host
+scp deploy/docker/docker compose.prod.yml $HOST:~/smart-pocket/docker compose.yml
 
 # Pull and restart on host
 ssh $HOST << EOF
   cd ~/smart-pocket
   export VERSION=$VERSION
-  docker-compose pull
-  docker-compose up -d
-  docker-compose ps
+  docker compose pull
+  docker compose up -d
+  docker compose ps
 EOF
 
 echo "✅ Deployed to $HOST"
@@ -806,20 +806,20 @@ openssl rand -hex 32 > deploy/docker/secrets/api_key.txt
 
 ```bash
 # All services
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f smart-pocket-server
+docker compose logs -f smart-pocket-server
 
 # Last 100 lines
-docker-compose logs --tail=100 smart-pocket-server
+docker compose logs --tail=100 smart-pocket-server
 ```
 
 ### Health Checks
 
 ```bash
 # Check service health
-docker-compose ps
+docker compose ps
 
 # Test health endpoints
 curl http://localhost:3001/health
@@ -839,10 +839,10 @@ docker stats
 
 ```bash
 # Backup
-docker-compose exec postgres pg_dump -U smart_pocket smart_pocket > backup.sql
+docker compose exec postgres pg_dump -U smart_pocket smart_pocket > backup.sql
 
 # Restore
-cat backup.sql | docker-compose exec -T postgres psql -U smart_pocket smart_pocket
+cat backup.sql | docker compose exec -T postgres psql -U smart_pocket smart_pocket
 ```
 
 ### Backup Actual Budget
@@ -872,24 +872,24 @@ docker run --rm -v actual-prod-data:/data -v $(pwd):/backup alpine \
 
 ```bash
 # Check logs
-docker-compose logs
+docker compose logs
 
 # Rebuild images
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Reset volumes
-docker-compose down -v
-docker-compose up
+docker compose down -v
+docker compose up
 ```
 
 ### Database connection errors
 
 ```bash
 # Check PostgreSQL is healthy
-docker-compose exec postgres pg_isready -U smart_pocket
+docker compose exec postgres pg_isready -U smart_pocket
 
 # Check DATABASE_URL
-docker-compose exec smart-pocket-server env | grep DATABASE
+docker compose exec smart-pocket-server env | grep DATABASE
 ```
 
 ### Port conflicts
@@ -898,7 +898,7 @@ docker-compose exec smart-pocket-server env | grep DATABASE
 # Find what's using port
 lsof -i :3001
 
-# Change ports in docker-compose.yml
+# Change ports in docker compose.yml
 ports:
   - "3002:3001"  # Map to different external port
 ```
