@@ -92,6 +92,15 @@ See [docs/DEVOPS.md](docs/DEVOPS.md) for comprehensive deployment guide.
 - **[api-spec.yaml](docs/api-spec.yaml)** - OpenAPI 3.0 specification
 - **[Postman Collection](docs/smart-pocket.postman_collection.json)** - API testing collection
 
+### External API Documentation
+
+- **[External APIs Overview](docs/external-apis/README.md)** - Integration guide for external services
+- **[Quick Reference](docs/external-apis/QUICK_REFERENCE.md)** - Quick start for all APIs
+- **[Actual Budget](docs/external-apis/actual-budget/README.md)** - Budget integration guide
+- **[OpenAI](docs/external-apis/openai/README.md)** - Receipt parsing with AI
+- **[PostgreSQL](docs/external-apis/postgresql/README.md)** - Database features & extensions
+- **[Google Sheets](docs/external-apis/google-sheets/README.md)** - Balance sync (personal feature)
+
 ### Package Documentation
 
 - **[Server README](packages/server/README.md)** - Node.js server documentation
@@ -125,7 +134,14 @@ smart-pocket-js/
 │   ├── PRICE_OBJECT.md
 │   ├── api-spec.yaml
 │   ├── smart-pocket.postman_collection.json
-│   └── smart-pocket.postman_environment.json
+│   ├── smart-pocket.postman_environment.json
+│   └── external-apis/      # External API references ✅
+│       ├── README.md
+│       ├── QUICK_REFERENCE.md
+│       ├── actual-budget/
+│       ├── openai/
+│       ├── postgresql/
+│       └── google-sheets/
 ├── deploy/                  # Docker files (TODO)
 │   ├── docker/
 │   └── scripts/
