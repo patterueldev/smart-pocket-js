@@ -26,7 +26,7 @@ for secret in "${REQUIRED_SECRETS[@]}"; do
 done
 
 # Start services
-docker-compose -f docker/docker-compose.prod.yml up -d
+docker compose -f docker/docker-compose.prod.yml up -d
 
 echo "✅ Production environment started!"
 echo ""
@@ -35,7 +35,7 @@ echo "  - Smart Pocket Server: http://localhost:3001"
 echo "  - Actual Budget: http://localhost:5006"
 echo ""
 echo "View logs:"
-echo "  docker-compose -f docker/docker-compose.prod.yml logs -f"
+echo "  docker compose -f docker/docker-compose.prod.yml logs -f"
 echo ""
 echo "Stop services:"
-echo "  docker-compose -f docker/docker-compose.prod.yml down"
+echo "  docker compose -f docker/docker-compose.prod.yml down"

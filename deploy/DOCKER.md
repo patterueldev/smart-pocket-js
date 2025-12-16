@@ -45,7 +45,7 @@ echo "sk-your-openai-key" > deploy/docker/secrets/openai_api_key.txt
 npm run docker:prod
 
 # 4. Run migrations
-docker-compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server npm run migrate
+docker compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server npm run migrate
 ```
 
 ## Directory Structure
@@ -108,8 +108,8 @@ deploy/
 **Usage**:
 ```bash
 npm run docker:dev
-docker-compose -f deploy/docker/docker-compose.dev.yml logs -f
-docker-compose -f deploy/docker/docker-compose.dev.yml down
+docker compose -f deploy/docker/docker-compose.dev.yml logs -f
+docker compose -f deploy/docker/docker-compose.dev.yml down
 ```
 
 ### Production (`docker-compose.prod.yml`)
@@ -124,8 +124,8 @@ docker-compose -f deploy/docker/docker-compose.dev.yml down
 **Usage**:
 ```bash
 npm run docker:prod
-docker-compose -f deploy/docker/docker-compose.prod.yml logs -f smart-pocket-server
-docker-compose -f deploy/docker/docker-compose.prod.yml down
+docker compose -f deploy/docker/docker-compose.prod.yml logs -f smart-pocket-server
+docker compose -f deploy/docker/docker-compose.prod.yml down
 ```
 
 ### Test (`docker-compose.test.yml`)
@@ -171,18 +171,18 @@ npm run docker:migrate   # Run migrations in dev
 
 ```bash
 # Development
-docker-compose -f deploy/docker/docker-compose.dev.yml up -d
-docker-compose -f deploy/docker/docker-compose.dev.yml logs -f
-docker-compose -f deploy/docker/docker-compose.dev.yml down
+docker compose -f deploy/docker/docker-compose.dev.yml up -d
+docker compose -f deploy/docker/docker-compose.dev.yml logs -f
+docker compose -f deploy/docker/docker-compose.dev.yml down
 
 # Production
-docker-compose -f deploy/docker/docker-compose.prod.yml up -d
-docker-compose -f deploy/docker/docker-compose.prod.yml logs -f smart-pocket-server
-docker-compose -f deploy/docker/docker-compose.prod.yml down
+docker compose -f deploy/docker/docker-compose.prod.yml up -d
+docker compose -f deploy/docker/docker-compose.prod.yml logs -f smart-pocket-server
+docker compose -f deploy/docker/docker-compose.prod.yml down
 
 # Execute commands in containers
-docker-compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server npm run migrate
-docker-compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev
+docker compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server npm run migrate
+docker compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev
 ```
 
 ## Configuration
@@ -220,13 +220,13 @@ Stored in `deploy/docker/secrets/`:
 
 ```bash
 # All services
-docker-compose -f deploy/docker/docker-compose.dev.yml logs -f
+docker compose -f deploy/docker/docker-compose.dev.yml logs -f
 
 # Specific service
-docker-compose -f deploy/docker/docker-compose.dev.yml logs -f smart-pocket-server
+docker compose -f deploy/docker/docker-compose.dev.yml logs -f smart-pocket-server
 
 # Last 100 lines
-docker-compose -f deploy/docker/docker-compose.dev.yml logs --tail=100 smart-pocket-server
+docker compose -f deploy/docker/docker-compose.dev.yml logs --tail=100 smart-pocket-server
 ```
 
 ### Run Migrations
@@ -236,37 +236,37 @@ docker-compose -f deploy/docker/docker-compose.dev.yml logs --tail=100 smart-poc
 npm run docker:migrate
 
 # Production
-docker-compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server npm run migrate
+docker compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server npm run migrate
 ```
 
 ### Access Database
 
 ```bash
 # Development
-docker-compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev
+docker compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev
 
 # Production
-docker-compose -f deploy/docker/docker-compose.prod.yml exec postgres psql -U smart_pocket smart_pocket
+docker compose -f deploy/docker/docker-compose.prod.yml exec postgres psql -U smart_pocket smart_pocket
 ```
 
 ### Restart Services
 
 ```bash
 # Restart specific service
-docker-compose -f deploy/docker/docker-compose.dev.yml restart smart-pocket-server
+docker compose -f deploy/docker/docker-compose.dev.yml restart smart-pocket-server
 
 # Restart all
-docker-compose -f deploy/docker/docker-compose.dev.yml restart
+docker compose -f deploy/docker/docker-compose.dev.yml restart
 ```
 
 ### Clean Up
 
 ```bash
 # Stop and remove containers
-docker-compose -f deploy/docker/docker-compose.dev.yml down
+docker compose -f deploy/docker/docker-compose.dev.yml down
 
 # Stop and remove containers + volumes (deletes data!)
-docker-compose -f deploy/docker/docker-compose.dev.yml down -v
+docker compose -f deploy/docker/docker-compose.dev.yml down -v
 
 # Remove all Smart Pocket images
 docker images | grep smart-pocket | awk '{print $3}' | xargs docker rmi
@@ -291,8 +291,8 @@ BASE_URL=https://smartpocket.myserver.com API_KEY=my-key ./deploy/scripts/test-a
 npm run docker:test
 
 # Or manually
-docker-compose -f deploy/docker/docker-compose.test.yml up --abort-on-container-exit
-docker-compose -f deploy/docker/docker-compose.test.yml down -v
+docker compose -f deploy/docker/docker-compose.test.yml up --abort-on-container-exit
+docker compose -f deploy/docker/docker-compose.test.yml down -v
 ```
 
 ## Building Images
@@ -343,10 +343,10 @@ docker buildx build \
 
 ```bash
 # Check logs
-docker-compose -f deploy/docker/docker-compose.dev.yml logs smart-pocket-server
+docker compose -f deploy/docker/docker-compose.dev.yml logs smart-pocket-server
 
 # Check container status
-docker-compose -f deploy/docker/docker-compose.dev.yml ps
+docker compose -f deploy/docker/docker-compose.dev.yml ps
 
 # Inspect container
 docker inspect smart-pocket-server-dev
@@ -356,13 +356,13 @@ docker inspect smart-pocket-server-dev
 
 ```bash
 # Test database connection
-docker-compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server npm run db:test
+docker compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server npm run db:test
 
 # Access database directly
-docker-compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev -c "SELECT 1"
+docker compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev -c "SELECT 1"
 
 # Check PostgreSQL logs
-docker-compose -f deploy/docker/docker-compose.dev.yml logs postgres
+docker compose -f deploy/docker/docker-compose.dev.yml logs postgres
 ```
 
 ### Port Already in Use
@@ -383,7 +383,7 @@ ports:
 
 ```bash
 # Check API key in container
-docker-compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server env | grep OPENAI
+docker compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server env | grep OPENAI
 
 # Test API key
 curl https://api.openai.com/v1/models \
@@ -423,7 +423,7 @@ Before deploying to production:
 
 ```bash
 # Backup PostgreSQL
-docker-compose -f deploy/docker/docker-compose.prod.yml exec postgres \
+docker compose -f deploy/docker/docker-compose.prod.yml exec postgres \
     pg_dump -U smart_pocket smart_pocket > backup.sql
 
 # Backup Actual Budget data
@@ -437,7 +437,7 @@ docker run --rm \
 
 ```bash
 # Restore PostgreSQL
-cat backup.sql | docker-compose -f deploy/docker/docker-compose.prod.yml exec -T postgres \
+cat backup.sql | docker compose -f deploy/docker/docker-compose.prod.yml exec -T postgres \
     psql -U smart_pocket smart_pocket
 
 # Restore Actual Budget

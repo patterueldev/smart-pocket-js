@@ -19,7 +19,7 @@
 
 4. Apply changes (if Docker is already running):
    ```bash
-   docker-compose -f docker-compose.dev.yml up -d --force-recreate
+   docker compose -f docker-compose.dev.yml up -d --force-recreate
    ```
 
 ## File Structure
@@ -71,7 +71,7 @@
 ### "Changes not reflected in container"
 **Solution**: Use `--force-recreate` flag:
 ```bash
-docker-compose -f docker-compose.dev.yml up -d --force-recreate
+docker compose -f docker-compose.dev.yml up -d --force-recreate
 ```
 
 Simple `restart` does NOT reload environment variables.

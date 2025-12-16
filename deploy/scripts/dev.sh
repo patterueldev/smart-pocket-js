@@ -16,7 +16,7 @@ if [ ! -f docker/.env ]; then
 fi
 
 # Start services
-docker-compose -f docker/docker-compose.dev.yml up -d --wait
+docker compose -f docker/docker-compose.dev.yml up -d --wait
 
 echo "✅ Development environment started!"
 echo ""
@@ -39,7 +39,7 @@ echo "  - Username: smart_pocket"
 echo "  - Password: dev_password_change_me"
 echo ""
 echo "View logs:"
-echo "  docker-compose -f docker/docker-compose.dev.yml logs -f"
+echo "  docker compose -f docker/docker-compose.dev.yml logs -f"
 echo ""
 echo "Stop services:"
-echo "  docker-compose -f docker/docker-compose.dev.yml down"
+echo "  docker compose -f docker/docker-compose.dev.yml down"

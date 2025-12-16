@@ -30,7 +30,7 @@ echo ""
 cleanup() {
     echo ""
     echo "🧹 Cleaning up test environment..."
-    docker-compose -f "$COMPOSE_FILE" down -v > /dev/null 2>&1
+    docker compose -f "$COMPOSE_FILE" down -v > /dev/null 2>&1
     echo "✨ Cleanup complete"
 }
 
@@ -39,7 +39,7 @@ trap cleanup EXIT
 
 # Start test environment
 echo "📦 Starting test containers..."
-docker-compose -f "$COMPOSE_FILE" up -d
+docker compose -f "$COMPOSE_FILE" up -d
 
 echo "⏳ Waiting for services to be healthy..."
 sleep 5
