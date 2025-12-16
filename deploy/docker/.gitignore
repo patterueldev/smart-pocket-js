@@ -1,0 +1,10 @@
+# Environment file with secrets
+.env
+
+# Docker volumes data (if mounted locally)
+postgres-data/
+actual-data/
+
+# Temporary files
+*.log
+*.tmp

@@ -82,7 +82,9 @@ CREATE TABLE line_items (
 );
 ```
 
-**Noproducts
+**Note**: Line items always store the raw OCR code + name. The `store_item_id` is optional and added when matched.
+
+### products
 
 Canonical product catalog - the "what" independent of store.
 
@@ -114,9 +116,29 @@ CREATE TABLE store_items (
     payee_id UUID NOT NULL REFERENCES payees(id) ON DELETE CASCADE,
     code_name VARCHAR(255) NOT NULL, -- Store-specific product code
     store_product_name VARCHAR(500), -- How this store labels it (may differ from canonical)
-    current_price DECIMAL(10, 2), -- Latest known price (denormalized for quick access)
-    currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-    first_seen TIMESTAMP WITH TIME ZONE DEFAULT N Prices are per store_item.
+    current_price JSONB, -- {"amount": "3.99", "currency": "USD"}
+    frequency INTEGER DEFAULT 0, -- Purchase count for auto-suggestions
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    UNIQUE (payee_id, code_name), -- Same code can't appear twice at same store
+    INDEX idx_store_items_product (product_id),
+    INDEX idx_store_items_payee (payee_id),
+    INDEX idx_store_items_code (code_name),
+    INDEX idx_store_items_frequency (frequency DESC)
+);
+```
+
+**Example**: Nestle Fresh Milk at different stores
+- Walmart: code "WM-123456", price $3.99
+- Target: code "TG-789012", price $4.29
+- Costco: code "COSTCO-1234", price $3.79
+
+### price_history
+
+Track price changes over time for trend analysis. Prices are per store_item.
 
 ```sql
 CREATE TABLE price_history (
@@ -165,16 +187,159 @@ Stores raw OCR data and corrections for ML training.
 CREATE TABLE ocr_metadata (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-    raw_text TEXT NOT NULL, -- Original OCR output
-    remarks TEXT, -- User's notes about OCR quality/issues
-    confidence_score DECIMAL(3, 2), -- OCR confidence (0-1)
-    parsing_confidence DECIMAL(3, 2), -- AI parsing confidence (0-1)
-    image_url TEXT, -- Optional: stored receipt image
-    corrections JSONB, -- Track what user corrected from AI suggestions
+    actual_budget_id VARCHAR(255), -- Linked payee in Actual Budget
+    transaction_count INTEGER DEFAULT 0,
+    is_draft BOOLEAN DEFAULT FALSE, -- True if created from unconfirmed OCR match
+    source_ocr_text VARCHAR(500), -- Original OCR text before normalization
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    INDEX idx_ocr_transaction (transaction_id)
+    INDEX idx_payees_name (name),
+    INDEX idx_payees_draft (is_draft)
 );
+```
+
+### accounts
+
+Bank accounts/payment methods.
+
+```sql
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    actual_budget_id VARCHAR(255) NOT NULL, -- Linked account in Actual Budget
+    type VARCHAR(50), -- checking, credit, cash, etc.
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),e need to match OCR-extracted text to existing payees and products, handling AI extraction errors and typos gracefully.
+
+### Problem Statement
+
+**Store Name Matching**:
+- OCR may extract: "WALMRT", "Walmart Superctr", "WAL-MART"
+- Need to match to existing payee: "Walmart"
+
+**Product Code Matching**:
+- Same product, different codes at different stores:
+  - Walmart: `WM-123456` = "Nestle Fresh Milk"
+  - Target: `TG-789012` = "Nestle Fresh Milk"
+  - Costco: `COSTCO-1234` = "NESTLE FRESH MILK 1GAL"
+
+```sql
+-- Fuzzy match store name from OCR extraction
+SELECT 
+    id,
+    name,
+    similarity(name, $ocr_store_name) as score,
+    CASE 
+        WHEN similarity(name, $ocr_store_name) >= 0.85 THEN 'auto'
+        WHEN similarity(name, $ocr_store_name) >= 0.65 THEN 'suggest'
+        ELSE 'draft'
+    END as match_type
+FROM payees
+WHERE similarity(name, $ocr_store_name) > 0.5
+ORDER BY score DESC
+LIMIT 3;
+```
+
+**Confidence Thresholds**:
+- **≥ 0.85**: Auto-match (high confidence) - use without user confirmation
+- **0.65-0.84**: Suggest matches (medium confidence) - show to user for selection
+- **< 0.65**: Create draft payee (low confidence) - likely new store
+
+**Draft Payees**: When confidence is low, create a temporary payee marked as `is_draft = true`. Store the original OCR text in `source_ocr_text` for reference. User confirms or edits in the transaction form.
+
+### Product/Item Matching Algorithm (3-Phase)
+
+**Phase 1: Exact Code Match at Store**
+```sql
+-- Try exact match on code + store (most reliable)
+SELECT 
+    si.id as store_item_id,
+    si.product_id,
+    p.name as product_name,
+    1.0 as score,
+    'exact_code' as match_type
+FROM store_items si
+JOIN products p ON si.product_id = p.id
+WHERE si.payee_id = $payee_id 
+  AND si.code_name = $ocr_code_name;
+```
+- **If found**: Link line_item to this store_item (highest confidence)
+- **If not found**: Proceed to Phase 2
+
+**Phase 2: Fuzzy Product Name Match**
+```sql
+-- Fuzzy match on product name (handles OCR typos)
+SELECT 
+    p.id as product_id,
+    p.name as product_name,
+    similarity(p.normalized_name, lower($ocr_product_name)) as score,
+    'fuzzy_name' as match_type
+FROM products p
+WHERE similarity(p.normalized_name, lower($ocr_product_name)) > 0.6
+ORDER BY score DESC
+LIMIT 5;
+```
+- Use when code doesn't match but product name is readable
+7. **Graceful degradation**: If AI/matching fails, create drafts - user fixes them later
+8. **Learn from corrections**: Track when users override AI suggestions to improve future matches
+
+## Common Query Patterns
+
+### Auto-suggestions for item code at specific store
+
+**Use case**: User types product code in transaction form, show matching items from this store
+
+```sql
+- **If score < 0.65**: Create draft product
+
+**Phase 3: Fuzzy Code Match (OCR Typos)**
+```sql
+-- Handle OCR misreads in product codes
+SELECT 
+    si.id as store_item_id,
+    si.product_id,
+### Track price history for a product at specific store
+
+**Use case**: Show price trends for "Nestle Fresh Milk" at Walmart over time
+
+```sql
+    p.name as product_name,
+    similarity(si.code_name, $ocr_code_name) as score,
+    'fuzzy_code' as match_type
+FROM store_items si
+JOIN products p ON si.product_id = p.id
+WHERE si.payee_id = $payee_id
+  AND similarity(si.code_name, $ocr_code_name) > 0.7
+ORDER BY score DESC
+LIMIT 3;
+```
+- Catches cases like: `WM-12345` vs `WM-12346` (typo in OCR)
+- User confirms if match is correct
+
+**Draft Products**: When no match found, store raw OCR data in `line_items` with `store_item_id = NULL`. User can later link to existing product or confirm as new product.
+
+### Transaction Status and Confidence Tracking
+
+```sql
+-- Add status tracking to transactions
+ALTER TABLE transactions 
+ADD COLUMN status VARCHAR(20) DEFAULT 'confirmed' 
+    CHECK (status IN ('draft', 'needs_review', 'confirmed'));
+
+-- Track matching confidence per line item
+ALTER TABLE line_items
+ADD COLUMN match_confidence DECIMAL(3, 2),  -- 0.00 to 1.00
+ADD COLUMN match_type VARCHAR(50);  -- 'exact_code', 'fuzzy_name', 'fuzzy_code', 'manual', 'draft'
+```
+
+**Transaction Status Rules**:
+- `draft`: Payee is draft OR average item confidence < 0.5
+- `needs_review`: Payee is draft OR average item confidence 0.5-0.7
+- `confirmed`: Payee matched AND average item confidence > 0.7
+
+### Key Architecture Principles
+
+1. **
 ```
 
 ### payees
@@ -183,69 +348,41 @@ Merchants/vendors for transactions.
 
 ```sql
 CREATE TABLE payees (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL UNIQUE,
-   Product Matching & Store Item Linking
+### Find all stores where a product is available with prices
 
-This is one of the most complex parts of the system. When a receipt is scanned, w and matching products across stores.
+**Use case**: Compare prices for "Nestle Fresh Milk" across all stores
 
-### Problem
-
-- Same product, different codes at different stores:
-  - Walmart: `WM-123456` = "Nestle Fresh Milk"
-  - Target: `TG-789012` = "Nestle Fresh Milk"
-  - Costco: `COSTCO-1234` = "NESTLE FRESH MILK 1GAL"
-
-- Same code, different products (rare but possible):
-  - Walmart: `WM-123456` in January = "Nestle Fresh Milk"
-  - Walmart: `WM-123456` in March = "Seasonal Item" (code reused
-### Matching Algorithm (Initial Proposal)
-
-**Phase 1: Exact Store Item Match**
-```sql
--- Try exact match on code + store
-SELECT id FROM store_items 
-WHERE payee_id = $payee_id 
-  AND code_name = $code_name;
-```
-- **If found**: Link line_item to this store_item, check for price change
-- **If not found**: Proceed to Phase 2
-
-**Phase 2: Fuzzy Product Match**
-```sql
--- Try fuzzy match on normalized name
-SELECT p.id, p.name, similarity(p.normalized_name, $normalized_input) as score
-FROM products p
-WHERE similarity(p.normalized_name, $normalized_input) > 0.7
-ORDER BY score DESC
-LIMIT 5;
-```
-- Use PostgreSQL's `pg_trgm` extension for fuzzy text matching
-- Present top matches to user for confirmation (or auto-link if confidence > 0.9)
-- **If matched**: Create new `store_item` linked to existing product
-- **If not matched**: Proceed to Phase 3
-
-**PhaCanonical products table**: Store the "true" product (brand + name)
-2. **Store-specific store_items table**: Each store's representation with code
-3. **Always store raw OCR data**: Line items preserve original code + name from receipt
-4. **Matching algorithm**: Link line_items → store_items → products with confidence scoring
-5. **Track history**: Learn from user corrections to improve matching
-6. **Price tracking**: Per store_item (not product), since prices vary by store
-VALUES ($readable_name, lower($readable_name));
-auto-suggestions for item code at specific store:**
 ```sql
 SELECT 
-    si.code_name,
-    p.name as product_name,
-    si.current_price->>'amount' as price_amount,
-    si.current_price->>'currency' as currency,
-    si.frequency,
-    si.last_seen
-FROM store_items si
-JOIN products p ON si.product_id = p.id
-WHERE si.payee_id = $payee_id
-    AND si.code_name ILIKE $search || '%'
-ORDER BY si.frequency DESC, si.last_seen DESC
+- GIN index for trigram fuzzy matching
+
+```sql
+-- Fuzzy text matching with trigrams
+CREATE INDEX idx_payees_name_trgm ON payees USING GIN (name gin_trgm_ops);
+CREATE INDEX idx_products_normalized_trgm ON products USING GIN (normalized_name gin_trgm_ops);
+CREATE INDEX idx_store_items_code_trgm ON store_items USING GIN (code_name gin_trgm_ops);
+```
+
+**Required PostgreSQL Extensions:**
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm; -- Fuzzy text matching
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; -- UUID generation (or use gen_random_uuid())
+```
+
+## OCR Workflow Summary
+
+1. **Mobile app** captures receipt, extracts text via OCR library
+2. **Server receives** OCR text + optional remarks
+3. ustom ML model trained on user corrections
+- Category auto-tagging via ML (classify products automatically)
+- Duplicate receipt detection (same receipt scanned twice)
+- Receipt image storage (S3/local filesystem)
+- Multi-currency exchange rate tracking
+- Product barcode linking (UPC/EAN codes for universal matching)
+- Store location tracking (price varies by store location)
+- Seasonal product detection (flags items that are time-limited)
+- Automatic brand extraction from product names
+- Cross-store price comparison alerts
 LIMIT 10;
 ```
 

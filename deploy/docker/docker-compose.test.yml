@@ -1,0 +1,64 @@
+
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-pocket-postgres-test
+    environment:
+      POSTGRES_DB: smart_pocket_test
+      POSTGRES_USER: smart_pocket
+      POSTGRES_PASSWORD: test_password
+    tmpfs:
+      - /var/lib/postgresql/data  # Ephemeral storage
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_pocket"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - smart-pocket-test-network
+
+  actual-budget:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: smart-pocket-actual-test
+    tmpfs:
+      - /data  # Ephemeral storage
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5006', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - smart-pocket-test-network
+
+  smart-pocket-server:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/server/Dockerfile
+      target: development
+    container_name: smart-pocket-server-test
+    ports:
+      - "3011:3001"  # Expose on different port to avoid conflicts
+    environment:
+      NODE_ENV: test
+      PORT: 3001
+      DATABASE_URL: postgres://smart_pocket:test_password@postgres:5432/smart_pocket_test
+      ACTUAL_BUDGET_URL: http://actual-budget:5006
+      OPENAI_API_KEY: test_key_mock
+      API_KEY: test_api_key
+      JWT_SECRET: test_jwt_secret
+      LOG_LEVEL: error
+      GOOGLE_SHEETS_ENABLED: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      actual-budget:
+        condition: service_healthy
+    command: ["npm", "run", "test"]
+    networks:
+      - smart-pocket-test-network
+
+networks:
+  smart-pocket-test-network:
+    driver: bridge

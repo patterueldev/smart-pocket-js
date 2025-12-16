@@ -286,6 +286,8 @@ Expected monorepo layout:
 - Package management: pnpm workspaces for monorepo
 - **Documentation references**:
   - [API.md](../docs/API.md) - API endpoints and workflows
+  - [api-spec.yaml](../docs/api-spec.yaml) - OpenAPI 3.0 specification
+  - [Postman Collection](../docs/smart-pocket.postman_collection.json) - Ready-to-use API testing
   - [DATABASE.md](../docs/DATABASE.md) - PostgreSQL schema
   - [PRICE_OBJECT.md](../docs/PRICE_OBJECT.md) - Price standardization
   - [MOBILE_SCREENS.md](../docs/MOBILE_SCREENS.md) - UI specifications

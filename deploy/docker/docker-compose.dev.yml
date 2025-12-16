@@ -1,0 +1,107 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-pocket-postgres-dev
+    environment:
+      POSTGRES_DB: smart_pocket_dev
+      POSTGRES_USER: smart_pocket
+      POSTGRES_PASSWORD: dev_password_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_pocket"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-pocket-network
+
+  actual-budget:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: smart-pocket-actual-dev
+    ports:
+      - "5006:5006"
+    volumes:
+      - actual-dev-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5006', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-pocket-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: smart-pocket-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-dev-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+      - ./pgadmin-pgpass:/var/lib/pgadmin/pgpass:ro
+    entrypoint: >
+      /bin/sh -c "
+      cp /var/lib/pgadmin/pgpass /tmp/pgpass;
+      chmod 600 /tmp/pgpass;
+      chown pgadmin:pgadmin /tmp/pgpass;
+      export PGPASSFILE=/tmp/pgpass;
+      /entrypoint.sh
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - smart-pocket-network
+
+  smart-pocket-server:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/server/Dockerfile
+      target: development
+    container_name: smart-pocket-server-dev
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Node debugger
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgres://smart_pocket:dev_password_change_me@postgres:5432/smart_pocket_dev
+      ACTUAL_BUDGET_URL: http://actual-budget:5006
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4-turbo-preview}
+      API_KEY: ${API_KEY:-dev_api_key_change_me}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_me}
+      LOG_LEVEL: debug
+      GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
+      DEFAULT_CURRENCY: USD
+    volumes:
+      - ../../packages/server/src:/app/packages/server/src
+      - ../../packages/shared:/app/packages/shared
+      - /app/packages/server/node_modules  # Prevent overwriting node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      actual-budget:
+        condition: service_healthy
+    networks:
+      - smart-pocket-network
+
+volumes:
+  postgres-dev-data:
+  actual-dev-data:
+  pgadmin-dev-data:
+
+networks:
+  smart-pocket-network:
+    driver: bridge
