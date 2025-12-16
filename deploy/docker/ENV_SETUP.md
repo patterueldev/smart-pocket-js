@@ -19,7 +19,7 @@
 
 4. Apply changes (if Docker is already running):
    ```bash
-   docker compose -f docker compose.dev.yml up -d --force-recreate
+   docker-compose -f docker-compose.dev.yml up -d --force-recreate
    ```
 
 ## File Structure
@@ -34,7 +34,7 @@
 
 ### For Docker Development (Recommended)
 - **Use**: `/deploy/docker/.env`
-- This is read automatically by `docker compose`
+- This is read automatically by `docker-compose`
 - Changes require container recreation: `--force-recreate`
 - Never commit this file (contains secrets)
 
@@ -45,7 +45,7 @@
 
 ## Why Two Locations?
 
-- **Docker Compose** reads env vars from the directory where `docker compose.yml` lives
+- **Docker Compose** reads env vars from the directory where `docker-compose.yml` lives
 - **Node.js** (when run directly) typically reads `.env` from the package root
 - To avoid confusion: **Always use Docker for development** (primary workflow)
 
@@ -71,7 +71,7 @@
 ### "Changes not reflected in container"
 **Solution**: Use `--force-recreate` flag:
 ```bash
-docker compose -f docker compose.dev.yml up -d --force-recreate
+docker-compose -f docker-compose.dev.yml up -d --force-recreate
 ```
 
 Simple `restart` does NOT reload environment variables.
