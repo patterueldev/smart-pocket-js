@@ -6,6 +6,9 @@ FROM node:20-alpine AS base
 
 WORKDIR /app
 
+# Install build dependencies for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++
+
 # Copy workspace files
 COPY package*.json pnpm-workspace.yaml ./
 COPY packages/server ./packages/server
@@ -22,6 +25,10 @@ FROM base AS development
 
 # Install all dependencies (including dev dependencies)
 RUN pnpm install --no-frozen-lockfile
+
+# Force rebuild better-sqlite3 for current architecture
+# This is needed because @actual-app/api depends on it
+RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && npm run build-release || true
 
 WORKDIR /app/packages/server
 
