@@ -11,23 +11,39 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ## Development Workflow
 
+### Project Tasks and Issues
+
+**Creating Tasks:**
+- Tasks are created in [GitHub Project #5](https://github.com/users/patterueldev/projects/5) (Smart Pocket Development)
+- GitHub automatically creates an issue when you create a task
+- Use **natural language** for task/issue titles (not conventional commit format)
+
+**Examples:**
+```
+✅ "Implement Actual Budget integration layer"
+✅ "Add unit tests for OCR parsing"
+✅ "Fix camera permission handling on Android"
+❌ "feat: Implement Actual Budget integration"
+❌ "test: Add unit tests for OCR parsing"
+```
+
 ### 1. Create a Feature Branch
 
 **Branch Naming Convention:**
 ```
-<type>/sp<ticket>-<task-description>
+<type>/<issue#>-<short-description>
 ```
 
 **Components:**
-- `<type>`: feat, fix, docs, refactor, test, chore, ci
-- `sp<ticket>`: Smart Pocket issue number (e.g., sp2 for #2)
-- `<task-description>`: Brief kebab-case description
+- `<type>`: feat, fix, docs, refactor, test, chore, build, ci
+- `<issue#>`: GitHub issue number with `#` (e.g., #11, #2)
+- `<short-description>`: Brief kebab-case description
 
 **Examples:**
 ```bash
-git checkout -b feat/sp2-actual-budget-integration
-git checkout -b fix/sp5-camera-permissions
-git checkout -b docs/sp8-api-documentation
+git checkout -b feat/#11-update-docs
+git checkout -b fix/#5-camera-permissions
+git checkout -b docs/#8-api-documentation
 ```
 
 ### 2. Make Your Changes
@@ -35,22 +51,33 @@ git checkout -b docs/sp8-api-documentation
 - Write tests for new features
 - Keep changes minimal and focused
 
-### 3. Test Locally
+
+Use [Conventional Commits](docs/references/conventional-commits-spec.md) format with issue reference:
+
 ```bash
-# Run unit tests
-pnpm run test
-
-# Run with coverage
-pnpm run test:coverage
-
-# Test in Docker environment
-npm run docker:dev
-
-# Run smoke tests
-npm run test:smoke
+git commit -m "feat[#11]: add product search endpoint"
+git commit -m "fix[#5]: resolve price calculation rounding"
+git commit -m "docs[#8]: update API documentation"
+git commit -m "test[#9]: add tests for OCR parsing"
 ```
 
-### 4. Commit Your Changes
+**Format:** `<type>[#issue]: <description>`
+
+**Commit types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `test` - Test additions/updates
+- `refactor` - Code refactoring
+- `perf` - Performance improvements
+- `build` - Build/dependency changes
+- `chore` - Maintenance tasks
+
+**Commit description rules:**
+- Use imperative, present tense: "add" not "added" or "adds"
+- Don't capitalize first letter
+- No period at the end
+- Keep it concise (50 chars or less)
 Use conventional commit messages:
 ```bash
 git commit -m "feat: add product search endpoint"
@@ -59,10 +86,26 @@ git commit -m "docs: update API documentation"
 git commit -m "test: add tests for OCR parsing"
 ```
 
-**Commit prefixes**:
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
+**Commit prefixes**:/#11-update-docs
+```
+
+Create a Pull Request on GitHub using the template.
+
+**PR Title Format:** `<type>: <description> (#issue)`
+
+**Examples:**
+```
+feat: Updated docs (#11)
+fix: Resolve camera permissions on Android (#5)
+docs: Add API documentation (#8)
+test: Add unit tests for OCR parsing (#9)
+```
+
+**Important:**
+- PR titles use the same `<type>` as commits
+- Include issue reference in parentheses: `(#11)`
+- Use past tense or descriptive format (unlike commits)
+- Add `Closes #issue` in PR description to auto-close the issue on merge
 - `test:` - Test additions/updates
 - `refactor:` - Code refactoring
 - `perf:` - Performance improvements
