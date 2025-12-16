@@ -78,13 +78,16 @@ services:
       PORT: 3001
       DATABASE_URL: postgres://smart_pocket:dev_password_change_me@postgres:5432/smart_pocket_dev
       ACTUAL_BUDGET_URL: http://actual-budget:5006
+      ACTUAL_BUDGET_PASSWORD: ${ACTUAL_BUDGET_PASSWORD:-}
+      ACTUAL_BUDGET_SYNC_ID: ${ACTUAL_BUDGET_SYNC_ID:-}
+      ACTUAL_BUDGET_ENABLED: ${ACTUAL_BUDGET_ENABLED:-true}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4-turbo-preview}
       API_KEY: ${API_KEY:-dev_api_key_change_me}
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_me}
       LOG_LEVEL: debug
       GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
-      DEFAULT_CURRENCY: USD
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
     volumes:
       - ../../packages/server/src:/app/packages/server/src
       - ../../packages/shared:/app/packages/shared

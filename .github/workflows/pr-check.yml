@@ -31,9 +31,26 @@ jobs:
             chore
             revert
           requireScope: false
+          scopes: |
+            SP-1
+            SP-2
+            SP-3
+            SP-4
+            SP-5
+            SP-6
+            SP-7
+            SP-8
+            SP-9
+            SP-10
+          scopePattern: ^SP-\d+$
+          headerPattern: '^(\w+)(?:\[([^\]]+)\])?: (.+)$'
+          headerPatternCorrespondence: type, scope, subject
           subjectPattern: ^[A-Z].+$
           subjectPatternError: |
             The subject must start with an uppercase letter and contain at least one character.
+            
+            Format: type[scope]: Subject
+            Example: feat[SP-2]: Actual Budget Integration
 
 
   lint-and-test:
