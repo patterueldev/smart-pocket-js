@@ -12,10 +12,22 @@ Thank you for your interest in contributing! This guide will help you get starte
 ## Development Workflow
 
 ### 1. Create a Feature Branch
+
+**Branch Naming Convention:**
+```
+<type>/sp<ticket>-<task-description>
+```
+
+**Components:**
+- `<type>`: feat, fix, docs, refactor, test, chore, ci
+- `sp<ticket>`: Smart Pocket issue number (e.g., sp2 for #2)
+- `<task-description>`: Brief kebab-case description
+
+**Examples:**
 ```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/bug-description
+git checkout -b feat/sp2-actual-budget-integration
+git checkout -b fix/sp5-camera-permissions
+git checkout -b docs/sp8-api-documentation
 ```
 
 ### 2. Make Your Changes
