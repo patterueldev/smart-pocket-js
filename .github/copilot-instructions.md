@@ -48,40 +48,121 @@ Actual Budget (on same server or nearby)
 
 ## Development Workflow
 
-### Git Branch Rules
+### Git Branch Rules & Workflow
 
-**CRITICAL**: Never commit directly to the `main` branch.
+**CRITICAL**: Never commit directly to the `main` branch. ALL changes must follow the documented workflow.
 
-**Before making any changes:**
-1. Always check current branch: `git branch --show-current`
-2. If on `main`, immediately create a feature branch:
-   ```bash
-   git checkout -b <type>/<description>
-   ```
-3. Make changes only on feature branches
-4. Create PR to merge back to main
+## Complete Change Workflow
+
+**For EVERY change (even minor documentation updates):**
+
+### Step 1: Create Issue First
+```bash
+# Create issue with proper labels
+gh issue create \
+  --title "Short descriptive title" \
+  --body "## Problem\n[Description]\n\n## Solution\n[Approach]\n\n## Changes\n[What will change]" \
+  --label "<type>"  # feat, bug, docs, chore, etc.
+```
+
+**Available labels:** `feat`, `bug`, `docs`, `chore`, `refactor`, `test`, `enhancement`, `ci`
+
+### Step 2: Create Branch from Issue
+```bash
+# Branch naming format: <type>/#<issue-number>-<short-desc>
+git checkout -b <type>/#<issue>-<short-description>
+
+# Examples:
+# feat/#22-update-docs
+# fix/#30-skip-coverage
+# docs/#15-api-documentation
+# chore/#8-update-dependencies
+# release/#69-v0.1.3
+```
 
 **Branch naming convention:**
-- `feat/<feature-name>` - New features
-- `fix/<bug-description>` - Bug fixes
-- `chore/<task>` - Maintenance tasks
-- `docs/<doc-name>` - Documentation updates
-- `refactor/<what>` - Code refactoring
-- `test/<test-name>` - Test additions/updates
+- `feat/#<issue>-<desc>` - New features
+- `fix/#<issue>-<desc>` - Bug fixes
+- `docs/#<issue>-<desc>` - Documentation updates
+- `chore/#<issue>-<desc>` - Maintenance tasks
+- `refactor/#<issue>-<desc>` - Code refactoring
+- `test/#<issue>-<desc>` - Test additions/updates
+- `release/#<issue>-v<version>` - Version releases (e.g., `release/#69-v0.1.3`)
+
+### Step 3: Make Changes (NO AUTO-COMMIT)
+- **NEVER auto-commit changes**
+- Make all necessary updates
+- Show user what changed
+- **WAIT for user approval** before committing
+- User will review and decide when to commit
+
+### Step 4: Commit & Push (After User Approval)
+```bash
+# Only after user explicitly approves:
+git add <files>
+git commit -m "<type>: <description> (#<issue>)
+
+- Detail 1
+- Detail 2
+- Detail 3"
+
+git push -u origin <branch-name>
+```
+
+**Commit message format:**
+- Format: `<type>: <description> (#<issue>)`
+- Types: feat, fix, docs, chore, refactor, test, build, ci, perf
+- Must include issue number in parentheses
+- Body: Bullet points with details
+
+### Step 5: Create Pull Request
+```bash
+gh pr create \
+  --title "<type>: <Title> (#<issue>)" \
+  --body "## Description
+[What this PR does]
+
+Closes #<issue>
+
+## Changes Made
+- Change 1
+- Change 2
+
+## Testing
+- Test approach"
+```
+
+**PR title format:** `<type>: <Title> (#<issue>)`
+
+## Main Branch Protection
 
 **Main branch is protected:**
 - ✅ Cannot push directly to main
 - ✅ All changes must go through PRs
 - ✅ All CI checks must pass
 - ✅ Branch must be up-to-date with main before merging
+- ✅ Issue must exist before creating branch
+- ✅ Commits must reference issue number
+
+## Emergency Checks
 
 **If accidentally on main:**
 ```bash
 # Check current branch
 git branch --show-current
 
-# If output is "main", immediately switch:
-git checkout -b fix/your-fix-name
+# If output is "main", immediately:
+# 1. Create issue first (if doesn't exist)
+# 2. Then create branch:
+git checkout -b fix/#<issue>-<short-desc>
+```
+
+**If branch created without issue:**
+```bash
+# STOP - Create issue first
+gh issue create --title "..." --body "..." --label "..."
+# Then create properly named branch
+git checkout -b <type>/#<issue>-<desc>
 ```
 
 ### Docker Commands
