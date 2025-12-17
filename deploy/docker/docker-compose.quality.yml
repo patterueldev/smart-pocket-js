@@ -1,0 +1,132 @@
+# Docker Compose configuration for Quality/Staging environment
+# Purpose: QA testing environment that mimics production but with enhanced debugging
+# - Persistent data volumes (can be reset between test cycles)
+# - Production-like configuration with staging secrets
+# - More verbose logging for troubleshooting
+# - Exposed ports for QA team access
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-pocket-postgres-qa
+    environment:
+      POSTGRES_DB: smart_pocket_quality
+      POSTGRES_USER: smart_pocket
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - postgres-qa-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"  # Expose on different port for QA access
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_pocket"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - smart-pocket-qa-network
+
+  actual-budget:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: smart-pocket-actual-qa
+    ports:
+      - "5007:5006"  # Expose on different port for QA access
+    volumes:
+      - actual-qa-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5006', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-pocket-qa-network
+
+  smart-pocket-server:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/server/Dockerfile
+      target: production  # Use production build
+    container_name: smart-pocket-server-qa
+    ports:
+      - "3002:3001"  # Expose on different port for QA access
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://smart_pocket:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/smart_pocket_quality
+      DATABASE_SSL: false
+      ACTUAL_BUDGET_URL: http://actual-budget:5006
+      ACTUAL_BUDGET_PASSWORD: ${ACTUAL_BUDGET_PASSWORD:-}
+      ACTUAL_BUDGET_SYNC_ID: ${ACTUAL_BUDGET_SYNC_ID:-}
+      ACTUAL_BUDGET_ENABLED: ${ACTUAL_BUDGET_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      API_KEY: ${API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      LOG_LEVEL: info  # Production-like logging with info level
+      GOOGLE_SHEETS_ENABLED: true  # Enable Google Sheets for QA testing
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID}
+      GOOGLE_SHEET_NAME: ${GOOGLE_SHEET_NAME:-Accounts}
+      GOOGLE_CREDENTIALS_JSON_PATH: /data/keys/smart-pocket-server.json
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+    volumes:
+      # Mount Google Sheets credentials for personal feature testing
+      - ../../keys/smart-pocket-server.json:/data/keys/smart-pocket-server.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      actual-budget:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    networks:
+      - smart-pocket-qa-network
+
+  # Optional: pgAdmin for database inspection during QA
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: smart-pocket-pgadmin-qa
+    environment:
+      PGADMIN_DEFAULT_EMAIL: qa@smartpocket.local
+      PGADMIN_DEFAULT_PASSWORD: quality_admin_pass
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-qa-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+      - ./pgadmin-pgpass:/pgadmin4/pgpass:ro
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - smart-pocket-qa-network
+    profiles:
+      - tools  # Only start with --profile tools
+
+volumes:
+  postgres-qa-data:
+  actual-qa-data:
+  pgadmin-qa-data:
+
+networks:
+  smart-pocket-qa-network:
+    driver: bridge

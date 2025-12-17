@@ -8,15 +8,21 @@ cd "$(dirname "$0")/.."
 echo "🚀 Starting Smart Pocket development environment..."
 
 # Check if .env exists
-if [ ! -f docker/.env ]; then
-    echo "⚠️  No .env file found. Copying from .env.example..."
-    cp docker/.env.example docker/.env
-    echo "📝 Please edit docker/.env with your configuration"
+if [ ! -f docker/.env.dev ]; then
+    echo "⚠️  No .env.dev file found."
+    echo "   Copy from template: cp deploy/docker/.env.example deploy/docker/.env.dev"
+    echo "   Then edit deploy/docker/.env.dev with your configuration"
     exit 1
 fi
 
+# Change to docker directory for proper env file resolution
+cd docker
+
 # Start services
-docker compose -f docker/docker-compose.dev.yml up -d --wait
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --wait
+
+# Return to original directory
+cd ..
 
 echo "✅ Development environment started!"
 echo ""
