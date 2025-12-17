@@ -246,10 +246,63 @@ Expected monorepo layout:
 - **React Native**: Mobile + web UI with camera integration
 - **Docker**: Container deployment for easy homeserver setup
 
+## Pull Request Creation Guidelines
+
+**CRITICAL**: When creating pull requests via `gh pr create`, **ALWAYS** use this exact format:
+
+### PR Title Format (REQUIRED)
+```
+<type>: <description> (#<issue>)
+```
+
+**Components**:
+- `<type>`: feat, fix, docs, test, refactor, chore, build, ci, perf
+- `<description>`: Clear, concise description (imperative mood: "add", "fix", "update")
+- `(#<issue>)`: Issue number in parentheses (e.g., #22, #45)
+
+**Valid Examples**:
+```
+feat: Add transaction batch import (#45)
+fix: Resolve camera permissions on Android (#23)
+docs: Update API documentation (#18)
+chore: Bump version to 0.2.0 (#50)
+test: Add unit tests for OCR parsing (#12)
+refactor: Improve error handling in sync (#33)
+```
+
+**Invalid Examples** (DO NOT USE):
+```
+❌ Update docs
+❌ feat: add transaction batch import
+❌ Fix bug #23
+❌ docs: Update API documentation (#18).  (period at end)
+```
+
+### PR Title Rules
+1. **Type prefix is mandatory**: Must start with `<type>:`
+2. **Issue number is mandatory**: Must end with `(#<issue>)`
+3. **Description case**: First word after colon should be capitalized
+4. **No period at end**: Never end with `.`
+5. **Imperative mood**: "Add" not "Added", "Fix" not "Fixed"
+
+### When Creating PRs
+Always construct the title using this format:
+```bash
+gh pr create --title "feat: Add new feature (#22)" --body "..."
+```
+
+**Never** create PRs with generic titles like:
+- "Update code"
+- "Fix bug"
+- "Implement feature"
+
+**Always** include the issue number even if you just created it.
+
 ## Notes for AI Assistants
 - Project is in early planning/development phase
 - **SDK-based architecture**: Features are independent packages in a monorepo
-- **Build-time exclusions**:Two-stage authentication
+- **Build-time exclusions**:
+- **Authentication Model**: Two-stage authentication
   - Stage 1: API key exchange for bearer token (POST /connect)
   - Stage 2: Bearer token (JWT) for all subsequent requests
   - Tokens expire after 30 days inactivity
