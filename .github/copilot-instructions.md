@@ -17,13 +17,23 @@ Smart Pocket is a personal finance management application with OCR receipt scann
 ### Step 1: Create Issue First
 ```bash
 # Create issue with proper labels
-gh issue create \
+ISSUE_URL=$(gh issue create \
   --title "Short descriptive title" \
   --body "## Problem\n[Description]\n\n## Solution\n[Approach]\n\n## Changes\n[What will change]" \
-  --label "<type>"  # feat, bug, docs, chore, etc.
+  --label "<type>")  # feat, bug, docs, chore, etc.
+
+# Extract issue number from URL
+ISSUE_NUMBER=$(echo $ISSUE_URL | grep -o '[0-9]*$')
+
+# Add issue to GitHub Project (for Kanban tracking)
+gh issue edit $ISSUE_NUMBER --add-project "Smart Pocket"
+
+echo "✅ Created issue #$ISSUE_NUMBER and added to project"
 ```
 
 **Available labels:** `feat`, `bug`, `docs`, `chore`, `refactor`, `test`, `enhancement`, `ci`
+
+**Project linking**: Always add issues to the GitHub project for Kanban board visibility and task delegation
 
 ### Step 2: Create Branch from Issue
 ```bash
