@@ -124,7 +124,7 @@ docker pull ghcr.io/patterueldev/smart-pocket-js/server:qa-<commit-sha>
 
 **Purpose**: Stable release for end users
 
-**Trigger**: Manual version tag push (e.g., `v0.1.0`)
+**Trigger**: Version change in `package.json` merged to `main`
 
 **Semantic Versioning**:
 - **0.x.x**: Pre-MVP releases (current)
@@ -139,59 +139,64 @@ docker pull ghcr.io/patterueldev/smart-pocket-js/server:qa-<commit-sha>
 
 **Release Process**:
 
-#### Step 1: Prepare Release
+#### Step 1: Prepare Version Bump PR
 
 1. Ensure `main` branch is stable and tested in QA
-2. Update version in `package.json` (if not automated)
-3. Update CHANGELOG.md (document changes)
-4. Commit version bump:
+2. Create version bump branch:
    ```bash
-   git add package.json CHANGELOG.md
-   git commit -m "chore: bump version to 0.1.0"
-   git push origin main
+   git checkout -b chore/bump-version-0.2.0
    ```
 
-#### Step 2: Create Git Tag
+3. Update `package.json` files:
+   ```json
+   {
+     "version": "0.2.0"  // Update this
+   }
+   ```
+
+4. Update `CHANGELOG.md` with release notes
+
+5. Commit and push:
+   ```bash
+   git add package.json packages/server/package.json CHANGELOG.md
+   git commit -m "chore: bump version to 0.2.0"
+   git push -u origin chore/bump-version-0.2.0
+   ```
+
+#### Step 2: Create and Merge Pull Request
 
 ```bash
-# Create annotated tag
-git tag -a v0.1.0 -m "Release version 0.1.0
+gh pr create \
+  --title "chore: Bump version to 0.2.0" \
+  --body "Release notes..."
 
-- Add Google Sheets sync feature
-- Implement OCR receipt parsing
-- Add transaction management
-- Docker production deployment
-- Homeserver QA infrastructure"
-
-# Push tag to trigger release workflow
-git push origin v0.1.0
+gh pr review --approve
+gh pr merge --squash --delete-branch
 ```
 
 #### Step 3: Automated Release Workflow
 
 **GitHub Actions** (`.github/workflows/release.yml`) automatically:
 
-1. **Builds Production Images**:
+1. **Detects Version Change** in `package.json`
+2. **Reads Version** (e.g., `0.2.0` from package.json)
+3. **Creates Git Tag** (`v0.2.0`)
+4. **Builds Production Images**:
    - Multi-architecture support (linux/amd64, linux/arm64)
    - Optimized production build
    - No development dependencies
-
-2. **Creates Multiple Tags**:
+5. **Creates Multiple Tags**:
    ```
-   ghcr.io/patterueldev/smart-pocket-js/server:v0.1.0    (exact version)
-   ghcr.io/patterueldev/smart-pocket-js/server:0.1.0     (without v prefix)
-   ghcr.io/patterueldev/smart-pocket-js/server:0.1       (minor version)
-   ghcr.io/patterueldev/smart-pocket-js/server:0         (major version)
+   ghcr.io/patterueldev/smart-pocket-js/server:v0.2.0    (exact version)
+   ghcr.io/patterueldev/smart-pocket-js/server:0.2.0     (without v prefix)
    ghcr.io/patterueldev/smart-pocket-js/server:prod      (production alias)
    ghcr.io/patterueldev/smart-pocket-js/server:latest    (latest release)
    ```
-
-3. **Creates GitHub Release**:
-   - Release notes from tag message
+6. **Creates GitHub Release**:
+   - Release notes from CHANGELOG.md
    - Automatically generated changelog
    - Links to commits since last release
-
-4. **Artifacts**:
+7. **Artifacts**:
    - Docker images pushed to GitHub Container Registry
    - Release notes on GitHub Releases page
 
