@@ -227,8 +227,27 @@ jobs:
           echo "Docker Build & Smoke: ${{ needs.docker-build-test.result }}"
           echo "Security Scan: ${{ needs.security-scan.result }}"
           
-          if [ "${{ needs.validate-pr-title.result }}" != "success" ] || [ "${{ needs.lint-and-test.result }}" != "success" ] || [ "${{ needs.docker-build-test.result }}" != "success" ]; then
-            echo "❌ Required checks failed"
+          # Validate PR title (must always succeed)
+          if [ "${{ needs.validate-pr-title.result }}" != "success" ]; then
+            echo "❌ PR title validation failed"
+            exit 1
+          fi
+          
+          # Lint & Test (can be skipped if only docs changed)
+          if [ "${{ needs.lint-and-test.result }}" != "success" ] && [ "${{ needs.lint-and-test.result }}" != "skipped" ]; then
+            echo "❌ Lint & Test failed"
+            exit 1
+          fi
+          
+          # Docker Build (can be skipped if docker files didn't change)
+          if [ "${{ needs.docker-build-test.result }}" != "success" ] && [ "${{ needs.docker-build-test.result }}" != "skipped" ]; then
+            echo "❌ Docker Build & Smoke Tests failed"
+            exit 1
+          fi
+          
+          # Security Scan (can be skipped if only docs changed)
+          if [ "${{ needs.security-scan.result }}" != "success" ] && [ "${{ needs.security-scan.result }}" != "skipped" ]; then
+            echo "❌ Security Scan failed"
             exit 1
           fi
           
