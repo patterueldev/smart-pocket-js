@@ -87,11 +87,15 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_me}
       LOG_LEVEL: debug
       GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}
+      GOOGLE_SHEET_NAME: ${GOOGLE_SHEET_NAME:-Accounts}
+      GOOGLE_CREDENTIALS_JSON_PATH: ${GOOGLE_CREDENTIALS_JSON_PATH:-/data/keys/smart-pocket-server.json}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
     volumes:
       - ../../packages/server/src:/app/packages/server/src
       - ../../packages/shared:/app/packages/shared
-      - /app/packages/server/node_modules  # Prevent overwriting node_modules
+      - /app/packages/server/node_modules
+      - ../../keys/smart-pocket-server.json:/data/keys/smart-pocket-server.json:ro
     depends_on:
       postgres:
         condition: service_healthy

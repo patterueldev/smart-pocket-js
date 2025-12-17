@@ -185,6 +185,104 @@ docker compose -f deploy/docker/docker-compose.dev.yml exec smart-pocket-server 
 docker compose -f deploy/docker/docker-compose.dev.yml exec postgres psql -U smart_pocket smart_pocket_dev
 ```
 
+## Managing Dependencies
+
+### Adding New Node.js Packages
+
+When adding new npm/pnpm packages to the project, follow these steps:
+
+#### For Development Environment
+
+1. **Add the package to package.json**:
+   ```bash
+   cd packages/server
+   pnpm add <package-name>
+   # or for dev dependencies:
+   pnpm add -D <package-name>
+   ```
+
+2. **Rebuild the Docker image** (dependencies are baked into the image):
+   ```bash
+   docker compose -f deploy/docker/docker-compose.dev.yml build smart-pocket-server
+   ```
+
+3. **Restart the container**:
+   ```bash
+   docker compose -f deploy/docker/docker-compose.dev.yml up -d smart-pocket-server
+   ```
+
+4. **Verify the package is installed**:
+   ```bash
+   docker compose -f deploy/docker/docker-compose.dev.yml logs smart-pocket-server
+   # Check for startup errors like "Cannot find module"
+   ```
+
+**Why rebuild?** Even though source code is mounted as volumes in dev, `node_modules` is installed during the Docker build process. New dependencies require rebuilding the image.
+
+**Shortcut** (rebuild + restart in one command):
+```bash
+docker compose -f deploy/docker/docker-compose.dev.yml up -d --build smart-pocket-server
+```
+
+#### For Production Environment
+
+1. **Add the package** (same as dev)
+2. **Test locally first**:
+   ```bash
+   # Rebuild dev image and test
+   docker compose -f deploy/docker/docker-compose.dev.yml up -d --build
+   # Test your changes
+   ```
+
+3. **Build production image**:
+   ```bash
+   docker compose -f deploy/docker/docker-compose.prod.yml build smart-pocket-server
+   ```
+
+4. **Test production build**:
+   ```bash
+   docker compose -f deploy/docker/docker-compose.prod.yml up -d
+   # Run smoke tests
+   ./deploy/scripts/test-api.sh
+   ```
+
+5. **Deploy** (when ready):
+   ```bash
+   # Tag and push if using registry
+   docker tag smart-pocket-server:latest your-registry/smart-pocket-server:v1.0.0
+   docker push your-registry/smart-pocket-server:v1.0.0
+   ```
+
+### Why Not Automatic?
+
+Docker images capture dependencies at build time for:
+- **Reproducibility**: Same dependencies every time
+- **Speed**: No npm install on container startup
+- **Reliability**: Works offline, no registry downtime issues
+- **Security**: Verified dependencies, no supply chain attacks at runtime
+
+### Troubleshooting Dependency Issues
+
+**"Cannot find module" errors**:
+1. Check if package is in `package.json` dependencies (not devDependencies for production)
+2. Rebuild the Docker image: `docker compose -f deploy/docker/docker-compose.dev.yml build`
+3. Check build logs for installation errors
+4. Verify `pnpm install` succeeded during build
+
+**Import path errors** (like the logger issue):
+```javascript
+// ❌ Wrong: already in utils directory
+const { logger } = require('./utils/logger');
+
+// ✅ Correct: relative to current file
+const { logger } = require('./logger');
+```
+
+**Native module build failures** (bcrypt, sqlite3, etc.):
+- The Dockerfile includes build tools: `python3`, `make`, `g++`
+- For @actual-app/api's better-sqlite3, rebuild happens automatically
+- Check build logs for compilation errors
+
 ## Configuration
 
 ### Environment Variables (dev)

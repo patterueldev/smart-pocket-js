@@ -24,27 +24,61 @@ pnpm test -- --testNamePattern="OCR"
 ```
 src/
 ├── __tests__/
-│   ├── setup.js              # Global test setup
-│   ├── integration/          # Integration tests
-│   │   └── api.test.js       # Full API flow tests
-│   └── README.md             # This file
+│   ├── setup.js                      # Global test setup
+│   ├── openapi-validation.test.js    # OpenAPI spec validation ⭐
+│   ├── integration/                  # Integration tests
+│   │   └── api.test.js               # Full API flow tests
+│   └── README.md                     # This file
 ├── services/
-│   └── __tests__/            # Service unit tests
+│   └── __tests__/                    # Service unit tests
 │       └── ocr.service.test.js
 ├── routes/
-│   └── __tests__/            # Route/endpoint tests
+│   └── __tests__/                    # Route/endpoint tests
 │       ├── auth.test.js
 │       ├── health.test.js
 │       └── ocr.test.js
 ├── middleware/
-│   └── __tests__/            # Middleware tests
+│   └── __tests__/                    # Middleware tests
 │       └── auth.test.js
 └── utils/
-    └── __tests__/            # Utility tests
+    └── __tests__/                    # Utility tests
         └── price.test.js
 ```
 
 ## Test Types
+
+### OpenAPI Validation Tests ⭐ NEW
+
+**File**: `openapi-validation.test.js`
+
+Ensures API implementation stays in sync with OpenAPI specification:
+
+- ✅ All documented routes are implemented
+- ✅ All implemented routes are documented
+- ✅ HTTP methods match between spec and code
+- ✅ Path parameters are consistent
+- ✅ OpenAPI spec structure is valid
+
+**Run validation**:
+```bash
+pnpm test -- openapi-validation.test.js
+```
+
+**When to run:**
+- Before committing code
+- After adding/modifying endpoints
+- In CI/CD pipeline
+
+**Fixing errors:**
+```bash
+# "Routes documented but not implemented"
+# → Implement the route or remove from docs/api-spec.yaml
+
+# "Routes implemented but not documented"  
+# → Add endpoint to docs/api-spec.yaml
+
+# See test output for specific missing routes
+```
 
 ### Unit Tests
 Test individual functions/modules in isolation:

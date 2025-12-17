@@ -1,7 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 const { logger, requestLogger } = require('./utils/logger');
+
+// Load OpenAPI spec
+const swaggerDocument = YAML.load(path.join(__dirname, '../../../docs/api-spec.yaml'));
 
 // Routes
 const healthRoutes = require('./routes/health');
@@ -20,7 +26,9 @@ const { authenticate } = require('./middleware/auth');
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for Swagger UI
+}));
 app.use(cors());
 
 // Body parsing
@@ -29,6 +37,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // Request logging
 app.use(requestLogger);
+
+// Swagger UI Documentation (no auth required)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customSiteTitle: 'Smart Pocket API',
+  customCss: '.swagger-ui .topbar { display: none }',
+  swaggerOptions: {
+    persistAuthorization: true,
+  }
+}));
 
 // Public routes (no auth required)
 app.use('/health', healthRoutes);

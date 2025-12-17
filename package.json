@@ -11,6 +11,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test -- --coverage",
+    "postman:generate": "node scripts/generate-postman.js",
     "docker:dev": "./deploy/scripts/dev.sh",
     "docker:restart": "docker compose -f deploy/docker/docker-compose.dev.yml restart",
     "docker:recreate": "docker compose -f deploy/docker/docker-compose.dev.yml up -d --force-recreate",
@@ -38,6 +39,7 @@
     "pnpm": ">=8.0.0"
   },
   "devDependencies": {
+    "js-yaml": "^4.1.1",
     "pnpm": "^8.0.0"
   }
 }

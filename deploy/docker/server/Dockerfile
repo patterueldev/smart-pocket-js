@@ -12,6 +12,7 @@ RUN apk add --no-cache python3 make g++
 # Copy workspace files
 COPY package*.json pnpm-workspace.yaml ./
 COPY packages/server ./packages/server
+COPY docs ./docs
 
 # Copy shared packages when they exist (for future monorepo structure)
 # COPY packages/shared ./packages/shared
@@ -68,8 +69,11 @@ COPY --from=builder /app/packages/server/src ./packages/server/src
 
 # Install production dependencies
 RUN npm install -g pnpm
-WORKDIR /app/packages/server
+# Install from workspace root to handle monorepo structure correctly
 RUN pnpm install --prod --no-frozen-lockfile
+
+# Set working directory to server package
+WORKDIR /app/packages/server
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
