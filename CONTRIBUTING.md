@@ -11,6 +11,17 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ## Development Workflow
 
+### Important: Branch Protection
+
+⚠️ **The `main` branch is protected and does not allow direct pushes.**
+
+All changes must go through pull requests. This ensures:
+- CI tests run before merging
+- Code review process is followed
+- Clean commit history is maintained
+
+See [docs/BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md) for complete details.
+
 ### Project Tasks and Issues
 
 **Creating Tasks:**

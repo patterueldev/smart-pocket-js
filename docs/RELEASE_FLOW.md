@@ -52,6 +52,14 @@ pnpm run docker:test
 
 **Trigger**: Pull Request opened to `main`
 
+**Branch Protection**: The `main` branch is protected and requires:
+- Pull request approval (at least 1)
+- All CI status checks passing
+- Branch up-to-date with main
+- No direct pushes allowed
+
+See [BRANCH_PROTECTION.md](./BRANCH_PROTECTION.md) for setup details.
+
 **Automated Checks** (via `.github/workflows/pr-check.yml`):
 - ✅ Linting and formatting
 - ✅ Unit tests
