@@ -26,14 +26,76 @@ ISSUE_URL=$(gh issue create \
 ISSUE_NUMBER=$(echo $ISSUE_URL | grep -o '[0-9]*$')
 
 # Add issue to GitHub Project (for Kanban tracking)
-gh issue edit $ISSUE_NUMBER --add-project "Smart Pocket"
+# Preferred (Projects v2): add to project named "Smart Pocket Development"
+OWNER="patterueldev"
+PROJECT_TITLE="Smart Pocket Development"
+PROJECT_NUMBER=$(gh project list --owner "$OWNER" --format json | jq -r \
+  --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .number')
 
-echo "✅ Created issue #$ISSUE_NUMBER and added to project"
+if [ -n "$PROJECT_NUMBER" ]; then
+  gh project item-add --owner "$OWNER" "$PROJECT_NUMBER" --url "$ISSUE_URL"
+  echo "✅ Created issue #$ISSUE_NUMBER and added to project: $PROJECT_TITLE (#$PROJECT_NUMBER)"
+else
+  # Fallback for classic projects (if any): try by name
+  gh issue edit "$ISSUE_NUMBER" --add-project "$PROJECT_TITLE" || true
+  echo "ℹ️ If project linking failed, verify the project exists and your permissions."
+fi
+
 ```
 
 **Available labels:** `feat`, `bug`, `docs`, `chore`, `refactor`, `test`, `enhancement`, `ci`
 
 **Project linking**: Always add issues to the GitHub project for Kanban board visibility and task delegation
+
+### Project Workflow Status
+
+Use the GitHub Project (v2) "Smart Pocket Development" and keep each issue’s Status in sync with our workflow:
+- Todo: new task
+- In Progress: in development
+- In Review: in PR
+- QA/Testing: after merge (if code changes)
+- Done: everything is good
+
+Update Status via GitHub CLI (recommended). The snippet below resolves the project number, project ID, Status field, and the item ID dynamically, then sets the Status. Replace STATUS_NAME with one of: "Todo", "In Progress", "In Review", "QA/Testing", "Done".
+
+```bash
+OWNER="patterueldev"
+PROJECT_TITLE="Smart Pocket Development"
+
+# Find project number and id
+PROJECTS_JSON=$(gh project list --owner "$OWNER" --format json)
+PROJECT_NUMBER=$(echo "$PROJECTS_JSON" | jq -r --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .number')
+PROJECT_ID=$(echo "$PROJECTS_JSON" | jq -r --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .id')
+
+# Resolve Status field and option id by name
+FIELDS_JSON=$(gh project field-list --owner "$OWNER" "$PROJECT_NUMBER" --format json)
+STATUS_FIELD_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name=="Status") | .id')
+STATUS_OPTION_ID=$(echo "$FIELDS_JSON" | jq -r --arg name "${STATUS_NAME}" '.fields[] | select(.name=="Status") | .options[] | select(.name==$name) | .id')
+
+# Resolve the project item id for this issue URL
+ITEM_ID=$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json | jq -r --arg url "$ISSUE_URL" '.items[] | select(.content.url==$url) | .id')
+
+# Set Status
+if [ -n "$ITEM_ID" ] && [ -n "$STATUS_FIELD_ID" ] && [ -n "$STATUS_OPTION_ID" ]; then
+  gh project item-edit \
+    --id "$ITEM_ID" \
+    --field-id "$STATUS_FIELD_ID" \
+    --project-id "$PROJECT_ID" \
+    --single-select-option-id "$STATUS_OPTION_ID"
+  echo "✅ Set item $ITEM_ID status to $STATUS_NAME"
+else
+  echo "❌ Could not resolve item or field ids; verify project and issue URL"
+fi
+```
+
+Quick examples:
+```bash
+STATUS_NAME="Todo"       # new task
+STATUS_NAME="In Progress" # in development
+STATUS_NAME="In Review"   # in PR
+STATUS_NAME="QA/Testing"  # after merge
+STATUS_NAME="Done"        # finished
+```
 
 ### Step 2: Create Branch from Issue
 ```bash
