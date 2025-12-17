@@ -13,19 +13,12 @@
     "test:coverage": "pnpm -r test -- --coverage",
     "postman:generate": "node scripts/generate-postman.js",
     "docker:dev": "./deploy/scripts/dev.sh",
-    "docker:restart": "docker compose -f deploy/docker/docker-compose.dev.yml restart",
-    "docker:recreate": "docker compose -f deploy/docker/docker-compose.dev.yml up -d --force-recreate",
-    "docker:down": "docker compose -f deploy/docker/docker-compose.dev.yml down",
-    "docker:logs": "docker compose -f deploy/docker/docker-compose.dev.yml logs -f",
-    "docker:prod": "./deploy/scripts/prod.sh",
     "docker:quality": "./deploy/scripts/quality.sh",
+    "docker:prod": "./deploy/scripts/prod.sh",
     "docker:test": "./deploy/scripts/test.sh",
     "docker:build": "./deploy/scripts/build.sh",
-    "docker:push": "./deploy/scripts/push.sh",
-    "deploy": "./deploy/scripts/deploy.sh",
-    "test:api": "./deploy/scripts/test-api.sh",
-    "test:build": "./deploy/scripts/test-build.sh",
-    "test:smoke": "./deploy/scripts/smoke-test.sh"
+    "docker:migrate": "./deploy/scripts/migrate.sh",
+    "test:api": "./deploy/scripts/test-api.sh"
   },
   "keywords": [
     "finance",

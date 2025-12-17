@@ -314,7 +314,7 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d --build smart-pocke
 4. **Test production build**:
    ```bash
    docker compose -f deploy/docker/docker-compose.prod.yml up -d
-   # Run smoke tests
+   # Test API endpoints
    ./deploy/scripts/test-api.sh
    ```
 

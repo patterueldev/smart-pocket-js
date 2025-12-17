@@ -1,12 +1,12 @@
 #!/bin/bash
-# Smoke test - Start test environment, curl APIs, validate responses, cleanup
-# This tests the actual HTTP endpoints with real requests
+# Test script - Start test environment, validate API endpoints, cleanup
+# Runs smoke tests against the HTTP API with real requests
 
 set -e
 
 cd "$(dirname "$0")/.."
 
-COMPOSE_FILE="docker/docker-compose.smoke.yml"
+COMPOSE_FILE="docker/docker-compose.test.yml"
 BASE_URL="http://localhost:3011"
 API_KEY="test_api_key"
 
@@ -22,8 +22,8 @@ TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-echo "🚀 Starting Smart Pocket API Smoke Tests"
-echo "========================================"
+echo "🧪 Starting Smart Pocket API Tests"
+echo "==================================="
 echo ""
 
 # Cleanup function
