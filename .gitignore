@@ -97,3 +97,8 @@ web-build/
 
 # Debug
 .vscode-test/
+
+# Google Sheets credentials (personal feature)
+keys/
+!keys/README.md
+!keys/.gitkeep

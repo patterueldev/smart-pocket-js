@@ -3,11 +3,15 @@ const app = require('./app');
 const { logger } = require('./utils/logger');
 const { connectDatabase } = require('./config/database');
 const { runMigrations } = require('./database/migrations');
+const { validateGoogleSheetsConfig } = require('./utils/config-validator');
 
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
   try {
+    // Validate Google Sheets configuration (if enabled)
+    validateGoogleSheetsConfig();
+    
     // Connect to PostgreSQL
     await connectDatabase();
     logger.info('Database connected successfully');

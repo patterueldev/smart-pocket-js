@@ -91,6 +91,8 @@ See [docs/DEVOPS.md](docs/DEVOPS.md) for comprehensive deployment guide.
 - **[PRICE_OBJECT.md](docs/PRICE_OBJECT.md)** - Price standardization guide
 - **[api-spec.yaml](docs/api-spec.yaml)** - OpenAPI 3.0 specification
 - **[Postman Collection](docs/smart-pocket.postman_collection.json)** - API testing collection
+- **[POSTMAN_GENERATOR.md](docs/POSTMAN_GENERATOR.md)** - Generate Postman from OpenAPI
+- **[OPENAPI_VALIDATION.md](docs/OPENAPI_VALIDATION.md)** - API spec validation tests
 
 ### External API Documentation
 
@@ -224,6 +226,8 @@ npm run test
 - `npm run docker:prod` - Start Docker production stack
 - `npm run docker:test` - Run test environment
 - `npm run test` - Run all tests
+- `npm run test:openapi` - Validate OpenAPI spec against implementation
+- `npm run postman:generate` - Generate Postman collection from OpenAPI spec
 - `npm run migrate` - Run database migrations
 
 ### Adding New Packages
@@ -236,6 +240,26 @@ npm init -y
 
 # Link to workspace (auto-detected by pnpm)
 ```
+
+### Adding Dependencies to Existing Packages
+
+When adding npm/pnpm packages:
+
+```bash
+# 1. Add package
+cd packages/server
+pnpm add <package-name>
+
+# 2. If using Docker, rebuild image
+docker compose -f deploy/docker/docker-compose.dev.yml up -d --build smart-pocket-server
+
+# 3. Verify
+docker compose -f deploy/docker/docker-compose.dev.yml logs smart-pocket-server
+```
+
+**Note**: Docker images bake dependencies at build time. Source code changes hot-reload, but new dependencies require rebuild.
+
+See [deploy/DOCKER.md - Managing Dependencies](deploy/DOCKER.md#managing-dependencies) for detailed workflow.
 
 ## Testing
 

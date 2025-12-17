@@ -313,17 +313,64 @@ paths:
                     type: string
                     example: ok
 
-  /server-info:
-    get:
-      summary: Get server information and enabled features
-      description: Returns server version, enabled features, and configuration
+  /api/v1/connect:
+    post:
+      summary: Connect and get bearer token
+      description: |
+        Exchange API key for bearer token (JWT).
+        First stage of two-stage authentication.
+      tags:
+        - Authentication
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceInfo
+              properties:
+                deviceInfo:
+                  type: object
+                  required:
+                    - platform
+                    - appVersion
+                    - deviceId
+                  properties:
+                    platform:
+                      type: string
+                      example: iOS
+                      description: Client platform (iOS, Android, web)
+                    appVersion:
+                      type: string
+                      example: 1.0.0
+                    deviceId:
+                      type: string
+                      example: unique-device-id
       responses:
         '200':
-          description: Server information
+          description: Bearer token issued
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerInfo'
+                type: object
+                required:
+                  - token
+                  - expiresIn
+                  - serverInfo
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    description: JWT bearer token for subsequent requests
+                  expiresIn:
+                    type: integer
+                    example: 2592000
+                    description: Token expiration in seconds (default 30 days)
+                  serverInfo:
+                    $ref: '#/components/schemas/ServerInfo'
         '401':
           description: Invalid API key
           content:
@@ -331,31 +378,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /ocr/extract:
+  /api/v1/disconnect:
     post:
-      summary: Extract text from receipt image
-      description: Processes image and returns raw OCR text
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OCRRequest'
+      summary: Disconnect session
+      description: |
+        Invalidate bearer token and end session.
+        User must reconnect with API key to get new token.
+      tags:
+        - Authentication
       responses:
         '200':
-          description: OCR extraction successful
+          description: Session invalidated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OCRResponse'
-        '400':
-          description: Invalid image data
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Session invalidated
+        '401':
+          description: Invalid or expired token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /ocr/parse:
+  /api/v1/ocr/parse:
     post:
       summary: Parse OCR text into structured transaction data
       description: Uses OpenAI to extract transaction details from OCR text
@@ -379,7 +431,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /transactions:
+  /api/v1/transactions:
     get:
       summary: List transactions
       parameters:
@@ -450,7 +502,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /transactions/{id}:
+  /api/v1/transactions/{id}:
     get:
       summary: Get transaction by ID
       parameters:
@@ -522,7 +574,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /payees:
+  /api/v1/payees:
     get:
       summary: List all payees
       parameters:
@@ -564,8 +616,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payee'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /accounts:
+  /api/v1/accounts:
     get:
       summary: List all accounts
       responses:
@@ -581,10 +639,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/Account'
 
-  /items/code-suggestions:
+  /api/v1/products/search:
     get:
-      summary: Get item code suggestions
-      description: Auto-suggest item codes based on partial input and historical usage
+      summary: Get product suggestions
+      description: Auto-suggest products based on partial code/name and historical usage
       parameters:
         - name: query
           in: query
@@ -615,3 +673,116 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ItemCodeSuggestion'
+
+  /api/v1/google-sheets/sync/draft:
+    post:
+      summary: Create sync draft
+      description: |
+        Get pending account balance changes that need to be synced to Google Sheets.
+        Creates a draft with the changes that can be reviewed before syncing.
+        Personal feature - only available if GOOGLE_SHEETS_ENABLED=true on server.
+      tags:
+        - Google Sheets
+      responses:
+        '200':
+          description: Sync draft created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draftId:
+                    type: string
+                    example: draft-uuid-123
+                  createdAt:
+                    type: string
+                    format: date-time
+                  pendingChanges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accountId:
+                          type: string
+                          format: uuid
+                        accountName:
+                          type: string
+                        cleared:
+                          type: object
+                          properties:
+                            current:
+                              type: object
+                              properties:
+                                amount:
+                                  type: string
+                                currency:
+                                  type: string
+                            synced:
+                              type: object
+                              properties:
+                                amount:
+                                  type: string
+                                currency:
+                                  type: string
+                        uncleared:
+                          type: object
+                          nullable: true
+                  summary:
+                    type: object
+                    properties:
+                      totalAccounts:
+                        type: integer
+                      totalChanges:
+                        type: integer
+        '404':
+          description: Feature not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/google-sheets/sync/approve/{draftId}:
+    post:
+      summary: Execute sync
+      description: |
+        Execute the Google Sheets sync using a previously created draft.
+        Updates the Google Sheets with current account balances from Actual Budget.
+        Personal feature - only available if GOOGLE_SHEETS_ENABLED=true on server.
+      tags:
+        - Google Sheets
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Draft ID from sync/draft endpoint
+      responses:
+        '200':
+          description: Sync completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  syncedAt:
+                    type: string
+                    format: date-time
+                  accountsSynced:
+                    type: integer
+                  spreadsheetUrl:
+                    type: string
+        '400':
+          description: Invalid draft ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Feature not enabled or draft not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

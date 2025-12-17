@@ -205,6 +205,40 @@ jobs:
         run: docker push myregistry.com/smart-pocket-server:${{ github.ref_name }}
 ```
 
+## Common Tasks
+
+### Adding a New Node.js Package
+
+When you add a new dependency to `package.json`:
+
+**Development**:
+```bash
+# 1. Add package (from packages/server)
+pnpm add <package-name>
+
+# 2. Rebuild + restart Docker container
+docker compose -f deploy/docker/docker-compose.dev.yml up -d --build smart-pocket-server
+
+# 3. Check logs for errors
+docker compose -f deploy/docker/docker-compose.dev.yml logs -f smart-pocket-server
+```
+
+**Production**:
+```bash
+# Test in dev first, then:
+docker compose -f deploy/docker/docker-compose.prod.yml build smart-pocket-server
+docker compose -f deploy/docker/docker-compose.prod.yml up -d
+```
+
+**Why rebuild?** Dependencies are installed during Docker build, not at runtime. Source code hot-reloads via volumes, but `node_modules` requires image rebuild.
+
+**Common Issues**:
+- `Cannot find module` → Rebuild image
+- Import path errors → Check relative paths (e.g., `./logger` not `./utils/logger` if already in utils)
+- Native module errors → Build tools (python3, make, g++) already in Dockerfile
+
+See [../DOCKER.md - Managing Dependencies](../DOCKER.md#managing-dependencies) for detailed guide.
+
 ## References
 
 - [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)

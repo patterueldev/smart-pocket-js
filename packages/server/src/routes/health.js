@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       database: 'connected',
+      docs: '/api-docs'
     });
   } catch (error) {
     res.status(503).json({

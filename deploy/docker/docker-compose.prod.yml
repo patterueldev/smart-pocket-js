@@ -59,7 +59,14 @@ services:
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       LOG_LEVEL: info
       GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}
+      GOOGLE_SHEET_NAME: ${GOOGLE_SHEET_NAME:-Accounts}
+      GOOGLE_CREDENTIALS_JSON_PATH: ${GOOGLE_CREDENTIALS_JSON_PATH:-/data/keys/smart-pocket-server.json}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+    # volumes:
+      # Mount Google Sheets credentials (optional, for personal feature)
+      # Uncomment and update path to your service account JSON:
+      # - /host/path/to/credentials.json:/data/keys/smart-pocket-server.json:ro
     secrets:
       - database_url
       - openai_api_key

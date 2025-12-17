@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Smart Pocket API",
-    "description": "Smart Pocket personal finance management API with OCR receipt scanning.\n\nAuthentication Flow:\n1. Call POST /connect with X-API-Key to get bearer token\n2. Use bearer token for all subsequent requests\n3. Token expires after 30 days of inactivity",
+    "name": "Smart Pocket Server API",
+    "description": "API for Smart Pocket personal finance management system.\nHomeserver deployment model - each instance serves one user.\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "smart-pocket-api-v1"
   },
@@ -35,149 +35,182 @@
   "item": [
     {
       "name": "Authentication",
+      "description": "Authentication endpoints",
       "item": [
         {
-          "name": "Connect (Get Bearer Token)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const response = pm.response.json();",
-                  "    pm.collectionVariables.set('bearerToken', response.token);",
-                  "    console.log('Bearer token saved to collection variable');",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Connect and get bearer token",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
-                "key": "X-API-Key",
-                "value": "{{apiKey}}",
-                "type": "text"
-              },
-              {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/connect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "connect"
+              ]
+            },
+            "description": "Exchange API key for bearer token (JWT).\nFirst stage of two-stage authentication.\n",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"deviceInfo\": {\n    \"platform\": \"iOS\",\n    \"appVersion\": \"1.0.0\",\n    \"deviceId\": \"test-device-123\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/connect",
-              "host": ["{{baseUrl}}"],
-              "path": ["connect"]
-            },
-            "description": "Exchange API key for bearer token. The token is automatically saved to the `bearerToken` collection variable."
-          },
-          "response": []
+              "raw": "{\n  \"deviceInfo\": {\n    \"platform\": \"iOS\",\n    \"appVersion\": \"1.0.0\",\n    \"deviceId\": \"unique-device-id\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         },
         {
-          "name": "Disconnect (Invalidate Token)",
+          "name": "Disconnect session",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/disconnect",
-              "host": ["{{baseUrl}}"],
-              "path": ["disconnect"]
+              "raw": "{{baseUrl}}/api/v1/disconnect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "disconnect"
+              ]
             },
-            "description": "Invalidate the current bearer token"
-          },
-          "response": []
+            "description": "Invalidate bearer token and end session.\nUser must reconnect with API key to get new token.\n"
+          }
         }
-      ],
-      "description": "Authentication endpoints. Use /connect first to get bearer token."
+      ]
     },
     {
       "name": "Health",
+      "description": "Health endpoints",
       "item": [
         {
-          "name": "Health Check",
+          "name": "Health check",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
-            },
-            "description": "Public health check endpoint (no authentication required)"
-          },
-          "response": []
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
         }
       ]
     },
     {
       "name": "OCR",
+      "description": "OCR endpoints",
       "item": [
         {
-          "name": "Parse OCR Text",
+          "name": "Parse OCR text into structured transaction data",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ocr/parse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ocr",
+                "parse"
+              ]
+            },
+            "description": "Uses OpenAI to extract transaction details from OCR text",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ocrText\": \"WALMART\\nDATE: 12/15/2025\\nMILK 3.99\\nBREAD 2.49\\nTOTAL: 6.48\",\n  \"remarks\": \"Receipt slightly blurry at bottom\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/ocr/parse",
-              "host": ["{{baseUrl}}"],
-              "path": ["ocr", "parse"]
-            },
-            "description": "Parse OCR text into structured transaction data using AI"
-          },
-          "response": []
+              "raw": "{\n  \"ocrText\": \"string\",\n  \"remarks\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     },
     {
       "name": "Transactions",
+      "description": "Transactions endpoints",
       "item": [
         {
-          "name": "List Transactions",
+          "name": "List transactions",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/transactions?limit=50&offset=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["transactions"],
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ],
               "query": [
                 {
                   "key": "limit",
-                  "value": "50"
+                  "value": 50,
+                  "disabled": true
                 },
                 {
                   "key": "offset",
-                  "value": "0"
+                  "value": "",
+                  "disabled": true
                 },
                 {
                   "key": "startDate",
-                  "value": "2025-01-01",
+                  "value": "",
                   "disabled": true
                 },
                 {
                   "key": "endDate",
-                  "value": "2025-12-31",
+                  "value": "",
                   "disabled": true
                 },
                 {
@@ -187,229 +220,368 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Create Transaction",
+          "name": "Create transaction",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ]
+            },
+            "description": "Creates transaction, stores in PostgreSQL, and syncs to Actual Budget",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2025-12-15\",\n  \"payeeId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"accountId\": \"660e8400-e29b-41d4-a716-446655440000\",\n  \"items\": [\n    {\n      \"codeName\": \"WM-123456\",\n      \"readableName\": \"Nestle Fresh Milk\",\n      \"price\": {\n        \"amount\": \"3.99\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1\n    },\n    {\n      \"codeName\": \"WM-789012\",\n      \"readableName\": \"Organic Bananas\",\n      \"price\": {\n        \"amount\": \"2.49\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1.5\n    }\n  ],\n  \"ocrMetadata\": {\n    \"rawText\": \"WALMART\\nDATE: 12/15/2025\\n...\",\n    \"remarks\": \"Receipt slightly blurry\",\n    \"confidence\": 0.92\n  }\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/transactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["transactions"]
+              "raw": "{\n  \"date\": \"string\",\n  \"payeeId\": \"string\",\n  \"accountId\": \"string\",\n  \"currency\": \"USD\",\n  \"items\": [\n    {\n      \"codeName\": \"string\",\n      \"readableName\": \"string\",\n      \"price\": null,\n      \"quantity\": null,\n      \"currency\": \"string\"\n    }\n  ],\n  \"ocrMetadata\": {\n    \"rawText\": \"string\",\n    \"remarks\": \"string\",\n    \"confidence\": null\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Get Transaction by ID",
+          "name": "Get transaction by ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/transactions/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["transactions", ":id"],
+              "raw": "{{baseUrl}}/api/v1/transactions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
-                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                  "value": "sample-id",
+                  "description": "Path parameter: id"
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Update Transaction",
+          "name": "Update transaction",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "sample-id",
+                  "description": "Path parameter: id"
+                }
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2025-12-15\",\n  \"payeeId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"accountId\": \"660e8400-e29b-41d4-a716-446655440000\",\n  \"items\": [\n    {\n      \"codeName\": \"WM-123456\",\n      \"readableName\": \"Nestle Fresh Milk\",\n      \"price\": {\n        \"amount\": \"3.99\",\n        \"currency\": \"USD\"\n      },\n      \"quantity\": 1\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/transactions/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["transactions", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "550e8400-e29b-41d4-a716-446655440000"
+              "raw": "{\n  \"date\": \"string\",\n  \"payeeId\": \"string\",\n  \"accountId\": \"string\",\n  \"currency\": \"USD\",\n  \"items\": [\n    {\n      \"codeName\": \"string\",\n      \"readableName\": \"string\",\n      \"price\": null,\n      \"quantity\": null,\n      \"currency\": \"string\"\n    }\n  ],\n  \"ocrMetadata\": {\n    \"rawText\": \"string\",\n    \"remarks\": \"string\",\n    \"confidence\": null\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Delete Transaction",
+          "name": "Delete transaction",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/transactions/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["transactions", ":id"],
+              "raw": "{{baseUrl}}/api/v1/transactions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
-                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                  "value": "sample-id",
+                  "description": "Path parameter: id"
                 }
               ]
             }
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Payees",
+      "description": "Payees endpoints",
       "item": [
         {
-          "name": "List Payees",
+          "name": "List all payees",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/payees?search=walmart",
-              "host": ["{{baseUrl}}"],
-              "path": ["payees"],
+              "raw": "{{baseUrl}}/api/v1/payees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payees"
+              ],
               "query": [
                 {
                   "key": "search",
-                  "value": "walmart"
+                  "value": "",
+                  "description": "Search payee names",
+                  "disabled": true
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Create Payee",
+          "name": "Create new payee",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payees"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Walmart\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/payees",
-              "host": ["{{baseUrl}}"],
-              "path": ["payees"]
+              "raw": "{\n  \"name\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Accounts",
+      "description": "Accounts endpoints",
       "item": [
         {
-          "name": "List Accounts",
+          "name": "List all accounts",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/accounts",
-              "host": ["{{baseUrl}}"],
-              "path": ["accounts"]
+              "raw": "{{baseUrl}}/api/v1/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "accounts"
+              ]
             }
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Products",
+      "description": "Products endpoints",
       "item": [
         {
-          "name": "Search Products",
+          "name": "Get product suggestions",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/products/search?query=WM-123&payeeId=550e8400-e29b-41d4-a716-446655440000&limit=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "search"],
+              "raw": "{{baseUrl}}/api/v1/products/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "search"
+              ],
               "query": [
                 {
                   "key": "query",
-                  "value": "WM-123"
+                  "value": "",
+                  "description": "Partial code name or readable name",
+                  "disabled": false
                 },
                 {
                   "key": "payeeId",
-                  "value": "550e8400-e29b-41d4-a716-446655440000"
+                  "value": "",
+                  "description": "Filter by payee/merchant context",
+                  "disabled": true
                 },
                 {
                   "key": "limit",
-                  "value": "5"
+                  "value": 10,
+                  "disabled": true
                 }
               ]
             },
-            "description": "Search products by code or name, optionally filtered by store/payee"
-          },
-          "response": []
+            "description": "Auto-suggest products based on partial code/name and historical usage"
+          }
         }
       ]
     },
     {
-      "name": "Google Sheets (Optional)",
+      "name": "Google Sheets",
+      "description": "Google Sheets endpoints",
       "item": [
         {
-          "name": "Get Sync Draft",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/google-sheets/sync/draft",
-              "host": ["{{baseUrl}}"],
-              "path": ["google-sheets", "sync", "draft"]
-            },
-            "description": "Get pending account balance changes (personal feature)"
-          },
-          "response": []
-        },
-        {
-          "name": "Execute Sync",
+          "name": "Create sync draft",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/google-sheets/sync",
-              "host": ["{{baseUrl}}"],
-              "path": ["google-sheets", "sync"]
+              "raw": "{{baseUrl}}/api/v1/google-sheets/sync/draft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "google-sheets",
+                "sync",
+                "draft"
+              ]
             },
-            "description": "Sync account balances to Google Sheets (personal feature)"
-          },
-          "response": []
+            "description": "Get pending account balance changes that need to be synced to Google Sheets.\nCreates a draft with the changes that can be reviewed before syncing.\nPersonal feature - only available if GOOGLE_SHEETS_ENABLED=true on server.\n"
+          }
+        },
+        {
+          "name": "Execute sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/google-sheets/sync/approve/:draftId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "google-sheets",
+                "sync",
+                "approve",
+                ":draftId"
+              ],
+              "variable": [
+                {
+                  "key": "draftId",
+                  "value": "sample-draftId",
+                  "description": "Path parameter: draftId"
+                }
+              ]
+            },
+            "description": "Execute the Google Sheets sync using a previously created draft.\nUpdates the Google Sheets with current account balances from Actual Budget.\nPersonal feature - only available if GOOGLE_SHEETS_ENABLED=true on server.\n"
+          }
         }
-      ],
-      "description": "Personal feature - only available if enabled on server"
+      ]
     }
   ]
 }

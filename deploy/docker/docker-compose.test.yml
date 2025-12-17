@@ -50,6 +50,8 @@ services:
       JWT_SECRET: test_jwt_secret
       LOG_LEVEL: error
       GOOGLE_SHEETS_ENABLED: false
+      GOOGLE_SHEET_ID: test_sheet_id
+      GOOGLE_SHEET_NAME: TestAccounts
     depends_on:
       postgres:
         condition: service_healthy

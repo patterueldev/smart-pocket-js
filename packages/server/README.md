@@ -68,6 +68,19 @@ npm start
 
 Server will run on `http://localhost:3001` (or PORT from .env)
 
+## API Documentation
+
+Interactive API documentation available at:
+- **Swagger UI**: http://localhost:3001/api-docs
+- **OpenAPI Spec**: [docs/api-spec.yaml](../../docs/api-spec.yaml)
+- **Postman Collection**: [docs/smart-pocket.postman_collection.json](../../docs/smart-pocket.postman_collection.json)
+
+The Swagger UI provides:
+- Interactive API exploration
+- Request/response examples
+- Authentication testing
+- Try-it-out functionality
+
 ## API Endpoints
 
 All endpoints except `/health` and `/connect` require bearer token authentication.
