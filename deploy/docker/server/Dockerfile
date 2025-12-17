@@ -57,6 +57,9 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
+# Install build dependencies for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++
+
 # Install production dependencies only
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
@@ -71,6 +74,11 @@ COPY --from=builder /app/packages/server/src ./packages/server/src
 RUN npm install -g pnpm
 # Install from workspace root to handle monorepo structure correctly
 RUN pnpm install --prod --no-frozen-lockfile
+
+# Force rebuild better-sqlite3 for the target architecture
+# This ensures native bindings match the container's architecture
+RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
+    npm run build-release || true
 
 # Copy docs folder for API spec
 COPY --from=builder /app/docs ./docs
