@@ -72,6 +72,9 @@ RUN npm install -g pnpm
 # Install from workspace root to handle monorepo structure correctly
 RUN pnpm install --prod --no-frozen-lockfile
 
+# Copy docs folder for API spec
+COPY --from=builder /app/docs ./docs
+
 # Set working directory to server package
 WORKDIR /app/packages/server
 

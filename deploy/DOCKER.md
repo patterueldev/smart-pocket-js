@@ -8,10 +8,10 @@ Complete guide for deploying Smart Pocket with Docker.
 
 ```bash
 # 1. Copy environment template
-cp deploy/docker/.env.example deploy/docker/.env
+cp deploy/docker/.env.example deploy/docker/.env.dev
 
-# 2. Edit .env and add your OpenAI API key
-nano deploy/docker/.env
+# 2. Edit .env.dev and add your OpenAI API key
+nano deploy/docker/.env.dev
 # Required: OPENAI_API_KEY=sk-...
 
 # 3. Start development stack
@@ -30,21 +30,58 @@ npm run docker:migrate
 
 **First-time setup note**: The Docker build will generate `pnpm-lock.yaml` during the build process. This is temporary - for production, commit the lockfile.
 
+### Quality/QA Environment
+
+```bash
+# 1. Copy environment template
+cp deploy/docker/.env.example deploy/docker/.env.qa
+
+# 2. Generate secure credentials
+openssl rand -hex 32  # For POSTGRES_PASSWORD
+openssl rand -hex 32  # For API_KEY
+openssl rand -hex 32  # For JWT_SECRET
+
+# 3. Edit .env.qa and add your values
+nano deploy/docker/.env.qa
+# Required:
+#   - POSTGRES_PASSWORD
+#   - OPENAI_API_KEY
+#   - API_KEY
+#   - JWT_SECRET
+#   - ACTUAL_BUDGET_PASSWORD
+#   - ACTUAL_BUDGET_SYNC_ID
+
+# 4. Start QA stack
+npm run docker:quality
+
+# 5. Access services
+# - Server: http://localhost:3002
+# - Actual Budget: http://localhost:5007
+# - PostgreSQL: localhost:5433
+```
+
 ### Production Environment
 
 ```bash
-# 1. Generate secrets
-./deploy/scripts/generate-secrets.sh
+# Production uses Docker secrets for enhanced security
 
-# 2. Add remaining secrets manually
-echo "your-postgres-password" > deploy/docker/secrets/postgres_password.txt
-echo "postgres://smart_pocket:PASSWORD@postgres:5432/smart_pocket" > deploy/docker/secrets/database_url.txt
+# 1. Create secrets directory
+mkdir -p deploy/docker/secrets
+
+# 2. Generate secure passwords
+openssl rand -hex 32 > deploy/docker/secrets/postgres_password.txt
+openssl rand -hex 32 > deploy/docker/secrets/api_key.txt
+openssl rand -hex 32 > deploy/docker/secrets/jwt_secret.txt
 echo "sk-your-openai-key" > deploy/docker/secrets/openai_api_key.txt
 
-# 3. Start production stack
+# 3. Generate database URL
+PW=$(cat deploy/docker/secrets/postgres_password.txt)
+echo "postgres://smart_pocket:${PW}@postgres:5432/smart_pocket" > deploy/docker/secrets/database_url.txt
+
+# 4. Start production stack
 npm run docker:prod
 
-# 4. Run migrations
+# 5. Run migrations
 docker compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server npm run migrate
 ```
 
@@ -54,24 +91,27 @@ docker compose -f deploy/docker/docker-compose.prod.yml exec smart-pocket-server
 deploy/
 ├── docker/
 │   ├── server/
-│   │   ├── Dockerfile         # Server image
+│   │   ├── Dockerfile                # Server image
 │   │   └── .dockerignore
-│   ├── secrets/               # Production secrets (gitignored)
+│   ├── secrets/                      # Production secrets only (gitignored)
 │   │   ├── .gitignore
 │   │   └── .gitkeep
-│   ├── docker-compose.dev.yml    # Development stack
-│   ├── docker-compose.prod.yml   # Production stack
-│   ├── docker-compose.test.yml   # Test stack
-│   ├── init-db.sql               # Database initialization
-│   └── .env.example              # Environment template
+│   ├── docker-compose.dev.yml        # Development stack
+│   ├── docker-compose.quality.yml    # QA/Staging stack  
+│   ├── docker-compose.prod.yml       # Production stack
+│   ├── docker-compose.test.yml       # Test stack
+│   ├── init-db.sql                   # Database initialization
+│   ├── .env.example                  # Environment template (all envs)
+│   ├── .env.dev                      # Dev environment (gitignored)
+│   └── .env.qa                       # QA environment (gitignored)
 └── scripts/
-    ├── dev.sh                 # Start dev environment
-    ├── prod.sh                # Start prod environment
-    ├── test.sh                # Run tests
-    ├── build.sh               # Build images
-    ├── migrate.sh             # Run migrations
-    ├── test-api.sh            # Test API endpoints
-    └── generate-secrets.sh    # Generate production secrets
+    ├── dev.sh                        # Start dev environment
+    ├── quality.sh                    # Start QA environment
+    ├── prod.sh                       # Start prod environment
+    ├── test.sh                       # Run tests
+    ├── build.sh                      # Build images
+    ├── migrate.sh                    # Run migrations
+    └── test-api.sh                   # Test API endpoints
 ```
 
 ## Services
@@ -143,6 +183,37 @@ npm run docker:test
 ./deploy/scripts/test.sh
 ```
 
+### Quality/Staging (`docker-compose.quality.yml`)
+
+**Features**:
+- Production builds for realistic testing
+- Environment variables via .env.qa file
+- Persistent data volumes (can be reset between test cycles)
+- Info-level logging for production-like behavior
+- Exposed ports on different ports (3002, 5433, 5007)
+- Optional pgAdmin for database inspection
+- Resource limits similar to production
+- Google Sheets integration enabled for testing
+
+**Usage**:
+```bash
+npm run docker:quality
+# or
+./deploy/scripts/quality.sh
+
+# Optional: Start with pgAdmin
+docker compose -f deploy/docker/docker-compose.quality.yml --profile tools up -d pgadmin
+
+# Reset data for clean test cycle
+docker compose -f deploy/docker/docker-compose.quality.yml down -v
+```
+
+**Port Mappings**:
+- Server: http://localhost:3002
+- Actual Budget: http://localhost:5007
+- PostgreSQL: localhost:5433
+- pgAdmin: http://localhost:5050 (with --profile tools)
+
 ## Commands
 
 ### NPM Scripts (from root)
@@ -150,6 +221,7 @@ npm run docker:test
 ```bash
 npm run docker:dev       # Start dev environment
 npm run docker:prod      # Start prod environment
+npm run docker:quality   # Start quality/staging environment
 npm run docker:test      # Run test environment
 npm run docker:build     # Build images
 npm run docker:migrate   # Run migrations in dev
@@ -160,11 +232,11 @@ npm run docker:migrate   # Run migrations in dev
 ```bash
 ./deploy/scripts/dev.sh              # Start dev
 ./deploy/scripts/prod.sh             # Start prod
+./deploy/scripts/quality.sh          # Start quality/staging
 ./deploy/scripts/test.sh             # Run tests
 ./deploy/scripts/build.sh [version]  # Build images
 ./deploy/scripts/migrate.sh          # Run migrations
 ./deploy/scripts/test-api.sh         # Test API
-./deploy/scripts/generate-secrets.sh # Generate secrets
 ```
 
 ### Direct Docker Compose
@@ -242,7 +314,7 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d --build smart-pocke
 4. **Test production build**:
    ```bash
    docker compose -f deploy/docker/docker-compose.prod.yml up -d
-   # Run smoke tests
+   # Test API endpoints
    ./deploy/scripts/test-api.sh
    ```
 
@@ -297,19 +369,40 @@ GOOGLE_SHEETS_ENABLED=false     # Optional feature
 DEFAULT_CURRENCY=USD            # Default currency
 ```
 
-### Secrets (prod)
+### Environment Configuration
 
-Stored in `deploy/docker/secrets/`:
+**Development & QA**: Use .env files
+- **Dev**: `deploy/docker/.env.dev` (copy from `.env.example`)
+- **QA**: `deploy/docker/.env.qa` (copy from `.env.example`)
+- Same variables for both, different values
+- All variables in plain text
+- Gitignored for safety
 
-- `postgres_password.txt` - PostgreSQL password
-- `database_url.txt` - Full database connection string
-- `openai_api_key.txt` - OpenAI API key
-- `api_key.txt` - API key for mobile app (generated)
-- `jwt_secret.txt` - JWT signing secret (generated)
+Required variables:
+- `POSTGRES_PASSWORD` - PostgreSQL password
+- `OPENAI_API_KEY` - OpenAI API key
+- `API_KEY` - API key for mobile app (generate with `openssl rand -hex 32`)
+- `JWT_SECRET` - JWT signing secret (generate with `openssl rand -hex 32`)
+- `ACTUAL_BUDGET_PASSWORD` - Actual Budget server password
+- `ACTUAL_BUDGET_SYNC_ID` - Budget sync ID from Actual Budget UI
 
-**Generate secrets**:
+**Production**: Use Docker secrets (file-based)
+- Stored in `deploy/docker/secrets/` directory
+- Files: `postgres_password.txt`, `database_url.txt`, `openai_api_key.txt`, `api_key.txt`, `jwt_secret.txt`
+- Mounted securely via Docker Compose `secrets` section
+- Never committed to git (`.gitignore`)
+
+Generate production secrets:
 ```bash
-./deploy/scripts/generate-secrets.sh
+mkdir -p deploy/docker/secrets
+openssl rand -hex 32 > deploy/docker/secrets/postgres_password.txt
+openssl rand -hex 32 > deploy/docker/secrets/api_key.txt
+openssl rand -hex 32 > deploy/docker/secrets/jwt_secret.txt
+echo "sk-your-key" > deploy/docker/secrets/openai_api_key.txt
+
+# Generate database URL from password
+PW=$(cat deploy/docker/secrets/postgres_password.txt)
+echo "postgres://smart_pocket:${PW}@postgres:5432/smart_pocket" > deploy/docker/secrets/database_url.txt
 ```
 
 ## Common Tasks
@@ -504,9 +597,13 @@ deploy:
 
 Before deploying to production:
 
-- [ ] Generate strong secrets with `./deploy/scripts/generate-secrets.sh`
-- [ ] Set all required secrets in `deploy/docker/secrets/`
-- [ ] Configure environment variables in `.env`
+- [ ] Generate strong secrets using `openssl rand -hex 32` for each credential
+- [ ] Create all required secret files in `deploy/docker/secrets/`
+  - `postgres_password.txt`
+  - `database_url.txt`
+  - `openai_api_key.txt`
+  - `api_key.txt`
+  - `jwt_secret.txt`
 - [ ] Test locally with `npm run docker:prod`
 - [ ] Set up HTTPS reverse proxy (nginx + Let's Encrypt)
 - [ ] Configure PostgreSQL SSL connection

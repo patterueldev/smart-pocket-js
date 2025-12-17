@@ -130,7 +130,7 @@ jobs:
           SKIP_PUSH: true
       
       - name: Run smoke tests
-        run: ./deploy/scripts/smoke-test.sh
+        run: ./deploy/scripts/test.sh
         timeout-minutes: 10
       
       - name: Display Docker logs on failure

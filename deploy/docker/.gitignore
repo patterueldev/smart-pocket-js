@@ -1,5 +1,10 @@
-# Environment file with secrets
+# Environment files with secrets
 .env
+.env.dev
+.env.qa
+
+# Keep example template
+!.env.example
 
 # Docker volumes data (if mounted locally)
 postgres-data/
