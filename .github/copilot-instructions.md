@@ -48,6 +48,42 @@ Actual Budget (on same server or nearby)
 
 ## Development Workflow
 
+### Git Branch Rules
+
+**CRITICAL**: Never commit directly to the `main` branch.
+
+**Before making any changes:**
+1. Always check current branch: `git branch --show-current`
+2. If on `main`, immediately create a feature branch:
+   ```bash
+   git checkout -b <type>/<description>
+   ```
+3. Make changes only on feature branches
+4. Create PR to merge back to main
+
+**Branch naming convention:**
+- `feat/<feature-name>` - New features
+- `fix/<bug-description>` - Bug fixes
+- `chore/<task>` - Maintenance tasks
+- `docs/<doc-name>` - Documentation updates
+- `refactor/<what>` - Code refactoring
+- `test/<test-name>` - Test additions/updates
+
+**Main branch is protected:**
+- ✅ Cannot push directly to main
+- ✅ All changes must go through PRs
+- ✅ All CI checks must pass
+- ✅ Branch must be up-to-date with main before merging
+
+**If accidentally on main:**
+```bash
+# Check current branch
+git branch --show-current
+
+# If output is "main", immediately switch:
+git checkout -b fix/your-fix-name
+```
+
 ### Docker Commands
 
 **Development**:
