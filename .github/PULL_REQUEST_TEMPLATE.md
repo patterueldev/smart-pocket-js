@@ -1,5 +1,24 @@
 # Pull Request
 
+<!-- 
+⚠️ IMPORTANT: PR Title Format (REQUIRED)
+Title must follow: <type>: <description> (#<issue>)
+
+Valid Examples:
+✅ feat: Add transaction batch import (#45)
+✅ fix: Resolve camera permissions (#23)
+✅ docs: Update API documentation (#18)
+✅ chore: Bump version to 0.2.0 (#50)
+
+Invalid Examples:
+❌ Update docs
+❌ feat: add feature (no issue number)
+❌ Fix bug #23 (wrong format)
+❌ docs: Update API documentation (#18). (period at end)
+
+Types: feat, fix, docs, test, refactor, chore, build, ci, perf
+-->
+
 ## Description
 <!-- Provide a clear and concise description of your changes -->
 
