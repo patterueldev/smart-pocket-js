@@ -1,13 +1,20 @@
 import React from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   StyleSheet,
-  ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View,
 } from 'react-native';
 import { theme } from './theme';
+
+// Simple text-based loading indicator (avoids ActivityIndicator native module issues)
+const SimpleLoadingIndicator: React.FC<{ color: string }> = ({ color }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+    <Text style={{ fontSize: 16, color }}>Loading...</Text>
+  </View>
+);
 
 export interface ButtonProps {
   title: string;
@@ -35,23 +42,22 @@ export const Button: React.FC<ButtonProps> = ({
   const isDisabled = disabled || loading;
 
   return (
-    <TouchableOpacity
+    <Pressable
       testID="button-container"
-      style={[
+      style={({ pressed }) => [
         styles.base,
         styles[`${variant}Container`],
         styles[`${size}Container`],
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
+        pressed && !isDisabled && styles.pressed,
         style,
       ]}
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator
-          testID="button-loading-indicator"
+        <SimpleLoadingIndicator
           color={variant === 'primary' ? theme.colors.background : theme.colors.primary}
         />
       ) : (
@@ -66,7 +72,7 @@ export const Button: React.FC<ButtonProps> = ({
           {title}
         </Text>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -81,6 +87,9 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   
   // Container variants

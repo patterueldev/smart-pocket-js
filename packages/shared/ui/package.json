@@ -20,8 +20,8 @@
     "@smart-pocket/shared-types": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-native": "^0.74.0"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-native": "^0.74.0 || ^0.81.0"
   },
   "devDependencies": {
     "@types/react": "~18.3.0",
