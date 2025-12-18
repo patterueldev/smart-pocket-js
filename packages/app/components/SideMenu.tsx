@@ -12,17 +12,22 @@ export const SideMenu: React.FC<SideMenuProps> = ({ visible, onClose, onSettings
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="fade"
       onRequestClose={onClose}
+      testID="side-menu-modal"
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
+        <View style={styles.overlay} testID="side-menu-overlay">
           <TouchableWithoutFeedback>
             <View style={styles.menu}>
               <View style={styles.header}>
                 <Text style={styles.title}>Menu</Text>
-                <Pressable onPress={onClose} style={styles.closeButton}>
+                <Pressable 
+                  onPress={onClose} 
+                  style={styles.closeButton}
+                  testID="side-menu-close-button"
+                >
                   <Text style={styles.closeIcon}>✕</Text>
                 </Pressable>
               </View>

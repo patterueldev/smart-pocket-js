@@ -63,7 +63,11 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={handleOpenMenu} style={styles.menuButton}>
+        <Pressable 
+          onPress={handleOpenMenu} 
+          style={styles.menuButton}
+          testID="hamburger-menu-button"
+        >
           <Text style={styles.menuIcon}>☰</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Smart Pocket</Text>
