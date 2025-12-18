@@ -9,7 +9,7 @@ import { useSession } from '../../hooks/useSession';
 export default function DashboardScreen() {
   const { session, clearSession } = useSession();
   const [recentTransactions] = useState<Transaction[]>([]);
-  const [googleSheetsSyncEnabled] = useState(false);
+  const [googleSheetsSyncEnabled] = useState(true); // Enable Google Sheets sync
 
   const handleScanReceipt = () => {
     console.log('Scan receipt pressed');
@@ -20,7 +20,7 @@ export default function DashboardScreen() {
   };
 
   const handleGoogleSheetsSync = () => {
-    console.log('Google Sheets sync pressed');
+    router.push('/google-sheets-sync');
   };
 
   const handleDisconnect = () => {
