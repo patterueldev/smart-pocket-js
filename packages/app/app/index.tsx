@@ -93,7 +93,7 @@ export default function DashboardScreen() {
           {recentTransactions.length === 0 ? (
             <Card style={styles.emptyCard}>
               <Text style={styles.emptyText}>No transactions yet</Text>
-              <Text style={styles.emptyHint}>Tap "Scan Receipt" to get started</Text>
+              <Text style={styles.emptyHint}>Tap &quot;Scan Receipt&quot; to get started</Text>
             </Card>
           ) : (
             recentTransactions.slice(0, 5).map(txn => (

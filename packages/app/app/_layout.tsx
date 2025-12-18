@@ -52,7 +52,7 @@ function RootLayoutNav() {
       console.log('Redirecting to dashboard (connected)');
       router.replace('/');
     }
-  }, [session, loading, segments]);
+  }, [session, loading, segments, router]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

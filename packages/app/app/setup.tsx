@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from '../components/Button';
 import { TextInput } from '../components/TextInput';
-import { router } from 'expo-router';
 import { useSession } from '../hooks/useSession';
 
 /**

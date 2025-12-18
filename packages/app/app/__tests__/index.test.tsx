@@ -73,7 +73,7 @@ describe('Dashboard', () => {
   });
 
   it('closes side menu when close is pressed', () => {
-    const { getByTestId, getByText, queryByText } = render(<Dashboard />);
+    const { getByTestId, queryByText } = render(<Dashboard />);
 
     // Open menu
     const hamburgerButton = getByTestId('hamburger-menu-button');

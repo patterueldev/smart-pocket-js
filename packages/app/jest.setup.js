@@ -5,19 +5,25 @@ jest.mock('react-native/Libraries/Utilities/Platform', () => ({
 }));
 
 // Mock core React Native modules
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  return {
-    ...RN,
-    Platform: {
-      OS: 'ios',
-      select: jest.fn((obj) => obj.ios),
-    },
-    NativeModules: {
-      ...RN.NativeModules,
-    },
-  };
-});
+jest.mock('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+    select: jest.fn((obj) => obj.ios),
+  },
+  StyleSheet: {
+    create: (styles) => styles,
+  },
+  View: 'View',
+  Text: 'Text',
+  TextInput: 'TextInput',
+  ScrollView: 'ScrollView',
+  Pressable: 'Pressable',
+  Modal: 'Modal',
+  Alert: {
+    alert: jest.fn(),
+  },
+  NativeModules: {},
+}));
 
 // Mock expo-router
 jest.mock('expo-router', () => ({

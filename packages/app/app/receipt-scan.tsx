@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { CameraScreen, OCRPreviewScreen } from '@smart-pocket/receipt-scan-ui';
 import { MockReceiptScanService } from '@smart-pocket/receipt-scan-service';
 import type { OCRParseResponse } from '@smart-pocket/shared-types';
@@ -12,9 +12,11 @@ type ScreenState = 'camera' | 'preview';
 export default function ReceiptScanRoute() {
   const router = useRouter();
   const [screenState, setScreenState] = useState<ScreenState>('camera');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [imageUri, setImageUri] = useState<string>('');
   const [ocrText, setOcrText] = useState<string>('');
-  const [parseResult, setParseResult] = useState<OCRParseResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [parseResult, _setParseResult] = useState<OCRParseResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const hasNavigated = useRef(false);
 

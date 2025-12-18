@@ -28,6 +28,7 @@ export default function TransactionRoute() {
   useEffect(() => {
     console.log('🟢 TransactionRoute MOUNT - useEffect triggered');
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadInitialData = async () => {
