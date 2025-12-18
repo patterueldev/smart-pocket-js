@@ -154,6 +154,73 @@ Use `Platform.select()` for conditional features:
 )}
 ```
 
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage report
+pnpm test:coverage
+```
+
+### Test Structure
+
+- **UI Components** (`packages/shared/ui/src/__tests__/`)
+  - Button.test.tsx
+  - TextInput.test.tsx
+  - Card.test.tsx
+
+- **Service Layer** (`packages/features/*/service/src/__tests__/`)
+  - MockReceiptScanService.test.ts
+  - MockTransactionService.test.ts
+  - MockGoogleSheetsService.test.ts
+
+### Coverage Thresholds
+
+All packages maintain **70% coverage** for:
+- Branches
+- Functions
+- Lines
+- Statements
+
+### Writing Tests
+
+**UI Component Example:**
+```typescript
+import { render, fireEvent } from '@testing-library/react-native';
+import { Button } from '../Button';
+
+test('calls onPress when button is pressed', () => {
+  const mockOnPress = jest.fn();
+  const { getByTestId } = render(
+    <Button title="Test" onPress={mockOnPress} />
+  );
+  
+  fireEvent.press(getByTestId('button-container'));
+  expect(mockOnPress).toHaveBeenCalledTimes(1);
+});
+```
+
+**Service Layer Example:**
+```typescript
+test('parseReceipt returns proper structure', async () => {
+  const service = new MockReceiptScanService();
+  const result = await service.parseReceipt('OCR text', 'remarks');
+  
+  expect(result).toHaveProperty('merchant');
+  expect(result).toHaveProperty('date');
+  expect(result).toHaveProperty('items');
+  expect(result.confidence).toBeGreaterThanOrEqual(0);
+  expect(result.confidence).toBeLessThanOrEqual(1);
+});
+```
+
 ## Development Workflow
 
 ### Adding a New Feature

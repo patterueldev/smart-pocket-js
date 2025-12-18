@@ -30,6 +30,7 @@ export const TextInput: React.FC<TextInputProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <RNTextInput
+        testID="text-input"
         style={[
           styles.input,
           error && styles.inputError,

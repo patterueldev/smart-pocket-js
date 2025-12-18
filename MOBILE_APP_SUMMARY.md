@@ -265,6 +265,12 @@ Mobile app scaffold implementation for issue #5 with feature-based architecture.
 - Personal features in separate namespace
 
 ## Testing
+- **Unit tests**: Jest + React Native Testing Library
+- **Coverage**: 70% threshold for branches/functions/lines/statements
+- **Test files**: 11 test files with 44 test cases
+  - UI components: Button, TextInput, Card (16 tests)
+  - Service mocks: Receipt Scan, Transaction, Google Sheets (28 tests)
+- **Test commands**: `pnpm test`, `pnpm test:watch`, `pnpm test:coverage`
 - Manual testing: `cd packages/app && pnpm start`
 - All features use mock data
 - Real API integration planned in issue #42

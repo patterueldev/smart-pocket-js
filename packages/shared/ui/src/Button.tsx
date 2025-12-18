@@ -36,6 +36,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <TouchableOpacity
+      testID="button-container"
       style={[
         styles.base,
         styles[`${variant}Container`],
@@ -50,6 +51,7 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator
+          testID="button-loading-indicator"
           color={variant === 'primary' ? theme.colors.background : theme.colors.primary}
         />
       ) : (

@@ -18,6 +18,7 @@ export const Card: React.FC<CardProps> = ({ children, style, onPress }) => {
   
   return (
     <Container
+      testID="card-container"
       style={[styles.card, style]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}

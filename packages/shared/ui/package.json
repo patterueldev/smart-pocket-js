@@ -4,7 +4,10 @@
   "description": "Shared UI components for Smart Pocket",
   "main": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "smart-pocket",

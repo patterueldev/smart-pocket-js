@@ -4,7 +4,10 @@
   "description": "Google Sheets sync service for Smart Pocket (personal feature)",
   "main": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "smart-pocket",
