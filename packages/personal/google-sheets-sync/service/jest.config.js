@@ -1,7 +1,7 @@
 const base = require('../../../../jest.config.base');
 
 module.exports = {
-  ...base,
-  displayName: '@smart-pocket/google-sheets-service',
+  ...base,  preset: undefined, // Don't use react-native preset
+  testEnvironment: 'node',  displayName: '@smart-pocket/google-sheets-service',
   rootDir: '.',
 };

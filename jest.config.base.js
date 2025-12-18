@@ -3,10 +3,17 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', {
+      presets: [
+        ['@babel/preset-env', { targets: { node: 'current' } }],
+        '@babel/preset-flow',
+        '@babel/preset-typescript',
+        '@babel/preset-react',
+      ],
+    }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|expo)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|expo|@testing-library)/)',
   ],
   testMatch: [
     '**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',

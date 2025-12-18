@@ -53,6 +53,9 @@ export class MockReceiptScanService implements IReceiptScanService {
   }
   
   async validateOCRQuality(ocrText: string): Promise<number> {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Simple mock validation based on text length
     if (!ocrText || ocrText.length < 20) {
       return 0.3;
