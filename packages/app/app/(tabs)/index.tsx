@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Transaction } from '../../types';
+import { useSession } from '../../hooks/useSession';
 
 export default function DashboardScreen() {
+  const { session, clearSession } = useSession();
   const [recentTransactions] = useState<Transaction[]>([]);
   const [googleSheetsSyncEnabled] = useState(false);
 
@@ -20,8 +23,27 @@ export default function DashboardScreen() {
     console.log('Google Sheets sync pressed');
   };
 
+  const handleDisconnect = () => {
+    Alert.alert(
+      'Disconnect',
+      'Are you sure you want to disconnect from the server?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Disconnect',
+          style: 'destructive',
+          onPress: async () => {
+            await clearSession();
+            router.replace('/setup');
+          },
+        },
+      ]
+    );
+  };
+
   const handleOpenMenu = () => {
-    console.log('Menu pressed');
+    // For now, just show disconnect option
+    handleDisconnect();
   };
 
   return (
@@ -37,6 +59,17 @@ export default function DashboardScreen() {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        {/* Connection Info */}
+        {session && (
+          <Card style={styles.connectionCard}>
+            <Text style={styles.connectionLabel}>Connected to:</Text>
+            <Text style={styles.connectionUrl}>{session.serverUrl}</Text>
+            <Text style={styles.connectionTime}>
+              Since {new Date(session.connectedAt).toLocaleString()}
+            </Text>
+          </Card>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Transactions</Text>
           {recentTransactions.length === 0 ? (
@@ -110,6 +143,10 @@ const styles = StyleSheet.create({
   serverIcon: { color: '#4caf50', fontSize: 18 },
   content: { flex: 1 },
   scrollContent: { padding: 20 },
+  connectionCard: { padding: 16, marginBottom: 20, backgroundColor: '#e3f2fd' },
+  connectionLabel: { fontSize: 12, color: '#666', marginBottom: 4 },
+  connectionUrl: { fontSize: 14, fontWeight: '600', color: '#1976d2', marginBottom: 4 },
+  connectionTime: { fontSize: 12, color: '#999' },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 16 },
   emptyCard: { padding: 24, alignItems: 'center' },

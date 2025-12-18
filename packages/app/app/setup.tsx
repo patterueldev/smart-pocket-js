@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from '../components/Button';
 import { TextInput } from '../components/TextInput';
 import { router } from 'expo-router';
+import { useSession } from '../hooks/useSession';
 
 /**
  * Setup Screen - Initial connection to server
@@ -10,6 +11,7 @@ import { router } from 'expo-router';
  * User enters server URL and API key to connect to their personal Smart Pocket server
  */
 export default function SetupScreen() {
+  const { saveSession } = useSession();
   const [serverUrl, setServerUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState('');
@@ -21,16 +23,28 @@ export default function SetupScreen() {
       return;
     }
 
+    if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
+      setError('Server URL must start with http:// or https://');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
     try {
-      // TODO: Implement actual API connection
-      // For now, just navigate to dashboard
+      // Mock API connection
       console.log('Connecting to:', serverUrl);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Save session
+      await saveSession({
+        serverUrl,
+        apiKey,
+        connected: true,
+        connectedAt: new Date().toISOString(),
+      });
       
       // Navigate to dashboard after successful connection
       router.replace('/(tabs)');
