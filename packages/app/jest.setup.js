@@ -63,6 +63,21 @@ jest.mock('expo-status-bar', () => ({
   StatusBar: 'StatusBar',
 }));
 
+// Mock useSession hook
+jest.mock('./hooks/useSession', () => ({
+  useSession: jest.fn(() => ({
+    session: {
+      serverUrl: 'http://localhost:3001',
+      apiKey: 'test-key',
+      token: 'test-token',
+    },
+    isLoading: false,
+    isConnected: true,
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  })),
+}));
+
 // Silence console warnings in tests
 global.console = {
   ...console,
