@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { CameraScreen, OCRPreviewScreen } from '@smart-pocket/receipt-scan-ui';
@@ -17,8 +17,16 @@ export default function ReceiptScanRoute() {
   const [parseResult, setParseResult] = useState<OCRParseResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCapture = async (uri: string) => {
+  console.log('ReceiptScanRoute render, screenState:', screenState);
+
+  useEffect(() => {
+    console.log('useEffect: screenState changed to:', screenState);
+  }, [screenState]);
+
+  const handleCapture = (uri: string) => {
+    console.log('=== handleCapture called ===');
     console.log('Receipt captured:', uri);
+    console.log('Current screenState:', screenState);
     setImageUri(uri);
     
     // Simulate OCR text extraction (normally done by expo-camera or native module)
@@ -42,7 +50,9 @@ TOTAL:                    $17.56
 THANK YOU FOR SHOPPING!`;
 
     setOcrText(mockOCRText);
+    console.log('Setting screenState to preview...');
     setScreenState('preview');
+    console.log('After setState, screenState should be preview');
   };
 
   const handleSubmit = async (remarks?: string) => {
@@ -91,22 +101,12 @@ THANK YOU FOR SHOPPING!`;
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: screenState === 'camera' ? 'Scan Receipt' : 'Review OCR',
-          headerShown: true,
-          presentation: 'modal',
-        }}
-      />
-      
-      {screenState === 'camera' && (
+      {screenState === 'camera' ? (
         <CameraScreen
           onCapture={handleCapture}
           onClose={handleClose}
         />
-      )}
-      
-      {screenState === 'preview' && (
+      ) : (
         <OCRPreviewScreen
           ocrText={ocrText}
           onSubmit={handleSubmit}

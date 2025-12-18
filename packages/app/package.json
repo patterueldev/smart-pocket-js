@@ -20,6 +20,7 @@
     "@smart-pocket/google-sheets-sync-ui": "workspace:*",
     "@smart-pocket/receipt-scan-service": "workspace:*",
     "@smart-pocket/receipt-scan-ui": "workspace:*",
+    "@smart-pocket/shared-types": "workspace:*",
     "@smart-pocket/transaction-service": "workspace:*",
     "@smart-pocket/transaction-ui": "workspace:*",
     "expo": "~54.0.30",
