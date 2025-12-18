@@ -5,4 +5,3 @@ packages:
   - 'packages/features/*/ui'
   - 'packages/personal/*/service'
   - 'packages/personal/*/ui'
-  - 'packages/app'

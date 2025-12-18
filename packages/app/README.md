@@ -1,323 +1,50 @@
-# Smart Pocket Mobile App
+# Welcome to your Expo app 👋
 
-React Native mobile application for Smart Pocket personal finance management.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Overview
+## Get started
 
-Multi-platform app (iOS, Android, Web) built with:
-- **React Native 0.73** + **Expo 50**
-- **React Navigation** for routing
-- **InversifyJS** for dependency injection
-- **Feature-based architecture** with isolated packages
+1. Install dependencies
 
-## Project Structure
+   ```bash
+   npm install
+   ```
 
-```
-packages/
-  shared/
-    types/          # Shared TypeScript interfaces
-    ui/             # Shared UI components (Button, TextInput, Card)
-  
-  features/         # Public features
-    receipt-scan/
-      service/      # OCR parsing service
-      ui/           # Camera + OCR preview screens
-    transaction/
-      service/      # Transaction CRUD service
-      ui/           # Transaction form screen
-  
-  personal/         # Personal features (build-excluded)
-    google-sheets-sync/
-      service/      # Google Sheets sync service
-      ui/           # Sync screen
-  
-  app/              # Main Expo app
-    src/
-      di/           # InversifyJS container
-      screens/      # Setup & Dashboard screens
-    App.tsx         # Entry point
-```
+2. Start the app
 
-## Getting Started
+   ```bash
+   npx expo start
+   ```
 
-### Prerequisites
+In the output, you'll find options to open the app in a
 
-- Node.js 20+
-- pnpm 8+
-- Expo CLI
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-### Installation
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Get a fresh project
+
+When you're ready, run:
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-cd packages/app
-pnpm start
+npm run reset-project
 ```
 
-### Running on Devices
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-```bash
-# iOS Simulator
-pnpm ios
+## Learn more
 
-# Android Emulator
-pnpm android
+To learn more about developing your project with Expo, look at the following resources:
 
-# Web Browser
-pnpm web
-```
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Features
+## Join the community
 
-### ✅ Completed
+Join our community of developers creating universal apps.
 
-- **Shared UI Components**
-  - Button (4 variants, 3 sizes, loading state)
-  - TextInput (label, error, helper text)
-  - Card (optional touchable)
-  - Theme system (colors, spacing, typography)
-
-- **Receipt Scan Feature**
-  - Camera screen with mock viewfinder
-  - OCR preview with remarks input
-  - Mock service returning Walmart receipt
-
-- **Transaction Feature**
-  - Transaction form with date picker
-  - Payee/account selectors
-  - Line items list with add/remove
-  - Calculated total display
-  - Mock service with CRUD operations
-
-- **Google Sheets Sync** (Personal Feature)
-  - Sync draft preview with balance changes
-  - Account cards with old→new visualization
-  - Pull to refresh
-  - Mock service with pending syncs
-
-- **Main App**
-  - Setup screen for server connection
-  - Dashboard with recent transactions
-  - React Navigation with drawer
-  - Session management
-  - InversifyJS DI container
-
-### 🚧 TODO (Future)
-
-- [ ] Real API integration (see issue #42)
-- [ ] Storybook configuration for component testing
-- [ ] Navigation to feature screens
-- [ ] QR code auto-fill for setup (see issue #40)
-- [ ] Bonjour/mDNS server discovery (see issue #41)
-- [ ] Draft transaction storage (see issue #43)
-- [ ] Camera permissions handling
-- [ ] Form validation improvements
-- [ ] Error handling and retry logic
-
-## Architecture
-
-### Dependency Injection
-
-Services are bound in `packages/app/src/di/container.ts`:
-
-```typescript
-container.bind<IReceiptScanService>(TYPES.IReceiptScanService)
-  .to(MockReceiptScanService);
-```
-
-Currently using **mock services** for UI development. Real API services will be implemented in issue #42.
-
-### Feature Isolation
-
-Each feature has:
-- **Service layer** - Interface + Mock implementation
-- **UI layer** - React Native screens
-
-Features are completely isolated and independently publishable.
-
-### Platform-Specific Features
-
-Use `Platform.select()` for conditional features:
-
-```typescript
-// OCR only available on mobile
-{Platform.OS !== 'web' && (
-  <Button title="Scan Receipt" onPress={onScanReceipt} />
-)}
-
-// Google Sheets available on all platforms
-{Platform.OS === 'web' && (
-  <Button title="Google Sheets Sync" onPress={onSync} />
-)}
-```
-
-## Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage report
-pnpm test:coverage
-```
-
-### Test Structure
-
-- **UI Components** (`packages/shared/ui/src/__tests__/`)
-  - Button.test.tsx
-  - TextInput.test.tsx
-  - Card.test.tsx
-
-- **Service Layer** (`packages/features/*/service/src/__tests__/`)
-  - MockReceiptScanService.test.ts
-  - MockTransactionService.test.ts
-  - MockGoogleSheetsService.test.ts
-
-### Coverage Thresholds
-
-All packages maintain **70% coverage** for:
-- Branches
-- Functions
-- Lines
-- Statements
-
-### Writing Tests
-
-**UI Component Example:**
-```typescript
-import { render, fireEvent } from '@testing-library/react-native';
-import { Button } from '../Button';
-
-test('calls onPress when button is pressed', () => {
-  const mockOnPress = jest.fn();
-  const { getByTestId } = render(
-    <Button title="Test" onPress={mockOnPress} />
-  );
-  
-  fireEvent.press(getByTestId('button-container'));
-  expect(mockOnPress).toHaveBeenCalledTimes(1);
-});
-```
-
-**Service Layer Example:**
-```typescript
-test('parseReceipt returns proper structure', async () => {
-  const service = new MockReceiptScanService();
-  const result = await service.parseReceipt('OCR text', 'remarks');
-  
-  expect(result).toHaveProperty('merchant');
-  expect(result).toHaveProperty('date');
-  expect(result).toHaveProperty('items');
-  expect(result.confidence).toBeGreaterThanOrEqual(0);
-  expect(result.confidence).toBeLessThanOrEqual(1);
-});
-```
-
-## Development Workflow
-
-### Adding a New Feature
-
-See [docs/FEATURE_ARCHITECTURE.md](../../docs/FEATURE_ARCHITECTURE.md) for complete guide.
-
-Quick steps:
-1. Create `packages/features/<name>/service` with interface + mock
-2. Create `packages/features/<name>/ui` with screen components
-3. Add service binding to DI container
-4. Integrate screens in navigation
-
-### Testing with Mocks
-
-All features use mock services, enabling:
-- UI development without backend
-- Fast iteration
-- Storybook stories (coming soon)
-
-### Switching to Real API
-
-When ready (issue #42):
-1. Implement real service classes
-2. Update DI bindings in `container.ts`
-3. No UI changes needed!
-
-## Scripts
-
-```bash
-# Development
-pnpm start              # Start Expo dev server
-pnpm ios                # Run on iOS simulator
-pnpm android            # Run on Android emulator
-pnpm web                # Run in web browser
-
-# Type Checking
-pnpm typecheck          # Check TypeScript errors
-
-# Testing (TODO)
-pnpm test               # Run Jest tests
-pnpm test:coverage      # With coverage report
-```
-
-## Configuration
-
-### Expo Config
-
-`app.json` contains:
-- App name, slug, version
-- iOS bundle identifier
-- Android package name
-- Icon and splash screen paths
-
-### TypeScript
-
-`tsconfig.json` extends workspace root config with:
-- `jsx: react-native`
-- Strict type checking enabled
-
-### Babel
-
-`babel.config.js` includes:
-- `babel-preset-expo`
-- Decorators support for InversifyJS
-- Reanimated plugin for smooth animations
-
-## Troubleshooting
-
-### Metro bundler cache issues
-
-```bash
-pnpm start --clear
-```
-
-### Dependency resolution errors
-
-```bash
-pnpm install --force
-```
-
-### iOS simulator not launching
-
-```bash
-sudo xcode-select --switch /Applications/Xcode.app
-```
-
-## Documentation
-
-- [FEATURE_ARCHITECTURE.md](../../docs/FEATURE_ARCHITECTURE.md) - Feature pattern guide
-- [STORYBOOK_SETUP.md](../../docs/STORYBOOK_SETUP.md) - UI testing setup
-- [MOBILE_SCREENS.md](../../docs/MOBILE_SCREENS.md) - Screen specifications
-- [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - Overall system architecture
-
-## Contributing
-
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for development workflow and PR guidelines.
-
-## License
-
-MIT
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
