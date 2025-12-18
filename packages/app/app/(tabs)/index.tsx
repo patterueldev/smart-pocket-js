@@ -1,98 +1,126 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
+import { Transaction } from '../../types';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DashboardScreen() {
+  const [recentTransactions] = useState<Transaction[]>([]);
+  const [googleSheetsSyncEnabled] = useState(false);
 
-export default function HomeScreen() {
+  const handleScanReceipt = () => {
+    console.log('Scan receipt pressed');
+  };
+
+  const handleManualTransaction = () => {
+    console.log('Manual transaction pressed');
+  };
+
+  const handleGoogleSheetsSync = () => {
+    console.log('Google Sheets sync pressed');
+  };
+
+  const handleOpenMenu = () => {
+    console.log('Menu pressed');
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleOpenMenu} style={styles.menuButton}>
+          <Text style={styles.menuIcon}>☰</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Smart Pocket</Text>
+        <View style={styles.serverStatus}>
+          <Text style={styles.serverIcon}>✓</Text>
+        </View>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          {recentTransactions.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <Text style={styles.emptyText}>No transactions yet</Text>
+              <Text style={styles.emptyHint}>Tap "Scan Receipt" to get started</Text>
+            </Card>
+          ) : (
+            recentTransactions.slice(0, 5).map(txn => (
+              <Card key={txn.id} style={styles.transactionCard}>
+                <View style={styles.transactionRow}>
+                  <View style={styles.transactionInfo}>
+                    <Text style={styles.transactionPayee}>{txn.payeeName}</Text>
+                    <Text style={styles.transactionDate}>{txn.date}</Text>
+                  </View>
+                  <Text style={styles.transactionAmount}>
+                    ${txn.total.amount}
+                  </Text>
+                </View>
+              </Card>
+            ))
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Button title="📸 Scan Receipt" onPress={handleScanReceipt} size="large" />
+        </View>
+
+        {googleSheetsSyncEnabled && (
+          <View style={styles.section}>
+            <Button title="📊 Google Sheets Sync" onPress={handleGoogleSheetsSync} variant="secondary" />
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <TouchableOpacity style={styles.quickAction} onPress={handleManualTransaction}>
+            <Text style={styles.quickActionText}>• Manual Transaction</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickAction}>
+            <Text style={styles.quickActionText}>• View All Transactions</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  menuButton: { padding: 12 },
+  menuIcon: { fontSize: 24 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold' },
+  serverStatus: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#e8f5e9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  serverIcon: { color: '#4caf50', fontSize: 18 },
+  content: { flex: 1 },
+  scrollContent: { padding: 20 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 16 },
+  emptyCard: { padding: 24, alignItems: 'center' },
+  emptyText: { fontSize: 16, color: '#666', marginBottom: 8 },
+  emptyHint: { fontSize: 14, color: '#999' },
+  transactionCard: { padding: 16, marginBottom: 12 },
+  transactionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  transactionInfo: { flex: 1 },
+  transactionPayee: { fontSize: 16, fontWeight: '500', marginBottom: 4 },
+  transactionDate: { fontSize: 14, color: '#666' },
+  transactionAmount: { fontSize: 18, fontWeight: 'bold' },
+  quickAction: { paddingVertical: 16 },
+  quickActionText: { fontSize: 16, color: '#2196f3' },
 });
