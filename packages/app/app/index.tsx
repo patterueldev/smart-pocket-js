@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { Transaction } from '../../types';
-import { useSession } from '../../hooks/useSession';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { SideMenu } from '@/components/SideMenu';
+import { Transaction } from '@/types';
+import { useSession } from '@/hooks/useSession';
 
 export default function DashboardScreen() {
   const { session, clearSession } = useSession();
   const [recentTransactions] = useState<Transaction[]>([]);
   const [googleSheetsSyncEnabled] = useState(true); // Enable Google Sheets sync
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const handleScanReceipt = () => {
     console.log('Scan receipt pressed');
@@ -44,16 +46,26 @@ export default function DashboardScreen() {
   };
 
   const handleOpenMenu = () => {
-    // For now, just show disconnect option
+    setMenuVisible(true);
+  };
+
+  const handleSettings = () => {
+    setMenuVisible(false);
+    // TODO: Navigate to settings screen
+    Alert.alert('Settings', 'Settings screen coming soon!');
+  };
+
+  const handleDisconnectFromMenu = () => {
+    setMenuVisible(false);
     handleDisconnect();
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleOpenMenu} style={styles.menuButton}>
+        <Pressable onPress={handleOpenMenu} style={styles.menuButton}>
           <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.headerTitle}>Smart Pocket</Text>
         <View style={styles.serverStatus}>
           <Text style={styles.serverIcon}>✓</Text>
@@ -108,14 +120,21 @@ export default function DashboardScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <TouchableOpacity style={styles.quickAction} onPress={handleManualTransaction}>
+          <Pressable style={styles.quickAction} onPress={handleManualTransaction}>
             <Text style={styles.quickActionText}>• Manual Transaction</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction}>
+          </Pressable>
+          <Pressable style={styles.quickAction}>
             <Text style={styles.quickActionText}>• View All Transactions</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </ScrollView>
+
+      <SideMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onSettings={handleSettings}
+        onDisconnect={handleDisconnectFromMenu}
+      />
     </View>
   );
 }
