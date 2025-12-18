@@ -5,13 +5,21 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useSession } from '@/hooks/useSession';
+import { SessionProvider, useSession } from '@/hooks/useSession';
 
 export const unstable_settings = {
   initialRouteName: 'setup',
 };
 
 export default function RootLayout() {
+  return (
+    <SessionProvider>
+      <RootLayoutNav />
+    </SessionProvider>
+  );
+}
+
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { session, loading } = useSession();
   const router = useRouter();
@@ -25,11 +33,15 @@ export default function RootLayout() {
     const onSetup = segments[0] === 'setup' || segments.length === 0;
     const isConnected = session?.connected;
 
+    console.log('Navigation guard:', { inTabs, onSetup, isConnected, segments });
+
     if (!isConnected && inTabs) {
       // User is not connected but trying to access tabs, redirect to setup
+      console.log('Redirecting to setup (not connected)');
       router.replace('/setup');
     } else if (isConnected && onSetup) {
       // User is connected but on setup screen, redirect to tabs
+      console.log('Redirecting to tabs (connected)');
       router.replace('/(tabs)');
     }
   }, [session, loading, segments]);

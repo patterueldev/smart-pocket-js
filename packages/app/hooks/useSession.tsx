@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SESSION_KEY = '@smart_pocket_session';
@@ -10,7 +10,17 @@ export interface Session {
   connectedAt: string;
 }
 
-export function useSession() {
+interface SessionContextType {
+  session: Session | null;
+  loading: boolean;
+  saveSession: (session: Session) => Promise<void>;
+  clearSession: () => Promise<void>;
+  isConnected: boolean;
+}
+
+const SessionContext = createContext<SessionContextType | undefined>(undefined);
+
+export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,11 +62,25 @@ export function useSession() {
     }
   };
 
-  return {
-    session,
-    loading,
-    saveSession,
-    clearSession,
-    isConnected: !!session?.connected,
-  };
+  return (
+    <SessionContext.Provider
+      value={{
+        session,
+        loading,
+        saveSession,
+        clearSession,
+        isConnected: !!session?.connected,
+      }}
+    >
+      {children}
+    </SessionContext.Provider>
+  );
+}
+
+export function useSession() {
+  const context = useContext(SessionContext);
+  if (context === undefined) {
+    throw new Error('useSession must be used within a SessionProvider');
+  }
+  return context;
 }

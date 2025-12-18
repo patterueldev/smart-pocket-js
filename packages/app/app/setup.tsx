@@ -38,7 +38,8 @@ export default function SetupScreen() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Save session
+      // Save session - navigation will happen automatically via the layout guard
+      // because the session state is now shared through Context
       await saveSession({
         serverUrl,
         apiKey,
@@ -46,8 +47,7 @@ export default function SetupScreen() {
         connectedAt: new Date().toISOString(),
       });
       
-      // Navigate to dashboard after successful connection
-      router.replace('/(tabs)');
+      console.log('Session saved, waiting for navigation guard...');
     } catch (err) {
       setError('Failed to connect to server');
       console.error(err);
