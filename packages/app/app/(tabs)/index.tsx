@@ -13,10 +13,12 @@ export default function DashboardScreen() {
 
   const handleScanReceipt = () => {
     console.log('Scan receipt pressed');
+    router.push('/receipt-scan');
   };
 
   const handleManualTransaction = () => {
     console.log('Manual transaction pressed');
+    router.push('/transaction');
   };
 
   const handleGoogleSheetsSync = () => {

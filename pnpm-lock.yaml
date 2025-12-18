@@ -71,6 +71,18 @@ importers:
       '@smart-pocket/google-sheets-sync-ui':
         specifier: workspace:*
         version: link:../features/google-sheets-sync/ui
+      '@smart-pocket/receipt-scan-service':
+        specifier: workspace:*
+        version: link:../features/receipt-scan/service
+      '@smart-pocket/receipt-scan-ui':
+        specifier: workspace:*
+        version: link:../features/receipt-scan/ui
+      '@smart-pocket/transaction-service':
+        specifier: workspace:*
+        version: link:../features/transaction/service
+      '@smart-pocket/transaction-ui':
+        specifier: workspace:*
+        version: link:../features/transaction/ui
       expo:
         specifier: ~54.0.30
         version: 54.0.30(@babel/core@7.28.5)(@expo/metro-runtime@6.1.2)(expo-router@6.0.21)(react-native@0.81.5(@babel/core@7.28.5)(@react-native-community/cli@13.6.9)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
