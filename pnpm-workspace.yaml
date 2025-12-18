@@ -1,2 +1,7 @@
 packages:
   - 'packages/*'
+  - 'packages/features/*/service'
+  - 'packages/features/*/ui'
+  - 'packages/personal/*/service'
+  - 'packages/personal/*/ui'
+  - 'packages/app'
