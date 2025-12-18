@@ -109,12 +109,17 @@ jobs:
               - 'packages/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
-              - '.github/workflows/**'
+              - 'pnpm-workspace.yaml'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!.github/ISSUE_TEMPLATE/**'
             docker:
               - 'packages/**'
               - 'deploy/**'
               - 'Dockerfile'
               - 'docker-compose*.yml'
+              - '!**/*.md'
+              - '!docs/**'
   lint-and-test:
     name: Lint & Unit Tests
     runs-on: ubuntu-latest
