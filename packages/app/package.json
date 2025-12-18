@@ -1,0 +1,42 @@
+{
+  "name": "@smart-pocket/app",
+  "version": "0.1.0",
+  "main": "expo-router",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@smart-pocket/shared-types": "workspace:*",
+    "@smart-pocket/shared-ui": "workspace:*",
+    "@smart-pocket/receipt-scan-service": "workspace:*",
+    "@smart-pocket/receipt-scan-ui": "workspace:*",
+    "@smart-pocket/transaction-service": "workspace:*",
+    "@smart-pocket/transaction-ui": "workspace:*",
+    "@smart-pocket/google-sheets-service": "workspace:*",
+    "@smart-pocket/google-sheets-ui": "workspace:*",
+    "expo": "~50.0.0",
+    "expo-status-bar": "~1.11.0",
+    "react": "18.2.0",
+    "react-native": "0.73.0",
+    "@react-navigation/native": "^6.1.0",
+    "@react-navigation/native-stack": "^6.9.0",
+    "@react-navigation/drawer": "^6.6.0",
+    "react-native-screens": "~3.29.0",
+    "react-native-safe-area-context": "4.8.2",
+    "react-native-gesture-handler": "~2.14.0",
+    "react-native-reanimated": "~3.6.1",
+    "inversify": "^6.0.0",
+    "reflect-metadata": "^0.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.0",
+    "@types/react-native": "~0.73.0",
+    "typescript": "^5.3.0"
+  },
+  "private": true
+}
