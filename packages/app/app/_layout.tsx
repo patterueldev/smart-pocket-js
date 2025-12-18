@@ -59,9 +59,9 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="setup" options={{ headerShown: false, title: 'Setup' }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="receipt-scan" options={{ headerShown: true, presentation: 'modal', title: 'Scan Receipt' }} />
-        <Stack.Screen name="transaction" options={{ headerShown: true, presentation: 'modal', title: 'Transaction' }} />
-        <Stack.Screen name="google-sheets-sync" options={{ headerShown: true, presentation: 'modal', title: 'Google Sheets Sync' }} />
+        <Stack.Screen name="receipt-scan" options={{ headerShown: true, title: 'Scan Receipt' }} />
+        <Stack.Screen name="transaction" options={{ headerShown: true, title: 'Transaction' }} />
+        <Stack.Screen name="google-sheets-sync" options={{ headerShown: true, title: 'Google Sheets Sync' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { CameraScreen, OCRPreviewScreen } from '@smart-pocket/receipt-scan-ui';
@@ -16,11 +16,16 @@ export default function ReceiptScanRoute() {
   const [ocrText, setOcrText] = useState<string>('');
   const [parseResult, setParseResult] = useState<OCRParseResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const hasNavigated = useRef(false);
 
-  console.log('ReceiptScanRoute render, screenState:', screenState);
+  console.log('🔴 ReceiptScanRoute RENDER', {
+    screenState,
+    hasNavigated: hasNavigated.current,
+    isLoading,
+  });
 
   useEffect(() => {
-    console.log('useEffect: screenState changed to:', screenState);
+    console.log('🔴 ReceiptScanRoute useEffect: screenState changed to:', screenState);
   }, [screenState]);
 
   const handleCapture = (uri: string) => {
@@ -56,7 +61,22 @@ THANK YOU FOR SHOPPING!`;
   };
 
   const handleSubmit = async (remarks?: string) => {
+    console.log('🟡 handleSubmit called, hasNavigated:', hasNavigated.current, 'isLoading:', isLoading);
+    
+    if (hasNavigated.current) {
+      console.log('⚠️ Navigation already in progress, ignoring duplicate submit');
+      return;
+    }
+    
+    if (isLoading) {
+      console.log('⚠️ Already loading, ignoring duplicate submit');
+      return;
+    }
+    
+    console.log('✅ Starting OCR parse and navigation...');
+    hasNavigated.current = true;
     setIsLoading(true);
+    
     try {
       // Parse OCR text with service (calls OpenAI in real implementation)
       const result = await receiptScanService.parseReceipt({
@@ -64,11 +84,13 @@ THANK YOU FOR SHOPPING!`;
         remarks,
       });
       
-      console.log('OCR parsed successfully:', result);
+      console.log('🟡 OCR parsed successfully:', result);
       setParseResult(result);
       
+      console.log('🚀 CALLING router.replace to /transaction...');
+      
       // Navigate to transaction screen with pre-filled data
-      router.push({
+      router.replace({
         pathname: '/transaction',
         params: {
           fromOCR: 'true',
@@ -80,10 +102,12 @@ THANK YOU FOR SHOPPING!`;
           confidence: result.confidence.toString(),
         },
       });
+      
+      console.log('✅ router.replace COMPLETED');
     } catch (error) {
-      console.error('Failed to parse receipt:', error);
+      console.error('❌ Failed to parse receipt:', error);
       Alert.alert('Error', 'Failed to parse receipt. Please try again.');
-    } finally {
+      hasNavigated.current = false;
       setIsLoading(false);
     }
   };
@@ -93,11 +117,17 @@ THANK YOU FOR SHOPPING!`;
     setOcrText('');
     setParseResult(null);
     setScreenState('camera');
+    hasNavigated.current = false;
   };
 
   const handleClose = () => {
     router.back();
   };
+
+  // Don't render anything if navigation has started
+  if (hasNavigated.current) {
+    return null;
+  }
 
   return (
     <>
@@ -106,14 +136,14 @@ THANK YOU FOR SHOPPING!`;
           onCapture={handleCapture}
           onClose={handleClose}
         />
-      ) : (
+      ) : screenState === 'preview' ? (
         <OCRPreviewScreen
           ocrText={ocrText}
           onSubmit={handleSubmit}
           onRetake={handleRetake}
           isLoading={isLoading}
         />
-      )}
+      ) : null}
     </>
   );
 }

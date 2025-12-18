@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   Platform,
 } from 'react-native';
 import { Button, TextInput, Card, theme } from '@smart-pocket/shared-ui';
@@ -117,25 +117,27 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
         {/* Payee Selector */}
         <View style={styles.section}>
           <Text style={styles.label}>🏪 Payee</Text>
-          <TouchableOpacity
-            style={styles.selector}
+          <Pressable
+            style={({ pressed }) => [styles.selector, pressed && styles.pressed]}
             onPress={() => setShowPayeeSelector(true)}
           >
             <Text style={selectedPayee ? styles.selectedText : styles.placeholderText}>
               {selectedPayee ? selectedPayee.name : 'Select payee'}
             </Text>
             <Text style={styles.chevron}>▼</Text>
-          </TouchableOpacity>
+          </Pressable>
           
-          {/* Mock Payee Selector Modal */}
           {showPayeeSelector && (
             <View style={styles.modal}>
               <Text style={styles.modalTitle}>Select Payee</Text>
               <ScrollView style={styles.modalList}>
                 {payees.map(payee => (
-                  <TouchableOpacity
+                  <Pressable
                     key={payee.id}
-                    style={styles.modalItem}
+                    style={({ pressed }) => [
+                      styles.modalItem,
+                      pressed && styles.pressed,
+                    ]}
                     onPress={() => {
                       setSelectedPayeeId(payee.id);
                       setShowPayeeSelector(false);
@@ -145,7 +147,7 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
                     <Text style={styles.modalItemCount}>
                       {payee.transactionCount} transactions
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </ScrollView>
               <Button
@@ -160,25 +162,27 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
         {/* Account Selector */}
         <View style={styles.section}>
           <Text style={styles.label}>💳 Account</Text>
-          <TouchableOpacity
-            style={styles.selector}
+          <Pressable
+            style={({ pressed }) => [styles.selector, pressed && styles.pressed]}
             onPress={() => setShowAccountSelector(true)}
           >
             <Text style={selectedAccount ? styles.selectedText : styles.placeholderText}>
               {selectedAccount ? selectedAccount.name : 'Select account'}
             </Text>
             <Text style={styles.chevron}>▼</Text>
-          </TouchableOpacity>
+          </Pressable>
           
-          {/* Mock Account Selector Modal */}
           {showAccountSelector && (
             <View style={styles.modal}>
               <Text style={styles.modalTitle}>Select Account</Text>
               <ScrollView style={styles.modalList}>
                 {accounts.map(account => (
-                  <TouchableOpacity
+                  <Pressable
                     key={account.id}
-                    style={styles.modalItem}
+                    style={({ pressed }) => [
+                      styles.modalItem,
+                      pressed && styles.pressed,
+                    ]}
                     onPress={() => {
                       setSelectedAccountId(account.id);
                       setShowAccountSelector(false);
@@ -186,7 +190,7 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
                   >
                     <Text style={styles.modalItemText}>{account.name}</Text>
                     <Text style={styles.modalItemCount}>{account.type}</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </ScrollView>
               <Button
@@ -211,9 +215,14 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.label}>📦 Items ({items.length})</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.addButton,
+                pressed && styles.pressed,
+              ]}
+            >
               <Text style={styles.addButtonText}>+ Add</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {items.map((item, index) => (
@@ -226,12 +235,15 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
                     ${item.price.amount} × {item.quantity}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.itemAction}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.itemAction,
+                    pressed && styles.pressed,
+                  ]}
                   onPress={() => handleRemoveItem(index)}
                 >
                   <Text style={styles.itemActionText}>🗑️</Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </Card>
           ))}
@@ -406,5 +418,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });
