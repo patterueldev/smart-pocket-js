@@ -15,9 +15,11 @@
   "license": "MIT",
   "dependencies": {
     "@smart-pocket/shared-types": "workspace:*",
-    "@smart-pocket/shared-ui": "workspace:*",
-    "react": "^18.2.0",
-    "react-native": "^0.73.0"
+    "@smart-pocket/shared-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-native": "^0.73.0 || ^0.81.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
