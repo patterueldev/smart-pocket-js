@@ -4,159 +4,165 @@
 
 Smart Pocket is a personal finance management application with OCR receipt scanning and Actual Budget integration. For detailed architecture, features, and specifications, see the documentation links below.
 
+## 🚨 CRITICAL RULES 🚨
+
+### 1. NO AUTO-COMMIT - EVER
+
+**This is the MOST IMPORTANT rule:**
+
+- **NEVER commit changes automatically**
+- **ALWAYS show the user what files changed** (using `git status`, `git diff`, or listing modified files)
+- **WAIT for EXPLICIT user approval** before running `git add` or `git commit`
+- User must review changes and say "commit these changes" or similar before you proceed
+
+**Why this matters:**
+- User needs to review all modifications before they're committed
+- Prevents accidental commits of sensitive data, debug code, or mistakes
+- Gives user control over what goes into version control
+
+**This applies to ALL changes:**
+- Code modifications
+- Documentation updates
+- Configuration changes
+- Any file modifications whatsoever
+
+**Workflow:**
+1. Make changes to files
+2. Show user: "I've modified these files: [list]. Would you like to review the changes before committing?"
+3. Wait for user confirmation
+4. Only then: `git add` and `git commit`
+
+### 2. Never Commit to Main Branch
+
+- Main branch is protected
+- ALL changes must go through Pull Requests
+- Always create a feature branch first
+
+### 3. File Backup Convention
+
+- When backing up old versions of files, use the `.backup` extension
+- Format: `filename.ext.backup`
+- Examples: `copilot-instructions.md.backup`, `config.json.backup`
+- This keeps backups consistent and easy to identify
+
 ## Development Workflow
 
-### Git Branch Rules & Workflow
+**📘 Complete workflow documented in:** [docs/TASK_MANAGEMENT.md](../docs/TASK_MANAGEMENT.md)
 
-**CRITICAL**: Never commit directly to the `main` branch. ALL changes must follow the documented workflow.
+### Quick Workflow Summary
 
-## Complete Change Workflow
+1. **Create Issue** (automated with project linking)
+   ```bash
+   ./.github/scripts/create-issue.sh --title "..." --body "..."
+   ```
+   
+   **Issue Title Format:** Use natural language (not conventional commits)
+   - ✅ "Create OCR scan screen"
+   - ✅ "Mobile: Add transaction form"
+   - ✅ "Backend: Implement batch import"
+   - ✅ "Fix camera permissions on Android"
+   - ❌ "feat: Create OCR scan screen"
 
-**For EVERY change (even minor documentation updates):**
+2. **Create Branch** from issue (uses conventional commit types)
+   ```bash
+   git checkout -b <type>/#<issue>-<short-desc>
+   ```
+   Examples: `feat/#22-ocr-screen`, `fix/#30-camera-bug`, `docs/#40-api-docs`
 
-### Step 1: Create Issue First
-```bash
-# Create issue with proper labels
-ISSUE_URL=$(gh issue create \
-  --title "Short descriptive title" \
-  --body "## Problem\n[Description]\n\n## Solution\n[Approach]\n\n## Changes\n[What will change]" \
-  --label "<type>")  # feat, bug, docs, chore, etc.
+3. **Make Changes** (NO AUTO-COMMIT - show user changes first!)
 
-# Extract issue number from URL
-ISSUE_NUMBER=$(echo $ISSUE_URL | grep -o '[0-9]*$')
+4. **Commit** (only after user approval, uses conventional commits)
+   ```bash
+   git add <files>
+   git commit -m "<type>: <description> (#<issue>)"
+   git push -u origin <branch-name>
+   ```
+   
+   **Commit Format (REQUIRED):**
+   - `<type>: <description> (#<issue>)`
+   - See [Conventional Commits Spec](../docs/references/conventional-commits-spec.md)
 
-# Add issue to GitHub Project (for Kanban tracking)
-# Preferred (Projects v2): add to project named "Smart Pocket Development"
-OWNER="patterueldev"
-PROJECT_TITLE="Smart Pocket Development"
-PROJECT_NUMBER=$(gh project list --owner "$OWNER" --format json | jq -r \
-  --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .number')
+5. **Create PR** (uses conventional commits)
+   ```bash
+   gh pr create --title "<type>: <Title>" --body "Closes #<issue>"
+   ```
+   
+   **PR Format (REQUIRED):**
+   - Title: `<type>: <Description>` (NO issue #)
+   - Body: Must include `Closes #<issue>`
+   - See PR formatting rules below
 
-if [ -n "$PROJECT_NUMBER" ]; then
-  gh project item-add --owner "$OWNER" "$PROJECT_NUMBER" --url "$ISSUE_URL"
-  echo "✅ Created issue #$ISSUE_NUMBER and added to project: $PROJECT_TITLE (#$PROJECT_NUMBER)"
-else
-  # Fallback for classic projects (if any): try by name
-  gh issue edit "$ISSUE_NUMBER" --add-project "$PROJECT_TITLE" || true
-  echo "ℹ️ If project linking failed, verify the project exists and your permissions."
-fi
+**Task Types Available:**
+- **User Story** - High-level feature (can have child tasks)
+- **Mobile** - iOS/Android implementation
+- **Backend** - Server/API implementation
+- **Mobile & Backend** - Fullstack feature
+- **Bug** - Bug fixes (specify component)
+- **CI** - GitHub Actions, automation
+- **Documentation** - Docs updates
+- **Release** - Version bumps
 
+### Automated Project Status
+
+GitHub Actions automatically updates issue status:
+- Issue created → **Todo**
+- PR opened → **In Progress**
+- PR ready for review → **In Review**  
+- PR merged to main → **QA/Testing**
+- Release PR merged → **Done**
+
+No manual status updates needed!
+
+### Branch Naming Convention
+
+Format: `<type>/#<issue>-<short-description>`
+
+**Types:** feat, fix, doc (Conventional Commits)
+
+**📘 Full specification:** [docs/references/conventional-commits-spec.md](../docs/references/conventional-commits-spec.md)
+
+Format: `<type>: <description> (#<issue>)`
+
+**Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `chore` - Maintenance tasks
+- `refactor` - Code refactoring
+- `test` - Test changes
+- `ci` - CI/CD changes
+- `perf` - Performance improvements
+- `build` - Build system changes
+- `revert` - Revert previous commit
+
+**Rules:**
+- Include issue number in parentheses
+- Imperative mood ("add" not "added")
+- First word capitalized
+- No period at end
+
+**Examples:**
+```
+feat: Add transaction batch import (#45)
+fix: Resolve camera permissions (#52)
+docs: Update API documentation (#18)
+chore: Update dependencies (#60)
 ```
 
-**Available labels:** `feat`, `bug`, `docs`, `chore`, `refactor`, `test`, `enhancement`, `ci`
+### PR Title Format (Conventional Commits)
 
-**Project linking**: Always add issues to the GitHub project for Kanban board visibility and task delegation
+Format: `<type>: <Title>`
 
-### Project Workflow Status
+**CRITICAL Rules:**
+- **Must follow conventional commits** (same types as commits)
+- **NO issue number in title** (linked via PR body)
+- First word capitalized
+- No period at end
+- Issue linked with `Closes #<issue>` in PR body
 
-Use the GitHub Project (v2) "Smart Pocket Development" and keep each issue’s Status in sync with our workflow:
-- Todo: new task
-- In Progress: in development
-- In Review: in PR
-- QA/Testing: after merge (if code changes)
-- Done: everything is good
-
-Update Status via GitHub CLI (recommended). The snippet below resolves the project number, project ID, Status field, and the item ID dynamically, then sets the Status. Replace STATUS_NAME with one of: "Todo", "In Progress", "In Review", "QA/Testing", "Done".
-
-```bash
-OWNER="patterueldev"
-PROJECT_TITLE="Smart Pocket Development"
-
-# Find project number and id
-PROJECTS_JSON=$(gh project list --owner "$OWNER" --format json)
-PROJECT_NUMBER=$(echo "$PROJECTS_JSON" | jq -r --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .number')
-PROJECT_ID=$(echo "$PROJECTS_JSON" | jq -r --arg title "$PROJECT_TITLE" '.projects[] | select(.title==$title) | .id')
-
-# Resolve Status field and option id by name
-FIELDS_JSON=$(gh project field-list --owner "$OWNER" "$PROJECT_NUMBER" --format json)
-STATUS_FIELD_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name=="Status") | .id')
-STATUS_OPTION_ID=$(echo "$FIELDS_JSON" | jq -r --arg name "${STATUS_NAME}" '.fields[] | select(.name=="Status") | .options[] | select(.name==$name) | .id')
-
-# Resolve the project item id for this issue URL
-ITEM_ID=$(gh project item-list "$PROJECT_NUMBER" --owner "$OWNER" --format json | jq -r --arg url "$ISSUE_URL" '.items[] | select(.content.url==$url) | .id')
-
-# Set Status
-if [ -n "$ITEM_ID" ] && [ -n "$STATUS_FIELD_ID" ] && [ -n "$STATUS_OPTION_ID" ]; then
-  gh project item-edit \
-    --id "$ITEM_ID" \
-    --field-id "$STATUS_FIELD_ID" \
-    --project-id "$PROJECT_ID" \
-    --single-select-option-id "$STATUS_OPTION_ID"
-  echo "✅ Set item $ITEM_ID status to $STATUS_NAME"
-else
-  echo "❌ Could not resolve item or field ids; verify project and issue URL"
-fi
-```
-
-Quick examples:
-```bash
-STATUS_NAME="Todo"       # new task
-STATUS_NAME="In Progress" # in development
-STATUS_NAME="In Review"   # in PR
-STATUS_NAME="QA/Testing"  # after merge
-STATUS_NAME="Done"        # finished
-```
-
-### Step 2: Create Branch from Issue
-```bash
-# Branch naming format: <type>/#<issue-number>-<short-desc>
-git checkout -b <type>/#<issue>-<short-description>
-
-# Examples:
-# feat/#22-update-docs
-# fix/#30-skip-coverage
-# docs/#15-api-documentation
-# chore/#8-update-dependencies
-# release/#69-v0.1.3
-```
-
-**Branch naming convention:**
-- `feat/#<issue>-<desc>` - New features
-- `fix/#<issue>-<desc>` - Bug fixes
-- `docs/#<issue>-<desc>` - Documentation updates
-- `chore/#<issue>-<desc>` - Maintenance tasks
-- `refactor/#<issue>-<desc>` - Code refactoring
-- `test/#<issue>-<desc>` - Test additions/updates
-- `release/#<issue>-v<version>` - Version releases (e.g., `release/#69-v0.1.3`)
-
-**Branch naming rules** (enforced by CI):
-- Must follow pattern: `<type>/#<issue>-<dashed-description>`
-- Type must be one of: feat, fix, docs, chore, refactor, test, build, ci, perf, revert, release
-- Must include issue number after `/#`
-- Description must be lowercase with dashes (kebab-case)
-- If branch name is invalid, PR checks will fail - you must recreate the branch
-
-### Step 3: Make Changes (NO AUTO-COMMIT)
-- **NEVER auto-commit changes**
-- Make all necessary updates
-- Show user what changed
-- **WAIT for user approval** before committing
-- User will review and decide when to commit
-
-### Step 4: Commit & Push (After User Approval)
-```bash
-# Only after user explicitly approves:
-git add <files>
-git commit -m "<type>: <description> (#<issue>)
-
-- Detail 1
-- Detail 2
-- Detail 3"
-
-git push -u origin <branch-name>
-```
-
-**Commit message format:**
-- Format: `<type>: <description> (#<issue>)`
-- Types: feat, fix, docs, chore, refactor, test, build, ci, perf
-- Must include issue number in parentheses
-- Body: Bullet points with details
-
-### Step 5: Create Pull Request
-```bash
-gh pr create \
-  --title "<type>: <Title>" \
-  --body "## Description
+**PR Body Template:**
+```markdown
+## Description
 [What this PR does]
 
 Closes #<issue>
@@ -166,127 +172,46 @@ Closes #<issue>
 - Change 2
 
 ## Testing
-- Test approach"
+- How it was tested
 ```
 
-**PR title format:** `<type>: <Title>` (NO issue number - GitHub adds PR # on merge)
-**PR body:** Must start with `Closes #<issue>` to link and auto-close issue
-
-## Main Branch Protection
-
-**Main branch is protected:**
-- ✅ Cannot push directly to main
-- ✅ All changes must go through PRs
-- ✅ All CI checks must pass
-- ✅ Branch must be up-to-date with main before merging
-- ✅ Issue must exist before creating branch
-- ✅ Commits must reference issue number
-
-## Emergency Checks
-
-**If accidentally on main:**
-```bash
-# Check current branch
-git branch --show-current
-
-# If output is "main", immediately:
-# 1. Create issue first (if doesn't exist)
-# 2. Then create branch:
-git checkout -b fix/#<issue>-<short-desc>
+**Valid Examples:**
+```
+✅ feat: Add transaction batch import
+✅ fix: Resolve camera permissions
+✅ docs: Update API documentation
+✅ chore: Streamline task management workflow
 ```
 
-**If branch created without issue:**
-```bash
-# STOP - Create issue first
-gh issue create --title "..." --body "..." --label "..."
-# Then create properly named branch
-git checkout -b <type>/#<issue>-<desc>
+**Invalid Examples:**
+```
+❌ feat: add import          (lowercase after colon)
+❌ Fix bug #23              (issue # in title)
+❌ feat: Add import (#45)   (issue # in title)
+❌ Add import               (missing type prefix)
+❌ feat: Add import.        (period at end
+**Examples:**
+```
+✅ feat: Add transaction batch import
+✅ fix: Resolve camera permissions
+✅ docs: Update API documentation
+
+❌ feat: add import          (lowercase)
+❌ Fix bug #23              (issue # in title)
+❌ feat: Add import (#45)   (issue # in title)
 ```
 
-### Docker Commands
+## Docker Commands
 
-**Development**:
 ```bash
-npm run docker:dev        # Start development stack with hot-reload
-```
-
-**Production**:
-```bash
-npm run docker:prod       # Start production stack
-```
-
-**Testing**:
-```bash
-npm run docker:test       # Run test environment (disposable)
-npm run test:api          # Test API endpoints against running services
-npm run test:build        # Build, test, destroy (full smoke test)
-```
-
-**Deployment**:
-```bash
-npm run docker:build      # Build Docker images
-npm run docker:push       # Push images to registry
-npm run deploy            # Deploy to homeserver
-```
-
-### Package Scripts
-```bash
-npm run dev               # Local development (no Docker)
-npm run build             # Build all packages
-npm run test              # Unit & integration tests
-npm run test:coverage     # Tests with coverage report
+npm run docker:dev        # Development with hot-reload
+npm run docker:prod       # Production stack
+npm run docker:test       # Test environment (disposable)
+npm run test:api          # Test API endpoints
+npm run test:build        # Build & smoke test
 ```
 
 **See [DEVOPS.md](../docs/DEVOPS.md) for comprehensive deployment documentation**
-
-## Pull Request Creation Guidelines
-
-**CRITICAL**: When creating pull requests via `gh pr create`, **ALWAYS** use this exact format:
-
-### PR Title Format (REQUIRED)
-```
-<type>: <description>
-```
-
-**Components**:
-- `<type>`: feat, fix, docs, test, refactor, chore, build, ci, perf
-- `<description>`: Clear, concise description (imperative mood: "add", "fix", "update")
-- **NO issue number in title** - GitHub automatically adds PR # on merge
-
-**PR Body Requirements**:
-- Must start with `Closes #<issue>` to link and auto-close the issue
-- This creates the GitHub link between PR and issue
-
-**Valid PR Titles**:
-```
-feat: Add transaction batch import
-fix: Resolve camera permissions on Android
-docs: Update API documentation
-chore: Bump version to 0.2.0
-test: Add unit tests for OCR parsing
-refactor: Improve error handling in sync
-```
-
-**Invalid Examples** (DO NOT USE):
-```
-❌ Update docs                           (missing type)
-❌ feat: add transaction batch import    (lowercase after colon)
-❌ Fix bug #23                           (issue # in title)
-❌ feat: Add import (#45)                (issue # in title)
-❌ docs: Update API documentation.       (period at end)
-```
-
-**Final Merge Commit Example**:
-- PR title: `feat: Add transaction batch import`
-- PR body: `Closes #45`
-- GitHub merge: `feat: Add transaction batch import (#47)` ← PR number added automatically
-
-### PR Title Rules
-1. **Type prefix is mandatory**: Must start with `<type>:`
-2. **NO issue number in title**: Issue linked via `Closes #<issue>` in body
-3. **Description case**: First word after colon should be capitalized
-4. **No period at end**: Never end with `.`
-5. **Imperative mood**: "Add" not "Added", "Fix" not "Fixed"
 
 ## Key Development Notes
 
@@ -339,6 +264,7 @@ refactor: Improve error handling in sync
 
 **DevOps:**
 - [DEVOPS.md](../docs/DEVOPS.md) - Docker, testing, deployment
+- [TASK_MANAGEMENT.md](../docs/TASK_MANAGEMENT.md) - Complete task workflow guide
 
 **External APIs:**
 - [external-apis/](../docs/external-apis/) - Integration guides for Actual Budget, OpenAI, Google Sheets, PostgreSQL
