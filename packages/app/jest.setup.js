@@ -78,6 +78,26 @@ jest.mock('./hooks/useSession', () => ({
   })),
 }));
 
+// Mock shared-ui Button component
+jest.mock('@smart-pocket/shared-ui', () => ({
+  Button: 'Button',
+}));
+
+// Mock local Button component
+jest.mock('./components/Button', () => ({
+  Button: 'Button',
+}));
+
+// Mock local TextInput component
+jest.mock('./components/TextInput', () => ({
+  TextInput: 'TextInput',
+}));
+
+// Mock local SideMenu component
+jest.mock('./components/SideMenu', () => ({
+  SideMenu: 'SideMenu',
+}));
+
 // Silence console warnings in tests
 global.console = {
   ...console,
