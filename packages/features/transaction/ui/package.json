@@ -1,0 +1,29 @@
+{
+  "name": "@smart-pocket/transaction-ui",
+  "version": "0.1.0",
+  "description": "Transaction UI screens for Smart Pocket",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "smart-pocket",
+    "transaction",
+    "ui"
+  ],
+  "author": "Smart Pocket",
+  "license": "MIT",
+  "dependencies": {
+    "@smart-pocket/shared-types": "workspace:*",
+    "@smart-pocket/shared-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-native": "^0.73.0 || ^0.81.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.3.0"
+  }
+}

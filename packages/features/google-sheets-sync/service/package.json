@@ -1,0 +1,23 @@
+{
+  "name": "@smart-pocket/google-sheets-sync-service",
+  "version": "0.1.0",
+  "description": "Google Sheets sync service for Smart Pocket",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "jest --passWithNoTests"
+  },
+  "keywords": [
+    "smart-pocket",
+    "google-sheets",
+    "service"
+  ],
+  "author": "Smart Pocket",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "typescript": "^5.3.0"
+  }
+}
