@@ -98,6 +98,9 @@ web-build/
 # Debug
 .vscode-test/
 
+# Devbox
+.devbox/
+
 # Google Sheets credentials (personal feature)
 keys/
 !keys/README.md

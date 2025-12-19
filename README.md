@@ -41,15 +41,21 @@ Actual Budget (optional sync)
 - OpenAI API key (for OCR parsing)
 - Actual Budget instance (optional but recommended)
 
-### Option 1: Local Development
+### Option 1: Local Development with Devbox (Recommended)
+
+[Devbox](https://www.jetify.com/devbox) provides a consistent, reproducible development environment.
 
 ```bash
 # Clone repository
 git clone <repo-url>
 cd smart-pocket-js
 
+# Enter devbox shell (installs Node.js 20 and pnpm 8 automatically)
+devbox shell
+
 # Install dependencies
-npm install
+devbox run install
+# or: pnpm install
 
 # Setup server
 cd packages/server
@@ -57,15 +63,39 @@ cp .env.example .env
 # Edit .env with your configuration
 
 # Run database migrations
-npm run migrate
+pnpm run migrate
 
 # Start server
-npm run dev
+pnpm run dev
 ```
 
 Server runs on `http://localhost:3001`
 
-### Option 2: Docker Deployment
+### Option 2: Local Development (Manual)
+
+```bash
+# Clone repository
+git clone <repo-url>
+cd smart-pocket-js
+
+# Requires Node.js 20+ and pnpm 8+
+pnpm install
+
+# Setup server
+cd packages/server
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run database migrations
+pnpm run migrate
+
+# Start server
+pnpm run dev
+```
+
+Server runs on `http://localhost:3001`
+
+### Option 3: Docker Deployment
 
 ```bash
 # Development environment
