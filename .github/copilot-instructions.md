@@ -4,6 +4,97 @@
 
 Smart Pocket is a personal finance management application with OCR receipt scanning and Actual Budget integration. For detailed architecture, features, and specifications, see the documentation links below.
 
+## Development Environment Setup
+
+### Devbox Shell (REQUIRED)
+
+**This project uses [Devbox](https://www.jetpack.io/devbox) for environment isolation.**
+
+When opening a new terminal or running commands:
+
+1. **Always start with:**
+   ```bash
+   devbox shell
+   ```
+
+2. **Or prefix individual commands with:**
+   ```bash
+   devbox run <command>
+   ```
+
+**Why:** Devbox provides isolated Node.js 20 and pnpm 8 environments. Running commands outside devbox will fail because:
+- `pnpm` won't be in PATH
+- Node.js version may be incorrect
+- Dependencies won't be found
+
+**Examples:**
+```bash
+# Enter devbox shell (preferred for multiple commands)
+devbox shell
+
+# Run single command
+devbox run pnpm app:ios
+devbox run pnpm test
+
+# Inside devbox shell, commands work normally
+$ pnpm app:ios
+$ pnpm test
+```
+
+### PNPM Monorepo (CRITICAL)
+
+**This is a pnpm workspace monorepo - NEVER use npm, npx, or direct expo commands.**
+
+**Package Manager Rules:**
+- ✅ Use: `pnpm` for all package management
+- ✅ Use: `pnpm app:ios`, `pnpm app:android` for running apps
+- ✅ Use: `pnpm --filter @smart-pocket/app <command>` for package-specific commands
+- ✅ Use: `pnpx` if you need npx-like behavior (e.g., `pnpx expo-cli`)
+- ❌ DO NOT use: `npm install`, `npm run`, `npx`
+- ❌ DO NOT use: `expo run:ios` directly (use `pnpm app:ios` instead)
+- ❌ DO NOT use: `npx expo` (use pnpm scripts or `pnpx`)
+
+**Why:**
+- pnpm creates different node_modules structure (`.pnpm` directory with hashes)
+- Direct npm/npx/expo commands will fail or use wrong dependencies
+- All scripts are configured in root package.json to work with pnpm
+
+**Workspace Structure:**
+```
+packages/
+  ├── app/          (React Native/Expo app)
+  ├── server/       (Node.js backend)
+  ├── shared/       (Shared TypeScript types)
+  ├── features/     (Feature packages)
+  └── personal/     (Personal features, excluded from builds)
+```
+
+**Common Commands:**
+```bash
+# Install dependencies (from root)
+pnpm install
+
+# Run iOS app
+pnpm app:ios
+
+# Run Android app
+pnpm app:android
+
+# Run server
+pnpm server:dev
+
+# Run tests for specific package
+pnpm --filter @smart-pocket/app test
+
+# Build all packages
+pnpm build
+```
+
+**If you see errors like:**
+- `command not found: pnpm` → Run inside `devbox shell`
+- `command not found: expo` → Use `pnpm app:ios` instead of `expo run:ios`
+- PNPM path errors with CocoaPods → Run `pnpm app:ios` which handles pod installation correctly
+
 ## 🚨 CRITICAL RULES 🚨
 
 ### 1. NO AUTO-COMMIT - EVER
