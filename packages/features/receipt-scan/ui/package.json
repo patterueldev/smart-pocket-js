@@ -18,8 +18,8 @@
     "@smart-pocket/shared-ui": "workspace:*"
   },
   "peerDependencies": {
-    "react": "^18.2.0 || ^19.1.0",
-    "react-native": "^0.74.0 || ^0.83.0"
+    "react": "catalog:",
+    "react-native": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
