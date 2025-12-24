@@ -5,6 +5,7 @@ packages:
   - 'packages/features/*/ui'
   - 'packages/personal/*/service'
   - 'packages/personal/*/ui'
+  - 'apps/*'
 
 catalog:
   # React & React Native

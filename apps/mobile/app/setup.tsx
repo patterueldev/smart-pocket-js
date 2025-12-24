@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from '../components/Button';
+import { router } from 'expo-router';
 import { TextInput } from '../components/TextInput';
 import { useSession } from '../hooks/useSession';
 
@@ -11,8 +12,8 @@ import { useSession } from '../hooks/useSession';
  */
 export default function SetupScreen() {
   const { saveSession } = useSession();
-  const [serverUrl, setServerUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [serverUrl, setServerUrl] = useState('http://localhost:3001');
+  const [apiKey, setApiKey] = useState('dev_api_key_change_me');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -37,8 +38,7 @@ export default function SetupScreen() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Save session - navigation will happen automatically via the layout guard
-      // because the session state is now shared through Context
+      // Save session
       await saveSession({
         serverUrl,
         apiKey,
@@ -46,7 +46,9 @@ export default function SetupScreen() {
         connectedAt: new Date().toISOString(),
       });
       
-      console.log('Session saved, waiting for navigation guard...');
+      // Navigate explicitly to dashboard to avoid relying on guard timing
+      router.replace('/');
+      console.log('Session saved, navigated to dashboard');
     } catch (err) {
       setError('Failed to connect to server');
       console.error(err);

@@ -29,8 +29,8 @@ function RootLayoutNav() {
   useEffect(() => {
     if (loading) return; // Wait for session to load
 
-    const onIndex = segments[0] === 'index' || segments.length === 0;
-    const onSetup = segments[0] === 'setup';
+    const onIndex = segments.length === 0 || segments[0] === 'index';
+    const onSetup = segments.length > 0 && segments[0] === 'setup';
     const isConnected = session?.connected;
     
     // Don't interfere with feature routes
