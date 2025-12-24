@@ -20,6 +20,6 @@
     "@smart-pocket/shared-types": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.3.0"
+    "typescript": "catalog:"
   }
 }
