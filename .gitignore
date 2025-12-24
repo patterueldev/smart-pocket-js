@@ -40,8 +40,18 @@ Thumbs.db
 *~
 
 # IDE files
-.vscode/
+# VS Code - commit project configs, ignore local/personal files
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+!.vscode/settings.json
+.vscode/*.code-workspace
+
+# IntelliJ - keep ignored (not primary IDE)
 .idea/
+
+# Other IDEs
 *.sublime-project
 *.sublime-workspace
 .project
