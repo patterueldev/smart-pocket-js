@@ -25,7 +25,7 @@ Node.js/Express backend for Smart Pocket personal finance management system.
 ### 1. Install Dependencies
 
 ```bash
-cd packages/server
+cd apps/server
 npm install
 ```
 
@@ -110,7 +110,7 @@ All endpoints except `/health` and `/connect` require bearer token authenticatio
 ## Project Structure
 
 ```
-packages/server/
+apps/server/
 ├── src/
 │   ├── index.js                 # Server entry point
 │   ├── app.js                   # Express app configuration

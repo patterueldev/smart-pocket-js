@@ -8,7 +8,7 @@ The `/health/actual-budget` endpoint is available for testing Actual Budget inte
 
 ### 1. Environment Variables
 
-Add these to your environment (or create `.env` in `packages/server/`):
+Add these to your environment (or create `.env` in `apps/server/`):
 
 ```bash
 # Actual Budget configuration

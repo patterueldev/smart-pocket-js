@@ -30,7 +30,7 @@
   - Returns sync results
 
 ### 3. ✅ Core Service Functions
-**File**: `packages/server/src/services/google-sheets.service.js`
+**File**: `apps/server/src/services/google-sheets.service.js`
 
 - `initAuth()` - Initialize Google Sheets API with service account
 - `getPendingSyncs()` - Compare balances and create draft
@@ -57,7 +57,7 @@ GOOGLE_CREDENTIALS_JSON_PATH=/data/keys/smart-pocket-server.json  # default
 - Column D: Date (MM/DD/yyyy format)
 
 ### 5. ✅ Configuration Validation
-**File**: `packages/server/src/utils/config-validator.js`
+**File**: `apps/server/src/utils/config-validator.js`
 
 - Validates required env vars on startup
 - Checks credentials file exists
@@ -94,18 +94,18 @@ Updated all Docker Compose files:
 - `deploy/docker/docker-compose.prod.yml` - Environment + volume
 - `deploy/docker/docker-compose.test.yml` - Test config
 - `deploy/docker/docker-compose.smoke.yml` - Smoke test config
-- `packages/server/.env.example` - Google Sheets config
-- `packages/server/package.json` - Added googleapis dependency
-- `packages/server/src/index.js` - Added config validation
-- `packages/server/src/routes/google-sheets.js` - Draft/approve endpoints
-- `packages/server/src/services/google-sheets.service.js` - Full implementation
+- `apps/server/.env.example` - Google Sheets config
+- `apps/server/package.json` - Added googleapis dependency
+- `apps/server/src/index.js` - Added config validation
+- `apps/server/src/routes/google-sheets.js` - Draft/approve endpoints
+- `apps/server/src/services/google-sheets.service.js` - Full implementation
 - `pnpm-lock.yaml` - Dependency updates
 
 ### New Files:
 - `docs/TASK_GOOGLE_SHEETS_SYNC.md` - Task documentation
 - `keys/README.md` - Credentials guide
 - `keys/.gitkeep` - Keep directory in git
-- `packages/server/src/utils/config-validator.js` - Config validation
+- `apps/server/src/utils/config-validator.js` - Config validation
 
 ---
 

@@ -154,7 +154,7 @@ WORKDIR /app
 
 # Copy workspace files
 COPY package*.json pnpm-workspace.yaml ./
-COPY packages/server ./packages/server
+COPY apps/server ./apps/server
 COPY packages/shared ./packages/shared
 COPY packages/core ./packages/core
 
@@ -168,7 +168,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy built artifacts
-COPY --from=builder /app/packages/server/dist ./dist
+COPY --from=builder /app/apps/server/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
@@ -265,7 +265,7 @@ services:
       API_KEY: ${API_KEY:-dev_api_key_change_me}
       LOG_LEVEL: debug
     volumes:
-      - ../../packages/server:/app/packages/server
+      - ../../apps/server:/app/apps/server
       - ../../packages/shared:/app/packages/shared
       - /app/node_modules  # Prevent overwriting node_modules
     depends_on:

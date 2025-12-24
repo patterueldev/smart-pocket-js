@@ -30,7 +30,7 @@ GRANT ALL PRIVILEGES ON DATABASE smart_pocket_dev TO smart_pocket;
 ## Step 2: Install Dependencies
 
 ```bash
-cd packages/server
+cd apps/server
 npm install
 ```
 

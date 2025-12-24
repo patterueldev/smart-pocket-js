@@ -254,7 +254,7 @@ pnpm outdated
 ```
 
 ### Database Migrations
-1. Create migration script in `packages/server/migrations/`
+1. Create migration script in `apps/server/migrations/`
 2. Test migration: `npm run migrate`
 3. Test rollback
 4. Update `DATABASE.md`
