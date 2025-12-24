@@ -31,6 +31,7 @@ jobs:
           filters: |
             code:
               - 'packages/**'
+              - 'apps/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -39,6 +40,7 @@ jobs:
               - '!.github/ISSUE_TEMPLATE/**'
             docker:
               - 'packages/**'
+              - 'apps/**'
               - 'deploy/**'
               - 'Dockerfile'
               - 'docker-compose*.yml'
