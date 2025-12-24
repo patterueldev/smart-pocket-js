@@ -6,7 +6,7 @@ on:
       - main
     paths:
       # Only trigger on server or infrastructure changes
-      - 'packages/server/**'
+      - 'apps/server/**'
       - 'packages/shared/**'
       - 'deploy/docker/**'
       - 'deploy/scripts/**'
