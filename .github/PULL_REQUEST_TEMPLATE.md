@@ -2,21 +2,23 @@
 
 <!-- 
 ⚠️ IMPORTANT: PR Title Format (REQUIRED)
-Title must follow: <type>: <description> (#<issue>)
+Title must follow: <type>: #<issue> <Platform> - <description>
+
+Platform: Optional but preferred for multi-component repos (e.g., Mobile, Backend, Server, Web, iOS, Android).
 
 Valid Examples:
-✅ feat: Add transaction batch import (#45)
-✅ fix: Resolve camera permissions (#23)
-✅ docs: Update API documentation (#18)
-✅ chore: Bump version to 0.2.0 (#50)
+✅ feat: #45 Mobile - Add transaction batch import
+✅ fix: #23 iOS - Resolve camera permissions
+✅ docs: #18 Backend - Update API documentation
+✅ chore: #50 CI - Bump version to 0.2.0
 
 Invalid Examples:
 ❌ Update docs
 ❌ feat: add feature (no issue number)
 ❌ Fix bug #23 (wrong format)
-❌ docs: Update API documentation (#18). (period at end)
+❌ docs: #18 Backend - Update API documentation. (period at end)
 
-Types: feat, fix, docs, test, refactor, chore, build, ci, perf
+Types: feat, fix, docs, test, refactor, style, perf, chore, ci, revert
 -->
 
 ## Description

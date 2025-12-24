@@ -62,17 +62,16 @@ git checkout -b docs/#8-api-documentation
 - Write tests for new features
 - Keep changes minimal and focused
 
-
-Use [Conventional Commits](docs/references/conventional-commits-spec.md) format with issue reference:
+Use Conventional Commits format (no issue numbers in commit messages):
 
 ```bash
-git commit -m "feat[#11]: add product search endpoint"
-git commit -m "fix[#5]: resolve price calculation rounding"
-git commit -m "docs[#8]: update API documentation"
-git commit -m "test[#9]: add tests for OCR parsing"
+git commit -m "feat: add product search endpoint"
+git commit -m "fix: resolve price calculation rounding"
+git commit -m "docs: update API documentation"
+git commit -m "test: add tests for OCR parsing"
 ```
 
-**Format:** `<type>[#issue]: <description>`
+**Format:** `<type>: <description>`
 
 **Commit types:**
 - `feat` - New feature
@@ -81,46 +80,36 @@ git commit -m "test[#9]: add tests for OCR parsing"
 - `test` - Test additions/updates
 - `refactor` - Code refactoring
 - `perf` - Performance improvements
-- `build` - Build/dependency changes
-- `chore` - Maintenance tasks
+- `style` - Formatting or style-only changes
+- `chore` - Maintenance/tooling tasks
+- `ci` - CI/CD configuration changes
+- `revert` - Revert a previous commit
 
 **Commit description rules:**
-- Use imperative, present tense: "add" not "added" or "adds"
-- Don't capitalize first letter
+- Use imperative present tense: "add" not "added" or "adds"
+- No capitalization of first letter
 - No period at the end
-- Keep it concise (50 chars or less)
-Use conventional commit messages:
-```bash
-git commit -m "feat: add product search endpoint"
-git commit -m "fix: resolve price calculation rounding"
-git commit -m "docs: update API documentation"
-git commit -m "test: add tests for OCR parsing"
-```
-
-**Commit prefixes**:/#11-update-docs
+- Keep concise (≈50 chars)
 ```
 
 Create a Pull Request on GitHub using the template.
 
-**PR Title Format:** `<type>: <description> (#issue)`
+**PR Title Format:** `<type>: #<issue> <Platform> - <description>`
 
 **Examples:**
 ```
-feat: Updated docs (#11)
-fix: Resolve camera permissions on Android (#5)
-docs: Add API documentation (#8)
-test: Add unit tests for OCR parsing (#9)
+feat: #42 Mobile - Add receipt OCR
+fix: #67 iOS - Fix camera permissions
+docs: #15 Backend - Add API documentation
+refactor: #88 Server - Simplify price utilities
 ```
 
 **Important:**
-- PR titles use the same `<type>` as commits
-- Include issue reference in parentheses: `(#11)`
-- Use past tense or descriptive format (unlike commits)
-- Add `Closes #issue` in PR description to auto-close the issue on merge
-- `test:` - Test additions/updates
-- `refactor:` - Code refactoring
-- `perf:` - Performance improvements
-- `chore:` - Build/tooling changes
+- Use the same `<type>` values as commits
+- Issue reference is required and appears after the type as `#<issue>`
+- `Platform` is optional but preferred for multi-component repos (e.g., Mobile, Backend, Server, Web, iOS, Android)
+- Keep description imperative, concise; no trailing period
+- In the PR description, include: linked issue (`Closes #<issue>`), testing notes, risks, and rollback plan
 
 ### 5. Push and Create PR
 ```bash

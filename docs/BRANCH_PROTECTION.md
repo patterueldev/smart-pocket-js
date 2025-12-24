@@ -4,6 +4,15 @@
 
 To maintain code quality and prevent accidental direct pushes to `main`, we enforce branch protection rules that require all changes to go through pull requests.
 
+### Branch Rules Summary
+- **Branch naming (required)**: `<type>/#<issue>-<short-description>` (e.g., `feat/#42-receipt-ocr`)
+- **PR title (required)**: `<type>: #<issue> <Platform> - <description>` (e.g., `feat: #42 Mobile - Add receipt OCR`)
+- **Commits (Conventional Commits)**: `<type>: <description>` (no issue numbers in commit messages)
+- **Linear history**: Enabled (prefer squash or rebase merges)
+- **Conversation resolution**: Required before merge
+- **Approvals**: Minimum 1 approval (solo dev can self-approve)
+- **Required checks**: Lint & unit tests, Docker build, smoke tests (see list below)
+
 ## Setting Up Branch Protection
 
 ### GitHub Web UI (Recommended)
@@ -25,8 +34,9 @@ To maintain code quality and prevent accidental direct pushes to `main`, we enfo
 - ✅ **Require status checks to pass before merging**
   - ✅ Require branches to be up to date before merging
   - Select required checks:
-    - `build-and-test` (from pr-check.yml)
-    - `Build & Push QA Images` (from deploy-qa.yml, if applicable)
+      - `build-and-test` (lint + unit tests)
+      - `docker-build` (images build successfully)
+      - `smoke-tests` (API contract smoke suite)
 
 - ✅ **Require conversation resolution before merging**
 
@@ -119,7 +129,7 @@ gh pr merge
 
 1. **Create feature branch**:
    ```bash
-   git checkout -b feat/#<issue>-description
+   git checkout -b <type>/#<issue>-<short-description>
    ```
 
 2. **Make changes and commit**:
@@ -135,7 +145,7 @@ gh pr merge
 
 4. **Create pull request**:
    ```bash
-   gh pr create --title "feat: Add new feature" --body "Description..."
+   gh pr create --title "feat: #42 Mobile - Add receipt OCR" --body "Closes #42\n\nTesting Notes:\n- ...\n\nRisks & Rollback:\n- ..."
    ```
 
 5. **Wait for CI checks** (automated)
