@@ -61,9 +61,9 @@ gh copilot --version
 # Create PR with Copilot-generated description
 gh copilot suggest "create a pull request for my current branch"
 
-# Example output suggests:
-gh pr create --title "feat: add external API documentation" \
-  --body "$(gh copilot explain 'generate PR description based on my commits')"
+# Use the new title convention
+gh pr create --title "feat: #42 Backend - Add external API documentation" \
+  --body "Closes #42\n\n$(gh copilot explain 'generate PR description based on my commits')"
 
 # Or use interactive mode
 gh pr create --web
@@ -75,9 +75,9 @@ In VS Code Copilot Chat:
 
 ```
 @github Create a PR for my current branch with:
-- Title: feat: add external API documentation
+- Title: feat: #123 Backend - Add external API documentation
 - Description based on my commits
-- Link to issue #123
+- Include 'Closes #123' in the body
 ```
 
 Copilot will generate the PR body following your template.

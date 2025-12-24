@@ -1,0 +1,110 @@
+name: PR Conventions Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  # Validate PR title follows Conventional Commits with issue number and optional platform
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          # Format: <type>: #<issue> <Platform> - <description>
+          # Platform is optional but preferred for multi-component projects
+          headerPattern: '^(\w+): #\d+(?: [A-Za-z]+ -)? (.+)$'
+          headerPatternCorrespondence: type, subject
+          subjectPattern: ^[A-Z].+[^.]$
+          subjectPatternError: |
+            PR title must follow: <type>: #<issue> <Platform> - <description>
+            - Issue number required: #123
+            - Platform optional but preferred: Backend - , iOS - , Mobile -
+            - Start description with capital letter
+            - No period at end
+            - Use imperative mood ("Add" not "Added")
+            
+            Examples:
+            - feat: #42 Add user authentication
+            - fix: #67 iOS - Fix camera permissions
+            - docs: #15 Backend - Add API documentation
+            - refactor: #88 Mobile - Simplify state management
+            
+            Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+  # Validate branch name format
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name format
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          PATTERN="^(feat|fix|docs|chore|refactor|test|build|ci|perf|revert|release)/#[0-9]+-[a-z0-9-]+$"
+          
+          if [[ ! $BRANCH_NAME =~ $PATTERN ]]; then
+            echo "❌ Branch name does not follow the required format!"
+            echo ""
+            echo "Current branch: $BRANCH_NAME"
+            echo ""
+            echo "Required format: <type>/#<issue>-<dashed-description>"
+            echo ""
+            echo "Valid examples:"
+            echo "  - feat/#22-user-auth"
+            echo "  - fix/#30-bug-fix"
+            echo "  - docs/#15-api-documentation"
+            echo "  - chore/#8-update-dependencies"
+            echo "  - release/#69-v0.1.3"
+            echo ""
+            echo "Rules:"
+            echo "  - Type: feat, fix, docs, chore, refactor, test, build, ci, perf, revert, release"
+            echo "  - Must include issue number: /#<number>-"
+            echo "  - Description: lowercase, dashed (kebab-case)"
+            exit 1
+          fi
+          
+          echo "✅ Branch name is valid: $BRANCH_NAME"
+
+  conventions-summary:
+    name: Conventions Check Summary
+    runs-on: ubuntu-latest
+    needs: [validate-pr-title, validate-branch-name]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "PR Title: ${{ needs.validate-pr-title.result }}"
+          echo "Branch Name: ${{ needs.validate-branch-name.result }}"
+          
+          if [ "${{ needs.validate-pr-title.result }}" != "success" ]; then
+            echo "❌ PR title validation failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.validate-branch-name.result }}" != "success" ]; then
+            echo "❌ Branch name validation failed"
+            exit 1
+          fi
+          
+          echo "✅ All conventions checks passed"

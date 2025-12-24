@@ -4,6 +4,23 @@
 
 Smart Pocket is a personal finance management application with OCR receipt scanning and Actual Budget integration. For detailed architecture, features, and specifications, see the documentation links below.
 
+## Read First
+1. README.md (overview, quick start)
+2. docs/REQUIREMENTS.md (original requirements)
+3. docs/MVP.md (features & acceptance criteria)
+4. docs/TECH_STACK.md (choices & rationale)
+5. docs/ARCHITECTURE.md (structure & patterns)
+6. docs/INFRASTRUCTURE.md (deployment & CI/CD)
+
+## Conventions
+- Branch: `<type>/#<issue>-<short-hyphenated-desc>`
+- Commit: `<type>: <description>`
+- PR title: `<type>: #<issue> <Platform> - <description>`
+   - Issue number required
+   - Platform optional but preferred (Backend, Server, Web, Mobile, iOS, Android)
+   - Start with capital letter, no period at end, use imperative mood
+- PR body: Include testing notes, risks, rollback plan, and `Closes #<issue>`
+
 ## Development Environment Setup
 
 ### Devbox Shell (REQUIRED)
@@ -61,12 +78,14 @@ $ pnpm test
 
 **Workspace Structure:**
 ```
+apps/ (entrypoints)
+   ├── server/       (Node.js backend)
+   └── mobile/       (React Native/Expo app)
+
 packages/
-  ├── app/          (React Native/Expo app)
-  ├── server/       (Node.js backend)
-  ├── shared/       (Shared TypeScript types)
-  ├── features/     (Feature packages)
-  └── personal/     (Personal features, excluded from builds)
+   ├── shared/       (Shared TypeScript types / UI)
+   ├── features/     (Feature packages)
+   └── personal/     (Personal features, excluded from builds)
 ```
 
 **Common Commands:**
@@ -174,23 +193,22 @@ The default remains NO AUTO-COMMIT. The following clarifications apply to make i
 4. **Commit** (only after user approval, uses conventional commits)
    ```bash
    git add <files>
-   git commit -m "<type>: <description> (#<issue>)"
+   git commit -m "<type>: <description>"
    git push -u origin <branch-name>
    ```
    
    **Commit Format (REQUIRED):**
-   - `<type>: <description> (#<issue>)`
+   - `<type>: <description>` (no issue number in commit message)
    - See [Conventional Commits Spec](../docs/references/conventional-commits-spec.md)
 
-5. **Create PR** (uses conventional commits)
+5. **Create PR**
    ```bash
-   gh pr create --title "<type>: <Title>" --body "Closes #<issue>"
+   gh pr create --title "<type>: #<issue> <Platform> - <Title>" --body "Closes #<issue>\n\nTesting Notes:\n- ...\n\nRisks & Rollback:\n- ..."
    ```
    
    **PR Format (REQUIRED):**
-   - Title: `<type>: <Description>` (NO issue #)
-   - Body: Must include `Closes #<issue>`
-   - See PR formatting rules below
+   - Title: `<type>: #<issue> <Platform> - <Description>`
+   - Body: Must include `Closes #<issue>`, testing notes, risks, rollback
 
 **Task Types Available:**
 - **User Story** - High-level feature (can have child tasks)
@@ -217,11 +235,11 @@ No manual status updates needed!
 
 Format: `<type>/#<issue>-<short-description>`
 
-**Types:** feat, fix, doc (Conventional Commits)
+**Types:** feat, fix, docs, refactor, test, chore, build, ci, perf, revert
 
 **📘 Full specification:** [docs/references/conventional-commits-spec.md](../docs/references/conventional-commits-spec.md)
 
-Format: `<type>: <description> (#<issue>)`
+Format: `<type>: <description>`
 
 **Types:**
 - `feat` - New feature
@@ -243,22 +261,20 @@ Format: `<type>: <description> (#<issue>)`
 
 **Examples:**
 ```
-feat: Add transaction batch import (#45)
-fix: Resolve camera permissions (#52)
-docs: Update API documentation (#18)
-chore: Update dependencies (#60)
+feat: Add transaction batch import
+fix: Resolve camera permissions
+docs: Update API documentation
+chore: Update dependencies
 ```
 
-### PR Title Format (Conventional Commits)
+### PR Title Format
 
-Format: `<type>: <Title>`
+Format: `<type>: #<issue> <Platform> - <Description>`
 
-**CRITICAL Rules:**
-- **Must follow conventional commits** (same types as commits)
-- **NO issue number in title** (linked via PR body)
-- First word capitalized
-- No period at end
-- Issue linked with `Closes #<issue>` in PR body
+**Rules:**
+- Use conventional commit types
+- Issue number required; platform optional but preferred
+- First word capitalized; no period at end; imperative mood
 
 **PR Body Template:**
 ```markdown
@@ -273,32 +289,10 @@ Closes #<issue>
 
 ## Testing
 - How it was tested
-```
 
-**Valid Examples:**
-```
-✅ feat: Add transaction batch import
-✅ fix: Resolve camera permissions
-✅ docs: Update API documentation
-✅ chore: Streamline task management workflow
-```
-
-**Invalid Examples:**
-```
-❌ feat: add import          (lowercase after colon)
-❌ Fix bug #23              (issue # in title)
-❌ feat: Add import (#45)   (issue # in title)
-❌ Add import               (missing type prefix)
-❌ feat: Add import.        (period at end
-**Examples:**
-```
-✅ feat: Add transaction batch import
-✅ fix: Resolve camera permissions
-✅ docs: Update API documentation
-
-❌ feat: add import          (lowercase)
-❌ Fix bug #23              (issue # in title)
-❌ feat: Add import (#45)   (issue # in title)
+## Risks & Rollback
+- Risks
+- Rollback plan
 ```
 
 ## Docker Commands

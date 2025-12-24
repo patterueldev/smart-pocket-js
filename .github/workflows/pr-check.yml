@@ -8,85 +8,9 @@ on:
     types: [opened, synchronize, reopened, edited]
 
 jobs:
-  # Always run title validation
-  validate-pr-title:
-    name: Validate PR Title
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Check PR title format
-        uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            style
-            refactor
-            perf
-            test
-            build
-            ci
-            chore
-            revert
-          requireScope: false
-          # Scopes not enforced - issue reference goes in PR body (Closes #issue)
-          # GitHub automatically adds PR number on merge: <type>: <description> (#pr)
-          headerPattern: '^(\w+): (.+)$'
-          headerPatternCorrespondence: type, subject
-          subjectPattern: ^[A-Z].+[^.]$
-          subjectPatternError: |
-            PR title must follow: <type>: <Description>
-            - Start description with capital letter
-            - No period at end
-            - Use imperative mood ("Add" not "Added")
-            - NO issue number in title (use "Closes #issue" in body instead)
-            
-            Examples:
-            - feat: Updated docs (#11)
-            - fix: Resolve camera permissions (#5)
-            - docs: Add API documentation (#8)
-            
-            Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
-            
-            Note: Issue reference (#number) is required in parentheses at the end.
 
   # Validate branch name format
-  validate-branch-name:
-    name: Validate Branch Name
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Check branch name format
-        env:
-          BRANCH_NAME: ${{ github.head_ref }}
-        run: |
-          PATTERN="^(feat|fix|docs|chore|refactor|test|build|ci|perf|revert|release)/#[0-9]+-[a-z0-9-]+$"
-          
-          if [[ ! $BRANCH_NAME =~ $PATTERN ]]; then
-            echo "❌ Branch name does not follow the required format!"
-            echo ""
-            echo "Current branch: $BRANCH_NAME"
-            echo ""
-            echo "Required format: <type>/#<issue>-<dashed-description>"
-            echo ""
-            echo "Valid examples:"
-            echo "  - feat/#22-update-docs"
-            echo "  - fix/#30-skip-coverage"
-            echo "  - docs/#15-api-documentation"
-            echo "  - chore/#8-update-dependencies"
-            echo "  - release/#69-v0.1.3"
-            echo ""
-            echo "Rules:"
-            echo "  - Type: feat, fix, docs, chore, refactor, test, build, ci, perf, revert, release"
-            echo "  - Must include issue number: /#<number>-"
-            echo "  - Description: lowercase, dashed (kebab-case)"
-            exit 1
-          fi
-          
-          echo "✅ Branch name is valid: $BRANCH_NAME"
+  # Branch name validation moved to pr-conventions workflow
 
   # Check if code was changed (not just docs)
   check-code-changes:
@@ -261,29 +185,17 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [validate-pr-title, validate-branch-name, lint-and-test, docker-build-test, security-scan]
+    needs: [lint-and-test, docker-build-test, security-scan]
     if: always()
     
     steps:
       - name: Check job results
         run: |
-          echo "PR Title: ${{ needs.validate-pr-title.result }}"
-          echo "Branch Name: ${{ needs.validate-branch-name.result }}"
           echo "Lint & Test: ${{ needs.lint-and-test.result }}"
           echo "Docker Build & Smoke: ${{ needs.docker-build-test.result }}"
           echo "Security Scan: ${{ needs.security-scan.result }}"
           
-          # Validate PR title (must always succeed)
-          if [ "${{ needs.validate-pr-title.result }}" != "success" ]; then
-            echo "❌ PR title validation failed"
-            exit 1
-          fi
-          
-          # Validate branch name (must always succeed)
-          if [ "${{ needs.validate-branch-name.result }}" != "success" ]; then
-            echo "❌ Branch name validation failed"
-            exit 1
-          fi
+          # Branch name validation handled in pr-conventions workflow
           
           # Lint & Test (can be skipped if only docs changed)
           if [ "${{ needs.lint-and-test.result }}" != "success" ] && [ "${{ needs.lint-and-test.result }}" != "skipped" ]; then
