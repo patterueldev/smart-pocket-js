@@ -122,6 +122,15 @@ pnpm build
 2. Show user: "I've modified these files: [list]. Would you like to review the changes before committing?"
 3. Wait for user confirmation
 4. Only then: `git add` and `git commit`
+### Auto-Commit Clarifications (User-Controlled)
+
+The default remains NO AUTO-COMMIT. The following clarifications apply to make intent explicit:
+
+- When the user asks for changes, implement them without committing. Do not stage or commit until explicitly asked.
+- When the user explicitly says “let’s commit,” stage, commit, and push the current changes. After that, resume the default (no auto-commit) for subsequent edits unless told otherwise.
+- Exception window: If the user explicitly says “auto-commit for the next 5 minutes” (or similar), auto-commit changes during that time-boxed window only. When the window ends, revert to the default no auto-commit behavior.
+- Always summarize what will be committed and link to the modified files before committing, unless operating within an explicitly granted auto-commit window.
+
 
 ### 2. Never Commit to Main Branch
 
