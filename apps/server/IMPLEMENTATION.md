@@ -66,7 +66,7 @@ Actual Budget (optional sync)
 ## File Structure
 
 ```
-packages/server/
+apps/server/
 ├── src/
 │   ├── index.js                      # Server entry (40 lines)
 │   ├── app.js                        # Express config (63 lines)

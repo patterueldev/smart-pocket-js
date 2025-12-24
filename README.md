@@ -58,7 +58,7 @@ devbox run install
 # or: pnpm install
 
 # Setup server
-cd packages/server
+cd apps/server
 cp .env.example .env
 # Edit .env with your configuration
 
@@ -82,7 +82,7 @@ cd smart-pocket-js
 pnpm install
 
 # Setup server
-cd packages/server
+cd apps/server
 cp .env.example .env
 # Edit .env with your configuration
 
@@ -135,9 +135,9 @@ See [docs/DEVOPS.md](docs/DEVOPS.md) for comprehensive deployment guide.
 
 ### Package Documentation
 
-- **[Server README](packages/server/README.md)** - Node.js server documentation
-- **[Server Quick Start](packages/server/QUICKSTART.md)** - 5-minute setup guide
-- **[Implementation Summary](packages/server/IMPLEMENTATION.md)** - What's built and what's pending
+- **[Server README](apps/server/README.md)** - Node.js server documentation
+- **[Server Quick Start](apps/server/QUICKSTART.md)** - 5-minute setup guide
+- **[Implementation Summary](apps/server/IMPLEMENTATION.md)** - What's built and what's pending
 
 ## Project Structure
 
@@ -277,7 +277,7 @@ When adding npm/pnpm packages:
 
 ```bash
 # 1. Add package
-cd packages/server
+cd apps/server
 pnpm add <package-name>
 
 # 2. If using Docker, rebuild image
@@ -297,7 +297,7 @@ See [deploy/DOCKER.md - Managing Dependencies](deploy/DOCKER.md#managing-depende
 
 ```bash
 # Start server
-cd packages/server
+cd apps/server
 npm run dev
 
 # Test with curl
@@ -384,7 +384,7 @@ DEFAULT_CURRENCY=USD
 GOOGLE_SHEETS_ENABLED=false
 ```
 
-See [.env.example](packages/server/.env.example) for full list.
+See [.env.example](apps/server/.env.example) for full list.
 
 ## Roadmap
 

@@ -93,10 +93,10 @@ services:
       GOOGLE_CREDENTIALS_JSON_PATH: ${GOOGLE_CREDENTIALS_JSON_PATH:-/data/keys/smart-pocket-server.json}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
     volumes:
-      - ../../packages/server/src:/app/packages/server/src
+      - ../../apps/server/src:/app/apps/server/src
       - ../../packages/shared:/app/packages/shared
       - /app/node_modules  # Prevent host node_modules from being mounted (native modules)
-      - /app/packages/server/node_modules
+      - /app/apps/server/node_modules
       - ../../keys/smart-pocket-server.json:/data/keys/smart-pocket-server.json:ro
     depends_on:
       postgres:

@@ -11,7 +11,7 @@ RUN apk add --no-cache python3 make g++
 
 # Copy workspace files
 COPY package*.json pnpm-workspace.yaml ./
-COPY packages/server ./packages/server
+COPY apps/server ./apps/server
 COPY docs ./docs
 
 # Copy shared packages when they exist (for future monorepo structure)
@@ -31,7 +31,7 @@ RUN pnpm install --no-frozen-lockfile
 # This is needed because @actual-app/api depends on it
 RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && npm run build-release || true
 
-WORKDIR /app/packages/server
+WORKDIR /app/apps/server
 
 # Expose dev server and debugger ports
 EXPOSE 3001 9229
@@ -45,7 +45,7 @@ FROM base AS builder
 RUN pnpm install --no-frozen-lockfile
 
 # Build server (if needed)
-WORKDIR /app/packages/server
+WORKDIR /app/apps/server
 RUN npm run build || echo "No build step needed"
 
 # Generate pnpm-lock.yaml for production stage
@@ -64,8 +64,8 @@ RUN apk add --no-cache python3 make g++
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/packages/server/package*.json ./packages/server/
-COPY --from=builder /app/packages/server/src ./packages/server/src
+COPY --from=builder /app/apps/server/package*.json ./apps/server/
+COPY --from=builder /app/apps/server/src ./apps/server/src
 
 # Copy shared packages when they exist (for future monorepo structure)
 # COPY --from=builder /app/packages/shared ./packages/shared
@@ -84,7 +84,7 @@ RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
 COPY --from=builder /app/docs ./docs
 
 # Set working directory to server package
-WORKDIR /app/packages/server
+WORKDIR /app/apps/server
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \

@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'package.json'
-      - 'packages/server/package.json'
+      - 'apps/server/package.json'
 
 jobs:
   build-and-push:

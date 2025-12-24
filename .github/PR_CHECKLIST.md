@@ -86,7 +86,8 @@ Before creating your pull request, ensure you've completed these steps:
 
 ## 🤝 Collaboration
 
-- [ ] PR title is clear and follows conventions
+- [ ] PR title follows format: `<type>: #<issue> <Platform> - <description>`
+- [ ] Branch name follows format: `<type>/#<issue>-<short-description>`
 - [ ] PR description explains what and why
 - [ ] Breaking changes highlighted
 - [ ] Screenshots/videos added (if UI changes)

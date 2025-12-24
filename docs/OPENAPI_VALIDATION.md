@@ -204,17 +204,17 @@ The test works by:
 
 ## Files
 
-- **Test**: `packages/server/src/__tests__/openapi-validation.test.js`
+- **Test**: `apps/server/src/__tests__/openapi-validation.test.js`
 - **Spec**: `docs/api-spec.yaml`
-- **App**: `packages/server/src/app.js`
-- **Docs**: `packages/server/src/__tests__/README.md`
+- **App**: `apps/server/src/app.js`
+- **Docs**: `apps/server/src/__tests__/README.md`
 
 ## Related Documentation
 
 - [API.md](../../../docs/API.md) - API endpoint documentation
 - [api-spec.yaml](../../../docs/api-spec.yaml) - OpenAPI specification
 - [Postman Collection](../../../docs/smart-pocket.postman_collection.json)
-- [Test README](../packages/server/src/__tests__/README.md)
+- [Test README](../apps/server/src/__tests__/README.md)
 
 ## Troubleshooting
 
