@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: '@smart-pocket/app',
+  displayName: '@smart-pocket/mobile',
   rootDir: '.',
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/jest.polyfills.js'],

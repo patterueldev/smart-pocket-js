@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/.." || exit
 
 echo "Starting Expo Metro bundler..."
-pnpm app:ios > /tmp/expo-metro.log 2>&1 &
+pnpm mobile:ios > /tmp/expo-metro.log 2>&1 &
 EXPO_PID=$!
 echo $EXPO_PID > /tmp/expo.pid
 
