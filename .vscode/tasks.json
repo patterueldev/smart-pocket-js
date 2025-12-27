@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "pnpm",
       "args": [
-        "app:start"
+        "mobile:start"
       ],
       "isBackground": true,
       "problemMatcher": {
@@ -37,7 +37,7 @@
       "type": "shell",
       "command": "pnpm",
       "args": [
-        "app:stop"
+        "mobile:stop"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -48,7 +48,7 @@
       "type": "shell",
       "command": "pnpm",
       "args": [
-        "dev"
+        "server:dev"
       ],
       "isBackground": true,
       "problemMatcher": {

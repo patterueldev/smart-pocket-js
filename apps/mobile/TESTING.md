@@ -284,12 +284,12 @@ Tests are configured for React 19:
 Tests run automatically in GitHub Actions:
 ```yaml
 - name: Run tests
-  run: pnpm --filter @smart-pocket/app test --coverage
+  run: pnpm --filter @smart-pocket/mobile test --coverage
 
 - name: Upload coverage
   uses: codecov/codecov-action@v3
   with:
-    files: ./packages/app/coverage/clover.xml
+    files: ./apps/mobile/coverage/clover.xml
 ```
 
 ## Future Test Coverage

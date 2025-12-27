@@ -1,5 +1,5 @@
 {
-  "name": "@smart-pocket/app",
+  "name": "@smart-pocket/mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

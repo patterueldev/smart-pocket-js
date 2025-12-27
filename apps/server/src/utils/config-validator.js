@@ -31,6 +31,12 @@ function validateGoogleSheetsConfig() {
     throw new Error(`Google Sheets credentials file not found at: ${credPath}`);
   }
 
+  // Check if path is a directory instead of a file
+  const stats = fs.statSync(credPath);
+  if (stats.isDirectory()) {
+    throw new Error(`GOOGLE_CREDENTIALS_JSON_PATH points to a directory, not a file: ${credPath}\nPlease specify the full path to the credentials JSON file.`);
+  }
+
   // Validate JSON structure
   try {
     const creds = JSON.parse(fs.readFileSync(credPath, 'utf8'));
