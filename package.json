@@ -11,6 +11,7 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test -- --coverage",
     "postman:generate": "node scripts/generate-postman.js",
+    "api:generate": "orval",
     "mobile": "pnpm --filter @smart-pocket/mobile start",
     "mobile:ios": "pnpm --filter @smart-pocket/mobile ios",
     "mobile:android": "pnpm --filter @smart-pocket/mobile android",
@@ -49,6 +50,7 @@
     "jest": "catalog:",
     "jest-environment-jsdom": "catalog:",
     "js-yaml": "catalog:",
+    "orval": "^7.17.2",
     "pnpm": "catalog:",
     "react-test-renderer": "catalog:"
   }

@@ -10,7 +10,18 @@ const { asyncHandler } = require('../middleware/errorHandler');
 router.post('/connect', verifyApiKey, asyncHandler(async (req, res) => {
   const { deviceInfo } = req.body;
   
+  console.log('[Connect API] Request received:', {
+    hasDeviceInfo: !!deviceInfo,
+    deviceInfo,
+    headers: {
+      'x-api-key': req.headers['x-api-key'] ? '***' : undefined,
+      'content-type': req.headers['content-type'],
+    },
+    body: req.body,
+  });
+  
   if (!deviceInfo) {
+    console.log('[Connect API] Validation failed: deviceInfo missing');
     return res.status(400).json({
       error: 'validation_error',
       message: 'deviceInfo is required',
@@ -36,7 +47,7 @@ router.post('/connect', verifyApiKey, asyncHandler(async (req, res) => {
     aiInsights: process.env.AI_INSIGHTS_ENABLED !== 'false', // Default enabled
   };
 
-  res.json({
+  const responseData = {
     token,
     expiresIn: 30 * 24 * 60 * 60, // 30 days in seconds
     serverInfo: {
@@ -44,7 +55,16 @@ router.post('/connect', verifyApiKey, asyncHandler(async (req, res) => {
       features,
       currency: process.env.DEFAULT_CURRENCY || 'USD',
     }
+  };
+
+  console.log('[Connect API] Sending response:', {
+    hasToken: !!responseData.token,
+    tokenLength: responseData.token?.length,
+    expiresIn: responseData.expiresIn,
+    serverInfo: responseData.serverInfo,
   });
+
+  res.json(responseData);
 }));
 
 /**
