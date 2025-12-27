@@ -6,6 +6,7 @@ import { Card } from '@/components/Card';
 import { SideMenu } from '@/components/SideMenu';
 import { Transaction } from '@/types';
 import { useSession } from '@/hooks/useSession';
+import { authService } from '@/services/authService';
 
 export default function DashboardScreen() {
   const { session, clearSession } = useSession();
@@ -27,7 +28,7 @@ export default function DashboardScreen() {
     router.push('/google-sheets-sync');
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
     Alert.alert(
       'Disconnect',
       'Are you sure you want to disconnect from the server?',
@@ -37,8 +38,19 @@ export default function DashboardScreen() {
           text: 'Disconnect',
           style: 'destructive',
           onPress: async () => {
-            await clearSession();
-            router.replace('/setup');
+            try {
+              // Call authService to disconnect (notifies server, best effort)
+              await authService.disconnect(session || undefined);
+              // Clear local session
+              await clearSession();
+              // Navigate to setup
+              router.replace('/setup');
+            } catch (error) {
+              console.error('Error during disconnect:', error);
+              // Even if disconnect fails, clear local session and go to setup
+              await clearSession();
+              router.replace('/setup');
+            }
           },
         },
       ]

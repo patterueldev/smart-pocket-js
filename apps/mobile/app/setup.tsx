@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from '../components/Button';
 import { router } from 'expo-router';
 import { TextInput } from '../components/TextInput';
 import { useSession } from '../hooks/useSession';
+import { authService, AuthError, AuthErrorType } from '@/services/authService';
+import { isDevelopment, devServerUrl, devApiKey } from '@/config/env';
 
 /**
  * Setup Screen - Initial connection to server
  * 
- * User enters server URL and API key to connect to their personal Smart Pocket server
+ * User enters server URL and API key to connect to their personal Smart Pocket server.
+ * In development mode, inputs are pre-filled from environment config.
  */
 export default function SetupScreen() {
   const { saveSession } = useSession();
-  const [serverUrl, setServerUrl] = useState('http://localhost:3001');
-  const [apiKey, setApiKey] = useState('dev_api_key_change_me');
+  const [serverUrl, setServerUrl] = useState(devServerUrl || 'http://localhost:3001');
+  const [apiKey, setApiKey] = useState(devApiKey || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,35 +26,38 @@ export default function SetupScreen() {
       return;
     }
 
-    if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
-      setError('Server URL must start with http:// or https://');
-      return;
-    }
-
     setError('');
     setLoading(true);
 
     try {
-      // Mock API connection
-      console.log('Connecting to:', serverUrl);
+      // Attempt to connect using AuthService
+      const session = await authService.connect(serverUrl, apiKey);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Save session
+      // Save session to app state
       await saveSession({
-        serverUrl,
-        apiKey,
+        serverUrl: session.serverUrl,
+        token: session.token,
+        expiresAt: session.expiresAt,
+        serverInfo: session.serverInfo,
         connected: true,
         connectedAt: new Date().toISOString(),
       });
       
-      // Navigate explicitly to dashboard to avoid relying on guard timing
+      // Navigate to dashboard
       router.replace('/');
-      console.log('Session saved, navigated to dashboard');
+      console.log('Connected to server, session saved');
     } catch (err) {
-      setError('Failed to connect to server');
-      console.error(err);
+      // Handle auth errors with user-friendly messages
+      if (err instanceof AuthError) {
+        setError(err.message);
+        console.error(`Auth error [${err.type}]:`, err.originalError);
+      } else if (err instanceof Error) {
+        setError(err.message);
+        console.error('Connection error:', err);
+      } else {
+        setError('Failed to connect to server');
+        console.error('Unknown error:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +89,7 @@ export default function SetupScreen() {
           onChangeText={setApiKey}
           placeholder="Enter your API key"
           secureTextEntry
+          showToggleVisibility
           editable={!loading}
         />
 
@@ -99,6 +106,11 @@ export default function SetupScreen() {
       <Text style={styles.helpText}>
         ℹ️ Get your API key from your server configuration
       </Text>
+      {isDevelopment && (
+        <Text style={styles.devNote}>
+          [DEV MODE] Server URL and API Key are pre-filled from environment config
+        </Text>
+      )}
     </ScrollView>
   );
 }
@@ -137,10 +149,18 @@ const styles = StyleSheet.create({
   error: {
     color: '#d32f2f',
     textAlign: 'center',
+    fontSize: 14,
   },
   helpText: {
     textAlign: 'center',
     color: '#666',
     fontSize: 14,
+  },
+  devNote: {
+    textAlign: 'center',
+    color: '#1976d2',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 16,
   },
 });
