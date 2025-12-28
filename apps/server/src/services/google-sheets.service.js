@@ -142,7 +142,7 @@ function createDraft(pendingChanges, allAccounts, lastSyncedAt = null) {
     id: randomUUID(),
     createdAt: new Date().toISOString(),
     pendingChanges,
-    allAccounts, // Store for sync execution
+    allAccounts, // Store for sync execution (full list)
     lastSyncedAt,
     summary: {
       totalAccounts: allAccounts.length,
@@ -199,8 +199,17 @@ async function executeSync(draftId) {
       throw error;
     }
 
-    // Update Google Sheets with balances from draft
-    const result = await updateGoogleSheets(draft.allAccounts);
+    // Only update accounts that had pending changes (NEW/UPDATE)
+    const pendingAccountNames = new Set(
+      (draft.pendingChanges || []).map(change => change.accountName)
+    );
+
+    const balancesToUpdate = (draft.allAccounts || []).filter(account =>
+      pendingAccountNames.has(account.accountName)
+    );
+
+    // Update Google Sheets with filtered balances
+    const result = await updateGoogleSheets(balancesToUpdate);
 
     // Delete draft after successful sync
     deleteDraft(draftId);
