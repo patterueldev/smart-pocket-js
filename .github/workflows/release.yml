@@ -11,160 +11,6 @@ on:
       - 'package.json'
       - 'apps/mobile/app.json'
       - 'apps/mobile/android/app/build.gradle'
-  workflow_dispatch:
-
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
-jobs:
-  build-release-images:
-    name: Build and push server image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      version: ${{ steps.extract-version.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract version from tag or version files
-        id: extract-version
-        run: |
-          if [[ "$GITHUB_REF" =~ ^refs/tags/v ]]; then
-            # Tag-triggered release
-            VERSION=${GITHUB_REF#refs/tags/}
-            echo "source=tag" >> "$GITHUB_OUTPUT"
-          else
-            # Version file change on main (fetch from package.json)
-            VERSION=$(jq -r '.version' package.json)
-            VERSION="v$VERSION"
-            echo "source=version-file" >> "$GITHUB_OUTPUT"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "✅ Detected version: $VERSION (source: ${{ steps.extract-version.outputs.source }})"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Docker login (GHCR)
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Docker image (using existing build.sh)
-        env:
-          VERSION: ${{ steps.extract-version.outputs.version }}
-        run: |
-          chmod +x ./deploy/scripts/build.sh
-          ./deploy/scripts/build.sh "${{ steps.extract-version.outputs.version }}"
-
-      - name: Tag and push to GHCR
-        env:
-          IMAGE_BASE: ghcr.io/${{ github.repository }}/server
-          VERSION: ${{ steps.extract-version.outputs.version }}
-        run: |
-          docker tag smart-pocket-server:$VERSION "$IMAGE_BASE:$VERSION"
-          docker tag smart-pocket-server:$VERSION "$IMAGE_BASE:latest"
-          docker tag smart-pocket-server:$VERSION "$IMAGE_BASE:prod"
-          docker push "$IMAGE_BASE:$VERSION"
-          docker push "$IMAGE_BASE:latest"
-          docker push "$IMAGE_BASE:prod"
-          echo "✅ Pushed image tags: $VERSION, latest, prod"
-
-  android-apk:
-    name: Build and upload Android APK
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: build-release-images
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Build release APK
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleRelease
-
-      - name: Prepare signing (optional)
-        id: signing
-        shell: bash
-        env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 || '' }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS || '' }}
-          KEY_PASS: ${{ secrets.ANDROID_KEY_PASS || '' }}
-          STORE_PASS: ${{ secrets.ANDROID_STORE_PASS || '' }}
-        run: |
-          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASS" ] && [ -n "$STORE_PASS" ]; then
-            echo "signing_enabled=true" >> "$GITHUB_OUTPUT"
-            echo "$KEYSTORE_B64" | base64 -d > keystore.jks
-          else
-            echo "signing_enabled=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Sign APK
-        if: steps.signing.outputs.signing_enabled == 'true'
-        env:
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
-          STORE_PASS: ${{ secrets.ANDROID_STORE_PASS }}
-        run: |
-          cp apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk app-release-unsigned.apk
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore keystore.jks -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
-            app-release-unsigned.apk "$KEY_ALIAS"
-          $ANDROID_HOME/build-tools/*/zipalign -f -v 4 app-release-unsigned.apk smart-pocket-android-${{ github.ref_name }}.apk
-          cp app-release-unsigned.apk smart-pocket-android-${{ github.ref_name }}-unsigned.apk
-
-      - name: Collect unsigned APK (fallback)
-        if: steps.signing.outputs.signing_enabled != 'true'
-        run: |
-          cp apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk smart-pocket-android-${{ github.ref_name }}-unsigned.apk
-          cp apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk smart-pocket-android-${{ github.ref_name }}.apk
-
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            smart-pocket-android-${{ github.ref_name }}.apk
-            smart-pocket-android-${{ github.ref_name }}-unsigned.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}name: Release
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'package.json'
-      - 'apps/server/package.json'
 
 jobs:
   build-and-push:
@@ -185,21 +31,28 @@ jobs:
         with:
           fetch-depth: 2
       
-      - name: Check if version changed
+      - name: Check if release should trigger
         id: check
         run: |
-          # Get version from package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          
-          # Check if this commit has a version bump
-          git diff HEAD^ HEAD -- package.json | grep -q '"version"' && VERSION_CHANGED=true || VERSION_CHANGED=false
-          
-          if [ "$VERSION_CHANGED" = "true" ]; then
+          # For tag-based releases, always proceed
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v ]]; then
             echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "✅ Version changed to $CURRENT_VERSION - will create release"
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No version change detected - skipping release"
+            echo "✅ Tag-based release detected"
+            exit 0
+          fi
+          
+          # For main push, check if version files changed
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            git diff HEAD^ HEAD -- package.json | grep -q '"version"' && VERSION_CHANGED=true || VERSION_CHANGED=false
+            
+            if [ "$VERSION_CHANGED" = "true" ]; then
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              CURRENT_VERSION=$(node -p "require('./package.json').version")
+              echo "✅ Version changed to $CURRENT_VERSION - will create release"
+            else
+              echo "should_release=false" >> $GITHUB_OUTPUT
+              echo "ℹ️ No version change detected - skipping release"
+            fi
           fi
       
       - name: Set up Docker Buildx
