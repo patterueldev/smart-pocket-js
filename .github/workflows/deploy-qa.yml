@@ -226,7 +226,7 @@ jobs:
           echo "3. View logs: \`pnpm run docker:quality -- logs -f\`" >> $GITHUB_STEP_SUMMARY
 
   android-qa:
-    name: Build Android APK (QA)
+    name: Build Android APK (QA) via EAS
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_android }}
     permissions:
@@ -240,37 +240,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
         with:
-          version: 9
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Run Expo prebuild for Android
+      - name: Build Android APK via EAS
         working-directory: apps/mobile
-        run: npx expo prebuild --platform android --clean
-
-      - name: Build release APK using Expo
-        working-directory: apps/mobile
-        env:
-          EXPO_NO_DOTENV: 1
-        run: npx expo run:android --variant release --no-bundler
+        run: eas build --platform android --non-interactive --output=./app-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-qa-apk
-          path: apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: apps/mobile/app-release.apk
           retention-days: 7
