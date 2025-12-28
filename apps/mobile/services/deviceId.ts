@@ -8,8 +8,12 @@ function generateFallbackId() {
 }
 
 function createId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+  } catch (e) {
+    // If randomUUID throws (unsupported environment), fall through to fallback
   }
   return generateFallbackId();
 }

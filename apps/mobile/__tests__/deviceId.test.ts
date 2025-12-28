@@ -36,17 +36,28 @@ describe('getDeviceId', () => {
     randomUUIDSpy.mockRestore();
   });
 
-  it('falls back to custom generator if randomUUID is unavailable', async () => {
+  it('falls back to custom generator if randomUUID throws', async () => {
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-    const originalCrypto = globalThis.crypto;
-    // @ts-expect-error override for test
-    globalThis.crypto = {} as Crypto;
+
+    // Ensure crypto exists and randomUUID throws
+    if (!globalThis.crypto) {
+      // @ts-expect-error minimal stub for test
+      globalThis.crypto = { randomUUID: () => { throw new Error('no uuid'); } };
+    } else {
+      const original = globalThis.crypto.randomUUID;
+      // @ts-expect-error override for test
+      globalThis.crypto.randomUUID = () => { throw new Error('no uuid'); };
+      const id = await getDeviceId();
+      expect(id).toMatch(/^sp-/);
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('smartpocket_device_id', expect.stringMatching(/^sp-/));
+      // restore
+      // @ts-expect-error restore
+      globalThis.crypto.randomUUID = original;
+      return;
+    }
 
     const id = await getDeviceId();
-
     expect(id).toMatch(/^sp-/);
     expect(AsyncStorage.setItem).toHaveBeenCalledWith('smartpocket_device_id', expect.stringMatching(/^sp-/));
-
-    globalThis.crypto = originalCrypto;
   });
 });
