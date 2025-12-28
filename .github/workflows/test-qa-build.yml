@@ -7,7 +7,7 @@ name: Test QA Build (Feature Branch)
 on:
   push:
     branches:
-      - 'ci/#57-release-pipeline-backend-mobile'
+      - 'ci/**'
     paths:
       # Trigger on all changes
       - 'apps/server/**'
@@ -127,7 +127,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Testing Instructions:**" >> $GITHUB_STEP_SUMMARY
           echo "1. Download android-qa-test-apk artifact from Actions tab" >> $GITHUB_STEP_SUMMARY
-          echo "2. Install on Android device/emulator via: \`adb install app-release-unsigned.apk\`" >> $GITHUB_STEP_STEP_SUMMARY
+          echo "2. Install on Android device/emulator via: \`adb install app-release-unsigned.apk\`" >> $GITHUB_STEP_SUMMARY
           echo "3. Verify OCR scanner is disabled (feature flag: OCR_ENABLED=false)" >> $GITHUB_STEP_SUMMARY
           echo "4. Check that dashboard shows 'Scan Receipt' button is hidden/disabled" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
