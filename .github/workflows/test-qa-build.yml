@@ -1,0 +1,134 @@
+name: Test QA Build (Feature Branch)
+
+# Temporary workflow for testing QA builds on ci/#57-release-pipeline-backend-mobile branch
+# This mirrors deploy-qa.yml logic to validate QA build process before merging to main
+# Delete this file after testing is complete
+
+on:
+  push:
+    branches:
+      - 'ci/#57-release-pipeline-backend-mobile'
+    paths:
+      # Trigger on all changes
+      - 'apps/server/**'
+      - 'packages/shared/**'
+      - 'deploy/docker/**'
+      - 'deploy/scripts/**'
+      - 'apps/mobile/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Images (QA Test)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract branch name
+        id: extract-branch
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          TAG="qa-test-${BRANCH//#/}-${GITHUB_SHA:0:7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "🏷️  Using tag: $TAG"
+
+      - name: Build Docker image (using build.sh)
+        env:
+          VERSION: test-${{ github.sha }}
+        run: |
+          chmod +x ./deploy/scripts/build.sh
+          ./deploy/scripts/build.sh "test-${{ github.sha }}"
+
+      - name: Tag image for QA test
+        env:
+          IMAGE_BASE: ghcr.io/${{ github.repository }}/server
+          TAG: ${{ steps.extract-branch.outputs.tag }}
+        run: |
+          docker tag smart-pocket-server:test-${{ github.sha }} "$IMAGE_BASE:$TAG"
+          docker push "$IMAGE_BASE:$TAG"
+          echo "✅ Pushed test image: $IMAGE_BASE:$TAG"
+
+  android-qa:
+    name: Build Android APK (QA Test)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build release APK (unsigned for QA test)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-qa-test-apk
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 7
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-push, android-qa]
+    if: always()
+
+    steps:
+      - name: Build Results
+        run: |
+          echo "# QA Build Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Server Docker image built and pushed to GHCR (qa-test tag)" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Android APK built and available as artifact" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Testing Instructions:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download android-qa-test-apk artifact from Actions tab" >> $GITHUB_STEP_SUMMARY
+          echo "2. Install on Android device/emulator via: \`adb install app-release-unsigned.apk\`" >> $GITHUB_STEP_STEP_SUMMARY
+          echo "3. Verify OCR scanner is disabled (feature flag: OCR_ENABLED=false)" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check that dashboard shows 'Scan Receipt' button is hidden/disabled" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "If all checks pass, the QA build workflow is ready for production use!" >> $GITHUB_STEP_SUMMARY
