@@ -17,6 +17,13 @@ on:
       - 'apps/mobile/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
+  
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+        default: 'Manual test'
 
 jobs:
   build-and-push:
