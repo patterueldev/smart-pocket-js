@@ -176,47 +176,46 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build release APK
+      - name: Setup signing config (if credentials available)
         working-directory: apps/mobile/android
-        run: ./gradlew assembleRelease
-
-      - name: Sign APK (if credentials available)
-        id: signing
-        working-directory: apps/mobile/android/app/build/outputs/apk/release
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "signing_enabled=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Keystore not configured - will use unsigned APK"
-            exit 0
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > app/my-upload-key.keystore
+            echo "MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore" >> gradle.properties
+            echo "MYAPP_UPLOAD_STORE_PASSWORD=$STORE_PASS" >> gradle.properties
+            echo "MYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS" >> gradle.properties
+            echo "MYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASS" >> gradle.properties
+            echo "✅ Signing config added"
+          else
+            echo "⚠️ No signing credentials - will use debug key"
           fi
-          
-          # Decode keystore
-          echo "$KEYSTORE_B64" | base64 -d > keystore.jks
-          
-          # Sign APK
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore keystore.jks -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
-            app-release-unsigned.apk "$KEY_ALIAS"
-          
-          # Align
-          $ANDROID_HOME/build-tools/*/zipalign -f -v 4 app-release-unsigned.apk app-release-signed.apk
-          
-          echo "signing_enabled=true" >> $GITHUB_OUTPUT
-          echo "✅ APK signed successfully"
+
+      - name: Run Expo prebuild for Android
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build release APK using Expo
+        working-directory: apps/mobile
+        env:
+          EXPO_NO_DOTENV: 1
+        run: npx expo run:android --variant release --no-bundler
 
       - name: Prepare APK for upload
         run: |
           cd apps/mobile/android/app/build/outputs/apk/release
           
-          if [ -f "app-release-signed.apk" ]; then
-            mv app-release-signed.apk smart-pocket-android-${{ needs.build-and-push.outputs.version }}.apk
+          # Check which APK was generated
+          if [ -f "app-release.apk" ]; then
+            echo "✅ Found signed APK"
+            mv app-release.apk smart-pocket-android-${{ needs.build-and-push.outputs.version }}.apk
             cp smart-pocket-android-${{ needs.build-and-push.outputs.version }}.apk smart-pocket-android-${{ needs.build-and-push.outputs.version }}-signed.apk
           else
+            echo "⚠️ Using unsigned APK"
             cp app-release-unsigned.apk smart-pocket-android-${{ needs.build-and-push.outputs.version }}.apk
             cp app-release-unsigned.apk smart-pocket-android-${{ needs.build-and-push.outputs.version }}-unsigned.apk
           fi

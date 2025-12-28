@@ -100,9 +100,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build release APK (unsigned for QA test)
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleRelease
+      - name: Run Expo prebuild for Android
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --clean
+
+      - name: Build release APK using Expo
+        working-directory: apps/mobile
+        env:
+          EXPO_NO_DOTENV: 1
+        run: npx expo run:android --variant release --no-bundler
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
