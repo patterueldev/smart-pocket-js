@@ -169,9 +169,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Android APK via EAS
+      - name: Build Android APK via EAS (Production Variant)
         working-directory: apps/mobile
-        run: eas build --platform android --non-interactive --output=./app-release.apk
+        run: eas build --platform android --profile production --non-interactive --output=./app-release.apk
 
       - name: Prepare APK for upload
         run: |

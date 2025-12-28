@@ -1,16 +1,26 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
-    "version": "1.0.0",
+    "name": "Smart Pocket",
+    "slug": "smart-pocket",
+    "version": "0.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "app",
+    "scheme": "smartpocket",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.app",
+      "bundleIdentifier": "com.smartpocket.app",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
@@ -33,7 +43,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.app"
+      "package": "com.smartpocket.app"
     },
     "web": {
       "output": "static",
@@ -61,7 +71,27 @@
     "extra": {
       "DEV_SERVER_URL": "http://thursday.local:3001",
       "DEV_API_KEY": "dev_api_key_change_me",
-      "OCR_ENABLED": false
+      "OCR_ENABLED": false,
+      "variants": {
+        "development": {
+          "displayName": "Smart Pocket (Dev)",
+          "apiEndpoint": "http://localhost:3001",
+          "ocrEnabled": false,
+          "debugEnabled": true
+        },
+        "qa": {
+          "displayName": "Smart Pocket (QA)",
+          "apiEndpoint": "http://localhost:3002",
+          "ocrEnabled": false,
+          "debugEnabled": true
+        },
+        "production": {
+          "displayName": "Smart Pocket",
+          "apiEndpoint": "https://smartpocket.example.com",
+          "ocrEnabled": false,
+          "debugEnabled": false
+        }
+      }
     }
   }
 }

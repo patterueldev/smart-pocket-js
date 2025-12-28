@@ -251,9 +251,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Android APK via EAS
+      - name: Build Android APK via EAS (QA Variant)
         working-directory: apps/mobile
-        run: eas build --platform android --non-interactive --output=./app-release.apk
+        run: eas build --platform android --profile qa --non-interactive --output=./app-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
