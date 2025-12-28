@@ -114,6 +114,48 @@ pnpm build
 - `command not found: expo` → Use `pnpm app:ios` instead of `expo run:ios`
 - PNPM path errors with CocoaPods → Run `pnpm app:ios` which handles pod installation correctly
 
+### API Client Generation (Orval)
+
+**This project uses Orval to generate type-safe API clients from OpenAPI specs.**
+
+**Workflow:**
+1. Update [docs/api-spec.yaml](../docs/api-spec.yaml) with new endpoints
+2. Run `pnpm api:generate` to regenerate [apps/mobile/api/generated.ts](../apps/mobile/api/generated.ts)
+3. Import generated types and functions in your service layer
+4. Map API response DTOs to UI-friendly models
+
+**Configuration:** [orval.config.ts](../orval.config.ts)
+- Input: `docs/api-spec.yaml` (OpenAPI 3.0 spec)
+- Output: `apps/mobile/api/generated.ts` (generated client)
+- Mutator: `apps/mobile/api/httpClient.ts` (HTTP client with auth)
+
+**Usage Pattern:**
+```typescript
+// Import generated client and types
+import { postApiV1Connect, PostApiV1ConnectBody } from '../api/generated';
+
+// Call API
+const response = await postApiV1Connect({ deviceInfo: { ... } });
+
+// Map DTO → UI model
+const mapped = mapResponseToUIModel(response.data);
+```
+
+**Service Layer Convention:**
+- Create services in `apps/mobile/services/` (e.g., `googleSheetsSyncService.ts`)
+- Services call generated client functions and map DTOs to UI models
+- Export typed interfaces for UI components to consume
+- Keep DTO mapping logic in service layer, not in components
+
+**Commands:**
+```bash
+# Regenerate API client after spec changes
+pnpm api:generate
+
+# Mobile-specific generation (if needed)
+pnpm --filter @smart-pocket/mobile api:generate
+```
+
 ## 🚨 CRITICAL RULES 🚨
 
 ### 1. NO AUTO-COMMIT - EVER
