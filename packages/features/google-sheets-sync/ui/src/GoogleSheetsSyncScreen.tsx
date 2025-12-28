@@ -7,7 +7,9 @@ import {
   RefreshControl,
   ViewStyle,
   TextStyle,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { SyncDraft, SyncItem } from '@smart-pocket/google-sheets-sync-service';
 
 export interface GoogleSheetsSyncScreenProps {
@@ -29,6 +31,7 @@ export interface GoogleSheetsSyncScreenProps {
   /**
    * Loading states
    */
+  initialLoading?: boolean;
   loading?: boolean;
   syncing?: boolean;
 
@@ -63,6 +66,7 @@ export function GoogleSheetsSyncScreen({
   syncDraft,
   onRefresh,
   onSync,
+  initialLoading = false,
   loading = false,
   syncing = false,
   Button,
@@ -70,16 +74,48 @@ export function GoogleSheetsSyncScreen({
 }: GoogleSheetsSyncScreenProps) {
   const hasPendingSyncs = syncDraft && syncDraft.pendingSyncs.length > 0;
 
-  const formatRelativeTime = (isoDate: string): string => {
-    const date = new Date(isoDate);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
+  // Currency symbols map
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    JPY: '¥',
+    PHP: '₱',
+    CNY: '¥',
+    INR: '₹',
+    AUD: 'A$',
+    CAD: 'C$',
+    CHF: 'CHF',
+    SEK: 'kr',
+    NZD: 'NZ$',
+  };
 
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  const getCurrencySymbol = (code: string): string => {
+    return CURRENCY_SYMBOLS[code] || code;
+  };
+
+  const formatDate = (isoDate?: string | null): string => {
+    if (!isoDate) return 'Not synced yet';
+
+    const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) return 'Not synced yet';
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const formatAmount = (amount: string, currency: string): string => {
+    const numAmount = parseFloat(amount);
+    const symbol = getCurrencySymbol(currency);
+    // Use toLocaleString for thousands separators
+    const formatted = numAmount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return `${symbol}${formatted}`;
   };
 
   const renderBalanceChange = (
@@ -96,69 +132,98 @@ export function GoogleSheetsSyncScreen({
         <Text style={styles.balanceLabel}>{label}:</Text>
         <View style={styles.balanceChange}>
           <Text style={styles.balanceOld}>
-            {synced.currency} {synced.amount}
+            {formatAmount(synced.amount, synced.currency)}
           </Text>
           <Text style={styles.arrow}>→</Text>
           <Text style={styles.balanceNew}>
-            {current.currency} {current.amount}
+            {formatAmount(current.amount, current.currency)}
           </Text>
         </View>
       </View>
     );
   };
 
+  // Skeleton loader data
+  const skeletonLayout = [
+    { key: 'skeleton1', width: '100%', height: 120, marginBottom: 16, borderRadius: 8 },
+    { key: 'skeleton2', width: '100%', height: 120, marginBottom: 16, borderRadius: 8 },
+    { key: 'skeleton3', width: '100%', height: 120, marginBottom: 16, borderRadius: 8 },
+  ];
+
+  if (initialLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.scrollContent}>
+          {skeletonLayout.map((item) => (
+            <View
+              key={item.key}
+              style={{
+                width: item.width,
+                height: item.height,
+                marginBottom: item.marginBottom,
+                borderRadius: item.borderRadius,
+                backgroundColor: '#E0E0E0',
+              }}
+            />
+          ))}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
-        }
-      >
-        {!hasPendingSyncs && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>✅</Text>
-            <Text style={styles.emptyTitle}>All accounts are synced</Text>
-            <Text style={styles.emptyText}>Pull down to check for updates</Text>
-            {syncDraft?.lastSyncedAt && (
-              <Text style={styles.lastSyncText}>
-                Last synced: {formatRelativeTime(syncDraft.lastSyncedAt)}
-              </Text>
-            )}
-          </View>
-        )}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.scrollViewWrapper}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+          }
+        >
+          {!hasPendingSyncs && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>✅</Text>
+              <Text style={styles.emptyTitle}>All accounts are synced</Text>
+              <Text style={styles.emptyText}>Pull down to check for updates</Text>
+              {syncDraft?.lastSyncedAt && (
+                <Text style={styles.lastSyncText}>
+                  Last synced: {formatDate(syncDraft.lastSyncedAt)}
+                </Text>
+              )}
+            </View>
+          )}
 
-        {hasPendingSyncs && (
-          <>
-            <Text style={styles.header}>
-              Pending Syncs ({syncDraft.pendingSyncs.length})
-            </Text>
-
-            {syncDraft.pendingSyncs.map((item: SyncItem) => (
-              <Card key={item.accountId} style={styles.accountCard}>
-                <View style={styles.accountHeader}>
-                  <Text style={styles.accountIcon}>
-                    {item.accountName.includes('Cash') ? '💵' : '💳'}
-                  </Text>
-                  <View style={styles.accountInfo}>
-                    <Text style={styles.accountName}>{item.accountName}</Text>
-                    <Text style={styles.lastSynced}>
-                      Last synced: {formatRelativeTime(item.lastSyncedAt)}
+          {hasPendingSyncs && (
+            <>
+              {syncDraft.pendingSyncs.map((item: SyncItem, index: number) => (
+                <Card
+                  key={item.accountId || `${item.accountName}-${index}`}
+                  style={styles.accountCard}
+                >
+                  <View style={styles.accountHeader}>
+                    <Text style={styles.accountIcon}>
+                      {item.accountName.includes('Cash') ? '💵' : '💳'}
                     </Text>
+                    <View style={styles.accountInfo}>
+                      <Text style={styles.accountName}>{item.accountName}</Text>
+                      <Text style={styles.lastSynced}>
+                        Last synced: {formatDate(item.lastSyncedAt)}
+                      </Text>
+                    </View>
                   </View>
-                </View>
 
-                {renderBalanceChange('Cleared', item.cleared?.current, item.cleared?.synced)}
-                {renderBalanceChange('Uncleared', item.uncleared?.current, item.uncleared?.synced)}
-              </Card>
-            ))}
-          </>
-        )}
-      </ScrollView>
+                  {renderBalanceChange('Cleared', item.cleared?.current, item.cleared?.synced)}
+                  {renderBalanceChange('Uncleared', item.uncleared?.current, item.uncleared?.synced)}
+                </Card>
+              ))}
+            </>
+          )}
+        </ScrollView>
+      </View>
 
       {hasPendingSyncs && (
-        <View style={styles.actions}>
+        <View style={[styles.actions, styles.actionsPadding]}>
           <Button
             title="Sync to Google Sheets"
             onPress={() => onSync(syncDraft.draftId)}
@@ -166,7 +231,7 @@ export function GoogleSheetsSyncScreen({
           />
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -175,17 +240,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  scrollViewWrapper: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
-  },
-  header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#000',
+    paddingBottom: Platform.select({ ios: 32, android: 20 }),
   },
   emptyState: {
     flex: 1,
@@ -268,8 +331,12 @@ const styles = StyleSheet.create({
   },
   actions: {
     padding: 16,
+    paddingBottom: Platform.select({ ios: 48, android: 24 }),
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     backgroundColor: '#fff',
+  },
+  actionsPadding: {
+    paddingBottom: 0,
   },
 });
