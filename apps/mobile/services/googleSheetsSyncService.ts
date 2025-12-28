@@ -28,7 +28,6 @@ export interface SyncDraft {
     totalAccounts: number;
     totalChanges: number;
   };
-  lastSyncedAt?: string | null;
 }
 
 export interface SyncResult {
@@ -44,45 +43,49 @@ function mapPendingSyncs(
 ): PendingSync[] {
   const pendingChanges = draftResponse.pendingChanges || [];
   
-  return pendingChanges.map((change) => ({
-    accountId: change.accountId || '',
-    accountName: change.accountName || '',
-    lastSyncedAt: (change as any).lastSyncedAt || null,
-    cleared: change.cleared
-      ? {
-          current: {
-            amount: change.cleared.current?.amount || '0.00',
-            currency: change.cleared.current?.currency || 'USD',
-          },
-          synced: {
-            amount: change.cleared.synced?.amount || '0.00',
-            currency: change.cleared.synced?.currency || 'USD',
-          },
-        }
-      : undefined,
-    uncleared: change.uncleared
-      ? {
-          current: {
-            amount: (change.uncleared as any)?.current?.amount || '0.00',
-            currency: (change.uncleared as any)?.current?.currency || 'USD',
-          },
-          synced: {
-            amount: (change.uncleared as any)?.synced?.amount || '0.00',
-            currency: (change.uncleared as any)?.synced?.currency || 'USD',
-          },
-        }
-      : undefined,
-  }));
+  return pendingChanges.map((change) => {
+    const base: PendingSync = {
+      accountId: change.accountId || '',
+      accountName: change.accountName || '',
+      lastSyncedAt: (change as any).lastSyncedAt || null,
+      cleared: change.cleared
+        ? {
+            current: {
+              amount: change.cleared.current?.amount || '0.00',
+              currency: change.cleared.current?.currency || 'USD',
+            },
+            synced: {
+              amount: change.cleared.synced?.amount || '0.00',
+              currency: change.cleared.synced?.currency || 'USD',
+            },
+          }
+        : undefined,
+    } as PendingSync;
+
+    if ((change as any).uncleared) {
+      base.uncleared = {
+        current: {
+          amount: (change.uncleared as any)?.current?.amount || '0.00',
+          currency: (change.uncleared as any)?.current?.currency || 'USD',
+        },
+        synced: {
+          amount: (change.uncleared as any)?.synced?.amount || '0.00',
+          currency: (change.uncleared as any)?.synced?.currency || 'USD',
+        },
+      };
+    }
+
+    return base;
+  });
 }
 
 function mapSyncDraft(
   draftResponse: PostApiV1GoogleSheetsSyncDraft200
 ): SyncDraft {
-  return {
+  const mapped: SyncDraft = {
     draftId: draftResponse.draftId || '',
     createdAt: draftResponse.createdAt || new Date().toISOString(),
     pendingSyncs: mapPendingSyncs(draftResponse),
-    lastSyncedAt: (draftResponse as any).lastSyncedAt || null,
     summary: draftResponse.summary
       ? {
           totalAccounts: draftResponse.summary.totalAccounts || 0,
@@ -90,6 +93,13 @@ function mapSyncDraft(
         }
       : undefined,
   };
+
+  // Back-compat: only include top-level lastSyncedAt when provided non-null
+  if ((draftResponse as any).lastSyncedAt) {
+    (mapped as any).lastSyncedAt = (draftResponse as any).lastSyncedAt;
+  }
+
+  return mapped;
 }
 
 function mapSyncResult(
