@@ -94,8 +94,12 @@ export function GoogleSheetsSyncScreen({
     return CURRENCY_SYMBOLS[code] || code;
   };
 
-  const formatDate = (isoDate: string): string => {
+  const formatDate = (isoDate?: string | null): string => {
+    if (!isoDate) return 'Not synced yet';
+
     const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) return 'Not synced yet';
+
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: '2-digit',
@@ -192,8 +196,11 @@ export function GoogleSheetsSyncScreen({
 
           {hasPendingSyncs && (
             <>
-              {syncDraft.pendingSyncs.map((item: SyncItem) => (
-                <Card key={item.accountId} style={styles.accountCard}>
+              {syncDraft.pendingSyncs.map((item: SyncItem, index: number) => (
+                <Card
+                  key={item.accountId || `${item.accountName}-${index}`}
+                  style={styles.accountCard}
+                >
                   <View style={styles.accountHeader}>
                     <Text style={styles.accountIcon}>
                       {item.accountName.includes('Cash') ? '💵' : '💳'}

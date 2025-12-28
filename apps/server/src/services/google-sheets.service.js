@@ -6,6 +6,17 @@ const fs = require('fs');
 // In-memory draft storage
 const draftsStore = new Map();
 
+function parseSheetDate(dateString) {
+  if (!dateString) return null;
+
+  const parsed = new Date(dateString);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString();
+}
+
 /**
  * Initialize Google Sheets API authentication
  * 
@@ -45,6 +56,13 @@ async function getPendingSyncs(actualBudgetConfig) {
     // Fetch last synced values from Google Sheets
     const lastSyncedBalances = await getLastSyncedBalances();
 
+    // Track most recent last synced date across accounts
+    const latestSyncedTimestamp = lastSyncedBalances
+      .map(balance => (balance.lastSyncedAt ? new Date(balance.lastSyncedAt).getTime() : null))
+      .filter(Boolean)
+      .sort((a, b) => b - a)[0] || null;
+    const lastSyncedAt = latestSyncedTimestamp ? new Date(latestSyncedTimestamp).toISOString() : null;
+
     // Compare and find differences
     const pendingChanges = [];
 
@@ -58,6 +76,7 @@ async function getPendingSyncs(actualBudgetConfig) {
         pendingChanges.push({
           type: 'NEW',
           accountName: current.accountName,
+          lastSyncedAt: null,
           cleared: {
             current: current.cleared,
             synced: { amount: '0.00', currency: current.cleared.currency },
@@ -81,6 +100,7 @@ async function getPendingSyncs(actualBudgetConfig) {
         pendingChanges.push({
           type: 'UPDATE',
           accountName: current.accountName,
+          lastSyncedAt: synced.lastSyncedAt || null,
           cleared: hasClearedDiff ? {
             current: current.cleared,
             synced: synced.cleared,
@@ -94,7 +114,7 @@ async function getPendingSyncs(actualBudgetConfig) {
     }
 
     // Create draft
-    const draft = createDraft(pendingChanges, currentBalances);
+    const draft = createDraft(pendingChanges, currentBalances, lastSyncedAt);
 
     logger.info('Draft created', {
       draftId: draft.id,
@@ -115,7 +135,7 @@ async function getPendingSyncs(actualBudgetConfig) {
  * @param {Array} allAccounts - All accounts from Actual Budget
  * @returns {Object} Draft object with ID
  */
-function createDraft(pendingChanges, allAccounts) {
+function createDraft(pendingChanges, allAccounts, lastSyncedAt = null) {
   const { randomUUID } = require('crypto');
   
   const draft = {
@@ -123,6 +143,7 @@ function createDraft(pendingChanges, allAccounts) {
     createdAt: new Date().toISOString(),
     pendingChanges,
     allAccounts, // Store for sync execution
+    lastSyncedAt,
     summary: {
       totalAccounts: allAccounts.length,
       newAccounts: pendingChanges.filter(c => c.type === 'NEW').length,
@@ -250,7 +271,7 @@ async function getLastSyncedBalances() {
           amount: row[2] || '0.00',          // Column C
           currency: process.env.DEFAULT_CURRENCY || 'USD',
         },
-        lastSyncedAt: row[3] || null,        // Column D (date string)
+        lastSyncedAt: parseSheetDate(row[3]), // Column D (date string → ISO)
       }));
 
     return balances;

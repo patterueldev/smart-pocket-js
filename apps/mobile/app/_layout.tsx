@@ -58,14 +58,19 @@ function RootLayoutNav() {
     }
   }, [session, loading, segments, router]);
 
+  const headerBackground = '#1F1F1F';
+
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: headerBackground }}
+      edges={['top', 'left', 'right']}
+    >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{
             headerShadowVisible: false,
             headerStyle: {
-            backgroundColor: '#1F1F1F',
+            backgroundColor: headerBackground,
           },
           headerTitleStyle: {
             fontWeight: '600',
@@ -104,7 +109,7 @@ function RootLayoutNav() {
         <Stack.Screen name="transaction" options={{ headerShown: true, title: 'Transaction' }} />
         <Stack.Screen name="google-sheets-sync" options={{ headerShown: true, title: 'Google Sheets Sync' }} />
       </Stack>
-      <StatusBar style="light" backgroundColor="#000" />
+      <StatusBar style="light" backgroundColor={headerBackground} />
       </ThemeProvider>
     </SafeAreaView>
   );

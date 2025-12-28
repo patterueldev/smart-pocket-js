@@ -33,6 +33,7 @@ router.post('/sync/draft', asyncHandler(async (req, res) => {
   res.json({
     draftId: draft.id,
     createdAt: draft.createdAt,
+    lastSyncedAt: draft.lastSyncedAt || null,
     pendingChanges: draft.pendingChanges,
     summary: draft.summary,
   });

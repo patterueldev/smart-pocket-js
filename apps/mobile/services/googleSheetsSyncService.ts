@@ -9,7 +9,7 @@ import {
 export interface PendingSync {
   accountId: string;
   accountName: string;
-  lastSyncedAt?: string | null; // Allow null since API doesn't provide this yet
+  lastSyncedAt?: string | null;
   cleared?: {
     current: { amount: string; currency: string };
     synced: { amount: string; currency: string };
@@ -28,6 +28,7 @@ export interface SyncDraft {
     totalAccounts: number;
     totalChanges: number;
   };
+  lastSyncedAt?: string | null;
 }
 
 export interface SyncResult {
@@ -46,7 +47,7 @@ function mapPendingSyncs(
   return pendingChanges.map((change) => ({
     accountId: change.accountId || '',
     accountName: change.accountName || '',
-    lastSyncedAt: null, // API doesn't provide this field
+    lastSyncedAt: (change as any).lastSyncedAt || null,
     cleared: change.cleared
       ? {
           current: {
@@ -81,6 +82,7 @@ function mapSyncDraft(
     draftId: draftResponse.draftId || '',
     createdAt: draftResponse.createdAt || new Date().toISOString(),
     pendingSyncs: mapPendingSyncs(draftResponse),
+    lastSyncedAt: (draftResponse as any).lastSyncedAt || null,
     summary: draftResponse.summary
       ? {
           totalAccounts: draftResponse.summary.totalAccounts || 0,
