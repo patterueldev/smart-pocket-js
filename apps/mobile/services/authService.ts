@@ -74,19 +74,47 @@ export class AuthService {
    * @throws AuthError with specific error type
    */
   async connect(serverUrl: string, apiKey: string): Promise<StoredSession> {
+    const logContext = {
+      timestamp: new Date().toISOString(),
+      sessionStart: true,
+    };
+
     try {
+      console.log('[authService] ========================================');
+      console.log('[authService] CONNECTION ATTEMPT START');
+      console.log('[authService] ========================================');
+      console.log('[authService] Attempting to connect:', {
+        ...logContext,
+        serverUrl,
+        apiKeyLength: apiKey?.length,
+        apiKeyStart: apiKey?.substring(0, 10) + '***',
+      });
+
       // Validate URL format
       if (!this.isValidUrl(serverUrl)) {
+        console.error('[authService] Invalid URL format:', serverUrl);
         throw new AuthError(AuthErrorType.InvalidUrl);
       }
 
       // Normalize URL (remove trailing slash)
       const normalizedUrl = serverUrl.replace(/\/$/, '');
+      console.log('[authService] Normalized URL:', {
+        original: serverUrl,
+        normalized: normalizedUrl,
+        hostname: new URL(normalizedUrl).hostname,
+        port: new URL(normalizedUrl).port,
+        protocol: new URL(normalizedUrl).protocol,
+      });
 
       // Configure HTTP client with baseUrl and apiKey
       configureHttpClient({
         baseUrl: normalizedUrl,
         apiKey: apiKey,
+      });
+
+      console.log('[authService] HTTP client configured:', {
+        baseUrl: normalizedUrl,
+        apiKeySet: !!apiKey,
       });
 
         // Prepare request body (persisted device id)
@@ -100,23 +128,38 @@ export class AuthService {
           },
         };
 
+      console.log('[authService] Request body prepared:', {
+        deviceInfo: {
+          platform: requestBody.deviceInfo.platform,
+          appVersion: requestBody.deviceInfo.appVersion,
+          deviceIdLength: deviceId?.length,
+        },
+      });
+
+      console.log('[authService] Sending connect request to:', normalizedUrl + '/api/v1/connect');
+
       // Call generated API function
       const response = await postApiV1Connect(requestBody);
 
-      console.log('API Response:', {
+      console.log('[authService] API Response received:', {
         status: response.status,
-        data: response.data,
-        headers: response.headers,
+        dataKeys: response.data ? Object.keys(response.data) : null,
+        hasToken: !!response.data?.token,
       });
 
       // Check if it's an error response (401)
       if (response.status === 401) {
+        console.error('[authService] Invalid API key (401)');
         throw new AuthError(AuthErrorType.InvalidApiKey);
       }
 
       // Extract data from successful response
       const connectData = response.data;
-      console.log('Connect data:', connectData);
+      console.log('[authService] Connect data:', {
+        hasToken: !!connectData?.token,
+        hasServerInfo: !!connectData?.serverInfo,
+        expiresIn: connectData?.expiresIn,
+      });
 
       // Create session object
       const expiresAt = new Date(
@@ -141,13 +184,30 @@ export class AuthService {
 
       return session;
     } catch (error) {
+      console.error('[authService] ========================================');
+      console.error('[authService] CONNECTION FAILED');
+      console.error('[authService] ========================================');
+      console.error('[authService] Connection error:', error);
+
       if (error instanceof AuthError) {
+        console.error('[authService] AuthError details:', {
+          type: error.type,
+          message: error.message,
+          originalErrorMessage: error.originalError?.message,
+        });
         throw error;
       }
 
       if (error instanceof Error) {
+        console.error('[authService] Generic Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+
         // Classify the error
         if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          console.error('[authService] → Classified as InvalidApiKey');
           throw new AuthError(AuthErrorType.InvalidApiKey, error);
         }
 
@@ -155,14 +215,34 @@ export class AuthService {
           error.message.includes('HTTP') ||
           error.message.includes('Network')
         ) {
+          console.error('[authService] → Classified as NetworkError');
+          console.error('[authService] NETWORK ERROR DETAILS:', {
+            message: error.message,
+            probable_causes: [
+              'Server is not running on the specified host:port',
+              'Hostname resolution failed (thursday.local unreachable)',
+              'Network connectivity issue',
+              'Firewall blocking the connection',
+              'Port 3001 not exposed or listening',
+            ],
+            debugging_steps: [
+              '1. Verify server is running: curl http://thursday.local:3001/health',
+              '2. Check network connectivity from device/simulator',
+              '3. Verify thursday.local resolves correctly',
+              '4. Check firewalls and network settings',
+            ],
+          });
           throw new AuthError(AuthErrorType.NetworkError, error);
         }
 
         if (error.message.includes('5')) {
+          console.error('[authService] → Classified as ServerError');
           throw new AuthError(AuthErrorType.ServerError, error);
         }
       }
 
+      console.error('[authService] → Classified as Unknown error');
+      console.error('[authService] Full error object:', error);
       throw new AuthError(AuthErrorType.Unknown, error as Error);
     }
   }

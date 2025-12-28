@@ -8,6 +8,7 @@ import { googleSheetsSyncService, SyncDraft } from '../services/googleSheetsSync
 
 export default function GoogleSheetsSyncRoute() {
   const [syncDraft, setSyncDraft] = useState<SyncDraft | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -31,6 +32,7 @@ export default function GoogleSheetsSyncRoute() {
       Alert.alert('Error', 'Failed to load sync data. Please check your connection and try again.');
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -83,9 +85,9 @@ export default function GoogleSheetsSyncRoute() {
         syncDraft={syncDraft}
         onRefresh={handlePullToRefresh}
         onSync={handleSync}
+        initialLoading={initialLoading}
         loading={loading}
         syncing={syncing}
-        refreshing={refreshing}
         Button={Button}
         Card={Card}
       />

@@ -53,6 +53,13 @@ export const httpClient = async <T>(
     ? url
     : `${globalConfig.baseUrl || 'http://localhost:3001'}${url}`;
 
+  console.log('[httpClient] Making request:', {
+    url,
+    finalUrl,
+    method: options?.method || 'GET',
+    baseUrl: globalConfig.baseUrl,
+  });
+
   // Build headers
   const finalHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -72,9 +79,31 @@ export const httpClient = async <T>(
   }
 
   try {
+    console.log('[httpClient] Making request:', {
+      url,
+      finalUrl,
+      method: options?.method || 'GET',
+      baseUrl: globalConfig.baseUrl,
+    });
+
+    console.log('[httpClient] Request details:', {
+      timestamp: new Date().toISOString(),
+      finalUrl,
+      method: options?.method || 'GET',
+      headers: finalHeaders,
+      hasApiKey: !!finalHeaders['X-API-Key'],
+      hasAuthToken: !!finalHeaders['Authorization'],
+    });
+
+    console.log('[httpClient] Sending fetch request to:', finalUrl);
     const response = await fetch(finalUrl, {
       ...options,
       headers: finalHeaders,
+    });
+
+    console.log('[httpClient] Response received:', {
+      status: response.status,
+      statusText: response.statusText,
     });
 
     // Parse response
@@ -104,6 +133,30 @@ export const httpClient = async <T>(
       headers: response.headers,
     } as T;
   } catch (error) {
+    const errorDetails: any = {
+      url: finalUrl,
+      timestamp: new Date().toISOString(),
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+    };
+
+    if (error instanceof Error) {
+      errorDetails.stack = error.stack;
+      if (error.constructor === TypeError && error.message.includes('Network')) {
+        errorDetails.likelyNetworkCause = 'fetch XHR error - could be CORS, DNS resolution, connection refused, or host unreachable';
+        errorDetails.attemptedUrl = finalUrl;
+        errorDetails.checkItems = [
+          '1. Is the server actually running?',
+          '2. Is the hostname "thursday.local" resolvable from this device?',
+          '3. Is port 3001 accessible from this network?',
+          '4. Check firewall rules',
+          '5. Try with IP address instead of hostname',
+        ];
+      }
+    }
+
+    console.error('[httpClient] Request failed with detailed error:', errorDetails);
+
     // Re-throw with additional context
     if (error instanceof Error) {
       throw error;
