@@ -60,7 +60,8 @@
     },
     "extra": {
       "DEV_SERVER_URL": "http://thursday.local:3001",
-      "DEV_API_KEY": "dev_api_key_change_me"
+      "DEV_API_KEY": "dev_api_key_change_me",
+      "OCR_ENABLED": false
     }
   }
 }

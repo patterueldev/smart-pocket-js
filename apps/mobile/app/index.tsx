@@ -7,6 +7,7 @@ import { SideMenu } from '@/components/SideMenu';
 import { Transaction } from '@/types';
 import { useSession } from '@/hooks/useSession';
 import { authService } from '@/services/authService';
+import { ocrEnabled } from '@/config/env';
 
 export default function DashboardScreen() {
   const { session, clearSession } = useSession();
@@ -125,7 +126,13 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.section}>
-          <Button title="📸 Scan Receipt" onPress={handleScanReceipt} size="large" />
+          {ocrEnabled ? (
+            <Button title="📸 Scan Receipt" onPress={handleScanReceipt} size="large" />
+          ) : (
+            <Card style={styles.emptyCard}>
+              <Text style={styles.emptyText}>Receipt scanning is temporarily disabled for this release.</Text>
+            </Card>
+          )}
         </View>
 
         {googleSheetsSyncEnabled && (

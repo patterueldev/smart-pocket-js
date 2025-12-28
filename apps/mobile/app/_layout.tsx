@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SessionProvider, useSession } from '@/hooks/useSession';
+import { ocrEnabled } from '@/config/env';
 
 export const unstable_settings = {
   initialRouteName: 'setup',
@@ -38,12 +39,21 @@ function RootLayoutNav() {
     const isConnected = session?.connected;
     
     // Don't interfere with feature routes
-    const onFeatureRoute = ['receipt-scan', 'transaction', 'google-sheets-sync'].includes(currentSegment);
+    const featureRoutes = ['transaction', 'google-sheets-sync'];
+    if (ocrEnabled) {
+      featureRoutes.push('receipt-scan');
+    }
+
+    const onFeatureRoute = featureRoutes.includes(currentSegment);
 
     console.log('Navigation guard:', { onIndex, onSetup, isConnected, onFeatureRoute, segments });
 
+    if (currentSegment === 'receipt-scan' && !ocrEnabled) {
+      router.replace('/');
+      return;
+    }
+
     if (onFeatureRoute) {
-      // Allow feature routes to work normally
       return;
     }
 
@@ -105,7 +115,9 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="setup" options={{ headerShown: false, title: 'Setup' }} />
         <Stack.Screen name="index" options={{ headerShown: false, title: 'Dashboard' }} />
-        <Stack.Screen name="receipt-scan" options={{ headerShown: true, title: 'Scan Receipt' }} />
+        {ocrEnabled ? (
+          <Stack.Screen name="receipt-scan" options={{ headerShown: true, title: 'Scan Receipt' }} />
+        ) : null}
         <Stack.Screen name="transaction" options={{ headerShown: true, title: 'Transaction' }} />
         <Stack.Screen name="google-sheets-sync" options={{ headerShown: true, title: 'Google Sheets Sync' }} />
       </Stack>

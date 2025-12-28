@@ -12,6 +12,7 @@ interface EnvConfig {
   devServerUrl: string | null;
   devApiKey: string | null;
   apiBaseUrl: string;
+  ocrEnabled: boolean;
 }
 
 /**
@@ -32,6 +33,8 @@ export function getEnvConfig(): EnvConfig {
     devApiKey: isDev ? expoExtra.DEV_API_KEY || null : null,
     // Default API base URL for production
     apiBaseUrl: expoExtra.API_BASE_URL || 'https://smartpocket.example.com',
+    // Feature flag: gate OCR scanner until ready
+    ocrEnabled: expoExtra.OCR_ENABLED === true || expoExtra.OCR_ENABLED === 'true',
   };
 }
 
@@ -40,3 +43,4 @@ export const envConfig = getEnvConfig();
 export const isDevelopment = envConfig.isDev;
 export const devServerUrl = envConfig.devServerUrl;
 export const devApiKey = envConfig.devApiKey;
+export const ocrEnabled = envConfig.ocrEnabled;
