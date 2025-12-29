@@ -39,6 +39,7 @@
     "expo-symbols": "catalog:",
     "expo-system-ui": "catalog:",
     "expo-web-browser": "catalog:",
+    "expo-build-properties": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
