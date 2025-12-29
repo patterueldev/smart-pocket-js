@@ -31,15 +31,19 @@ jobs:
             chore
             revert
           requireScope: false
-          # Format: <type>: #<issue> <Platform> - <description>
+          # Format: <type>: #<issue> <description> OR <type>: #<issue> <Platform> - <description>
           # Platform is optional but preferred for multi-component projects
-          headerPattern: '^(\w+): #\d+(?: [A-Za-z]+ -)? (.+)$'
+          headerPattern: '^(\w+): #\d+(?:\s+[A-Za-z]+\s+-)?(?:\s+)?(.+)$'
           headerPatternCorrespondence: type, subject
           subjectPattern: ^[A-Z].+[^.]$
           subjectPatternError: |
-            PR title must follow: <type>: #<issue> <Platform> - <description>
+            PR title must follow one of these formats:
+            - <type>: #<issue> <description>
+            - <type>: #<issue> <Platform> - <description>
+            
+            Requirements:
             - Issue number required: #123
-            - Platform optional but preferred: Backend - , iOS - , Mobile -
+            - Platform optional (Backend, iOS, Mobile, Android, etc.)
             - Start description with capital letter
             - No period at end
             - Use imperative mood ("Add" not "Added")
