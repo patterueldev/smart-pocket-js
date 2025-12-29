@@ -54,7 +54,7 @@ jobs:
 
   # Validate branch name format
   validate-branch-name:
-    name: Validate Branch Name
+    name: PR - Validate Branch Name
     runs-on: ubuntu-latest
     steps:
       - name: Check branch name format
@@ -87,7 +87,7 @@ jobs:
           echo "✅ Branch name is valid: $BRANCH_NAME"
 
   conventions-summary:
-    name: Conventions Check Summary
+    name: PR - Conventions Summary
     runs-on: ubuntu-latest
     needs: [validate-pr-title, validate-branch-name]
     if: always()

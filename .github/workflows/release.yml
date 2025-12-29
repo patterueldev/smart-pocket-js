@@ -143,7 +143,7 @@ jobs:
           echo "Digest: ${{ steps.build.outputs.digest }}"
 
   android-apk:
-    name: Build Android APK (Production)
+    name: Production Release - Build Android APK
     runs-on: ubuntu-latest
     needs: build-and-push
     if: needs.build-and-push.outputs.should_release == 'true'
@@ -203,7 +203,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-release:
-    name: Create GitHub Release
+    name: Production Release - Create GitHub Release
     needs: build-and-push
     if: needs.build-and-push.outputs.should_release == 'true'
     runs-on: ubuntu-latest
@@ -242,7 +242,7 @@ jobs:
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
 
   summary:
-    name: Release Summary
+    name: Production Release - Summary
     needs: [build-and-push, android-apk, create-release]
     runs-on: ubuntu-latest
     if: always()

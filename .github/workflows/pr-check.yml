@@ -109,7 +109,7 @@ jobs:
         continue-on-error: true
 
   docker-build-test:
-    name: Docker Build & Smoke Tests
+    name: PR - Docker Build & Smoke Tests
     runs-on: ubuntu-latest
     needs: [check-code-changes, lint-and-test]
     if: |
