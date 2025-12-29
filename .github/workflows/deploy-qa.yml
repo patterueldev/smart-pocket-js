@@ -26,7 +26,7 @@ on:
 
 jobs:
   detect-version-bump:
-    name: Detect version file changes
+    name: QA Release - Detect Version Changes
     runs-on: ubuntu-latest
     outputs:
       is_version_bump: ${{ steps.check.outputs.is_version_bump }}
@@ -68,7 +68,7 @@ jobs:
           fi
 
   build-and-push:
-    name: Build & Push Docker Images
+    name: QA Release - Build Docker Image
     runs-on: ubuntu-latest
     needs: detect-version-bump
     if: ${{ needs.detect-version-bump.outputs.is_version_bump == 'false' }}
@@ -125,7 +125,7 @@ jobs:
           echo "Digest: ${{ steps.build.outputs.digest }}"
 
   notify-homeserver:
-    name: Notify Homeserver to Update
+    name: QA Release - Notify Homeserver
     needs: build-and-push
     runs-on: ubuntu-latest
     if: always() && needs.build-and-push.result == 'success'
@@ -187,7 +187,7 @@ jobs:
           fi
 
   summary:
-    name: Deployment Summary
+    name: QA Release - Summary
     needs: [build-and-push, notify-homeserver]
     runs-on: ubuntu-latest
     if: always()
@@ -226,7 +226,7 @@ jobs:
           echo "3. View logs: \`pnpm run docker:quality -- logs -f\`" >> $GITHUB_STEP_SUMMARY
 
   android-qa:
-    name: Build Android APK (Quality)
+    name: QA Release - Build Android APK
     runs-on: ubuntu-latest
     permissions:
       contents: read
