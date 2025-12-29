@@ -32,37 +32,60 @@ Smart Pocket uses **Expo app variants** to support multiple build environments w
 
 ## Building Variants
 
-### Via EAS Build (Recommended for CI)
+### Via Native Gradle (Recommended)
+
+Build APKs locally or in CI using native Android Gradle:
 
 ```bash
-# Development
-eas build --platform android --profile development
+cd apps/mobile
 
-# Quality (QA)
-eas build --platform android --profile quality
+# Step 1: Generate native projects for the variant
+APP_VARIANT=development pnpx expo prebuild --clean --platform android
+APP_VARIANT=quality pnpx expo prebuild --clean --platform android
+APP_VARIANT=production pnpx expo prebuild --clean --platform android
 
-# Production
-eas build --platform android --profile production
+# Step 2: Build APK
+cd android
+
+# Development (debug-signed)
+./gradlew assembleDevelopmentDebug
+
+# Quality (release-signed)
+./gradlew assembleQualityRelease
+
+# Production (release-signed)
+./gradlew assembleProductionRelease
 ```
 
-### Local Builds
+**APK Locations:**
+- Development: `android/app/build/outputs/apk/development/debug/app-development-debug.apk`
+- Quality: `android/app/build/outputs/apk/quality/release/app-quality-release.apk`
+- Production: `android/app/build/outputs/apk/production/release/app-production-release.apk`
+
+### Local Development with Expo Go
 
 ```bash
 # Development (uses local Expo Go)
 cd apps/mobile
-expo run:android
-
-# Or build locally with EAS
-eas build --platform android --profile development --local
+pnpm start
+# Then scan QR code with Expo Go app
 ```
 
 ## CI/CD Integration
 
 ### GitHub Actions Workflows
 
-- **test-qa-build.yml**: Builds **development** variant
-- **deploy-qa.yml**: Builds **quality** variant (triggered on main)
-- **release.yml**: Builds **production** variant (triggered on version bump)
+All workflows use native Gradle builds:
+
+- **test-qa-build.yml**: Builds **development** APK on feature branches
+- **deploy-qa.yml**: Builds **quality** APK (triggered on main)
+- **release.yml**: Builds **production** APK (triggered on version bump)
+
+Each workflow:
+1. Sets up Android SDK and Java 17
+2. Runs `expo prebuild` with `APP_VARIANT` env var
+3. Builds APK with Gradle
+4. Uploads artifact to GitHub Actions / GitHub Releases
 
 ## Installing Multiple Variants
 

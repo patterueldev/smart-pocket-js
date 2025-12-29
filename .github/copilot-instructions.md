@@ -23,40 +23,13 @@ Smart Pocket is a personal finance management application with OCR receipt scann
 
 ## Development Environment Setup
 
-### Devbox Shell (REQUIRED)
+### Environment Prerequisites
 
-**This project uses [Devbox](https://www.jetpack.io/devbox) for environment isolation.**
+- Node.js 20+
+- pnpm 8+
+- Android SDK/Xcode (when building locally)
 
-When opening a new terminal or running commands:
-
-1. **Always start with:**
-   ```bash
-   devbox shell
-   ```
-
-2. **Or prefix individual commands with:**
-   ```bash
-   devbox run <command>
-   ```
-
-**Why:** Devbox provides isolated Node.js 20 and pnpm 8 environments. Running commands outside devbox will fail because:
-- `pnpm` won't be in PATH
-- Node.js version may be incorrect
-- Dependencies won't be found
-
-**Examples:**
-```bash
-# Enter devbox shell (preferred for multiple commands)
-devbox shell
-
-# Run single command
-devbox run pnpm app:ios
-devbox run pnpm test
-
-# Inside devbox shell, commands work normally
-$ pnpm app:ios
-$ pnpm test
-```
+Run all commands directly with `pnpm` from the repository root.
 
 ### PNPM Monorepo (CRITICAL)
 
@@ -110,7 +83,7 @@ pnpm build
 ```
 
 **If you see errors like:**
-- `command not found: pnpm` → Run inside `devbox shell`
+- `command not found: pnpm` → Install pnpm 8+ (https://pnpm.io/installation)
 - `command not found: expo` → Use `pnpm app:ios` instead of `expo run:ios`
 - PNPM path errors with CocoaPods → Run `pnpm app:ios` which handles pod installation correctly
 

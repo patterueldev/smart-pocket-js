@@ -76,7 +76,7 @@ jobs:
           echo "✅ Pushed test image: $IMAGE_BASE:$TAG"
 
   android-qa:
-    name: Build Android APK (QA Test) via EAS
+    name: Build Android APK (Development Test)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -88,27 +88,41 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20'
+          cache: 'pnpm'
 
-      - name: Setup Expo and EAS
-        uses: expo/expo-github-action@v8
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          version: 8
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
-      - name: Build Android APK via EAS (Development Variant)
+      - name: Run Expo prebuild (generate native projects)
         working-directory: apps/mobile
-        run: eas build --platform android --profile development --non-interactive --output=./app-release.apk
+        env:
+          APP_VARIANT: development
+        run: pnpx expo prebuild --clean --platform android
+
+      - name: Build Development APK (Debug)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-qa-test-apk
-          path: apps/mobile/app-release.apk
+          name: android-development-test-apk
+          path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
 
   summary:
