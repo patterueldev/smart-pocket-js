@@ -1,428 +1,151 @@
-# App Variants Documentation
+# App Variants Configuration
 
 ## Overview
 
-Smart Pocket uses **Expo app variants** to create different builds of the app for different environments. This allows you to install all three versions on the same device with different bundle IDs, app names, and configurations.
+Smart Pocket uses **Expo app variants** to support multiple build environments with different bundle IDs, allowing you to install all three versions on the same device simultaneously.
 
-**Reference**: https://docs.expo.dev/build-reference/variants/
+## Variants
 
-## Three Variants
+### 1. Development Variant
+- **Bundle ID**: `io.patterueldev.smartpocket.development`
+- **Display Name**: Smart Pocket (Dev)
+- **Purpose**: Local development and testing
+- **API Endpoint**: `http://thursday.local:3001`
+- **OCR**: Disabled
+- **Debug**: Enabled
 
-### 1. Development (`.dev`)
+### 2. Quality Variant  
+- **Bundle ID**: `io.patterueldev.smartpocket.quality`
+- **Display Name**: Smart Pocket (QA)
+- **Purpose**: QA testing and staging
+- **API Endpoint**: `http://localhost:3002`
+- **OCR**: Disabled
+- **Debug**: Enabled
 
-**Purpose**: Local development with live reload and debugging
+### 3. Production Variant
+- **Bundle ID**: `io.patterueldev.smartpocket`
+- **Display Name**: Smart Pocket
+- **Purpose**: Production releases
+- **API Endpoint**: `https://smartpocket.example.com`
+- **OCR**: Disabled (until ready)
+- **Debug**: Disabled
 
-**Bundle ID/Package**:
-- iOS: `com.smartpocket.dev`
-- Android: `com.smartpocket.app.dev`
+## Building Variants
 
-**Configuration**:
-- API Endpoint: `http://localhost:3001` (local machine)
-- App Name: "Smart Pocket (Dev)"
-- OCR Enabled: `false`
-- Debug Mode: Enabled
+### Via EAS Build (Recommended for CI)
 
-**When to Use**:
-- Developing new features locally
-- Testing with local server
-- Rapid iteration with hot reload
-- Running on emulator/simulator
-
-**Build Command**:
 ```bash
+# Development
 eas build --platform android --profile development
-eas build --platform ios --profile development
-```
 
-### 2. Quality Assurance (`.qa`)
+# Quality (QA)
+eas build --platform android --profile quality
 
-**Purpose**: Testing QA builds against staging environment
-
-**Bundle ID/Package**:
-- iOS: `com.smartpocket.qa`
-- Android: `com.smartpocket.app.qa`
-
-**Configuration**:
-- API Endpoint: `http://localhost:3002` (QA server)
-- App Name: "Smart Pocket (QA)"
-- OCR Enabled: `false`
-- Debug Mode: Enabled
-
-**When to Use**:
-- Testing against QA/staging server
-- Quality assurance testing
-- Pre-release validation
-- Testing on physical devices
-- Running automated tests
-
-**Build Command**:
-```bash
-eas build --platform android --profile qa
-eas build --platform ios --profile qa
-```
-
-**Triggered Automatically**:
-- Every push to `main` branch (GitHub Actions: `deploy-qa.yml`)
-- Available as artifact in Actions tab
-
-### 3. Production
-
-**Purpose**: Production release for end users
-
-**Bundle ID/Package**:
-- iOS: `com.smartpocket.app`
-- Android: `com.smartpocket.app`
-
-**Configuration**:
-- API Endpoint: `https://smartpocket.example.com` (production server)
-- App Name: "Smart Pocket"
-- OCR Enabled: `false` (controlled by feature flag)
-- Debug Mode: Disabled
-
-**When to Use**:
-- Official releases
-- App Store / Play Store submission
-- End-user distribution
-- Stable, tested builds
-
-**Build Command**:
-```bash
+# Production
 eas build --platform android --profile production
-eas build --platform ios --profile production
 ```
 
-**Triggered Automatically**:
-- Version bump commits to `main` (GitHub Actions: `release.yml`)
-- Git tags matching `v*` pattern
-- Available on GitHub Releases page
+### Local Builds
 
-## Configuration Files
+```bash
+# Development (uses local Expo Go)
+cd apps/mobile
+expo run:android
 
-### `eas.json` - Build Profiles
+# Or build locally with EAS
+eas build --platform android --profile development --local
+```
 
-Defines how each variant is built:
+## CI/CD Integration
+
+### GitHub Actions Workflows
+
+- **test-qa-build.yml**: Builds **development** variant
+- **deploy-qa.yml**: Builds **quality** variant (triggered on main)
+- **release.yml**: Builds **production** variant (triggered on version bump)
+
+## Installing Multiple Variants
+
+All three can be installed simultaneously:
+
+```bash
+adb install smart-pocket-development.apk
+adb install smart-pocket-quality.apk  
+adb install smart-pocket-production.apk
+```
+
+Each appears as a separate app in the launcher.
+
+## Configuration
+
+### app.config.js
+
+Dynamically sets bundle ID based on `APP_VARIANT` environment variable:
+
+```javascript
+const APP_VARIANT = process.env.APP_VARIANT || 'development';
+const currentVariant = variants[APP_VARIANT];
+
+module.exports = {
+  expo: {
+    name: currentVariant.name,
+    android: { package: currentVariant.package },
+    ios: { bundleIdentifier: currentVariant.bundleIdentifier },
+    extra: {
+      APP_VARIANT,
+      API_ENDPOINT: currentVariant.apiEndpoint,
+      // ...
+    }
+  }
+};
+```
+
+### eas.json
+
+Sets `APP_VARIANT` environment variable for each profile:
 
 ```json
 {
   "build": {
-    "development": {
-      "env": {
-        "VARIANT": "development",
-        "API_ENDPOINT": "http://localhost:3001",
-        "OCR_ENABLED": "false"
-      },
-      "android": {
-        "applicationIdSuffix": ".dev"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.dev"
-      }
-    },
-    "qa": {
-      "env": {
-        "VARIANT": "qa",
-        "API_ENDPOINT": "http://localhost:3002",
-        "OCR_ENABLED": "false"
-      },
-      "android": {
-        "applicationIdSuffix": ".qa"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.qa"
-      }
-    },
-    "production": {
-      "env": {
-        "VARIANT": "production",
-        "API_ENDPOINT": "https://smartpocket.example.com",
-        "OCR_ENABLED": "false"
-      },
-      "android": {
-        "buildType": "apk"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.app"
-      }
-    }
+    "development": { "env": { "APP_VARIANT": "development" } },
+    "quality": { "env": { "APP_VARIANT": "quality" } },
+    "production": { "env": { "APP_VARIANT": "production" } }
   }
 }
 ```
 
-### `app.json` - App Configuration
+## Runtime Detection
 
-Defines app metadata and variant-specific configs:
-
-```json
-{
-  "expo": {
-    "name": "Smart Pocket",
-    "android": {
-      "package": "com.smartpocket.app"
-    },
-    "ios": {
-      "bundleIdentifier": "com.smartpocket.app"
-    },
-    "extra": {
-      "variants": {
-        "development": {
-          "displayName": "Smart Pocket (Dev)",
-          "apiEndpoint": "http://localhost:3001",
-          "ocrEnabled": false,
-          "debugEnabled": true
-        },
-        "qa": {
-          "displayName": "Smart Pocket (QA)",
-          "apiEndpoint": "http://localhost:3002",
-          "ocrEnabled": false,
-          "debugEnabled": true
-        },
-        "production": {
-          "displayName": "Smart Pocket",
-          "apiEndpoint": "https://smartpocket.example.com",
-          "ocrEnabled": false,
-          "debugEnabled": false
-        }
-      }
-    }
-  }
-}
-```
-
-### `apps/mobile/config/env.ts` - Environment Detection
-
-Detects which variant is running and loads appropriate configuration:
+The app detects its variant at runtime:
 
 ```typescript
-function detectVariant(): AppVariant {
-  // Priority 1: EAS Build environment variable
-  const variant = process.env.VARIANT;
-  if (variant) return variant;
-  
-  // Priority 2: Bundle ID inference
-  const bundleId = Constants.expoConfig?.ios?.bundleIdentifier;
-  if (bundleId.includes('.dev')) return 'development';
-  if (bundleId.includes('.qa')) return 'qa';
-  
-  // Default
-  return 'production';
-}
-```
+import { variant, apiBaseUrl, debugEnabled } from '@/config/env';
 
-## Workflow Integration
-
-### Development Build
-
-**Trigger**: Feature branches with prefix `ci/**`
-
-```bash
-eas build --platform android --profile development
-```
-
-**CI File**: `.github/workflows/test-qa-build.yml`
-
-### QA Build
-
-**Trigger**: Every push to `main` (code changes, not version bumps)
-
-```bash
-eas build --platform android --profile qa
-```
-
-**CI File**: `.github/workflows/deploy-qa.yml`
-
-### Production Build
-
-**Trigger**: Version bump commits or git tags
-
-```bash
-eas build --platform android --profile production
-```
-
-**CI File**: `.github/workflows/release.yml`
-
-## Local Testing
-
-### Build Locally
-
-```bash
-# Development variant
-cd apps/mobile
-eas build --platform android --profile development
-
-# QA variant
-eas build --platform android --profile qa
-
-# Production variant
-eas build --platform android --profile production
-```
-
-### Install on Device
-
-```bash
-# Development build
-adb install app-release.apk
-
-# Can install multiple variants side-by-side:
-# App 1: "Smart Pocket (Dev)" - package: com.smartpocket.app.dev
-# App 2: "Smart Pocket (QA)" - package: com.smartpocket.app.qa
-# App 3: "Smart Pocket" - package: com.smartpocket.app
-```
-
-### Test API Endpoint
-
-Each variant connects to different API:
-
-**Development**: `http://localhost:3001` (local machine)
-```bash
-# Start local dev server
-npm run server:dev
-
-# Install dev variant APK
-# App will connect to localhost:3001
-```
-
-**QA**: `http://localhost:3002` (QA environment)
-```bash
-# Start QA Docker stack
-npm run docker:quality
-
-# Install QA variant APK
-# App will connect to localhost:3002
-```
-
-**Production**: `https://smartpocket.example.com`
-```bash
-# Install production variant APK
-# App will connect to production server
-```
-
-## Key Files to Update
-
-When adding new variant or modifying configuration:
-
-### 1. `eas.json`
-- Add/update build profile
-- Set environment variables
-- Configure bundle ID suffix (Android)
-- Configure bundle identifier (iOS)
-
-### 2. `app.json`
-- Update `extra.variants` section
-- Define `displayName`, `apiEndpoint`, etc.
-
-### 3. `.github/workflows/*.yml`
-- Add `--profile <variant>` to `eas build` command
-- One profile per workflow (or parameterized)
-
-### 4. `apps/mobile/config/env.ts`
-- Update `detectVariant()` logic if needed
-- Add new variant type to `AppVariant` type
-
-## Feature Flags per Variant
-
-Currently, OCR is disabled in all variants. To enable it for a specific variant:
-
-**Option 1**: Update `eas.json`
-```json
-{
-  "qa": {
-    "env": {
-      "OCR_ENABLED": "true"  // Enable for QA only
-    }
-  }
-}
-```
-
-**Option 2**: Update `app.json`
-```json
-{
-  "variants": {
-    "qa": {
-      "ocrEnabled": true
-    }
-  }
-}
-```
-
-## Example: Running All Three Variants
-
-```bash
-# Terminal 1: Start local dev server
-npm run server:dev
-
-# Terminal 2: Start QA Docker stack
-npm run docker:quality
-
-# Build all three variants
-cd apps/mobile
-eas build --platform android --profile development &
-eas build --platform android --profile qa &
-eas build --platform android --profile production
-
-# Install all three APKs
-adb install app-dev-release.apk      # com.smartpocket.app.dev
-adb install app-qa-release.apk       # com.smartpocket.app.qa
-adb install app-prod-release.apk     # com.smartpocket.app
-
-# Now you have three apps on device:
-# 1. "Smart Pocket (Dev)" → http://localhost:3001
-# 2. "Smart Pocket (QA)" → http://localhost:3002
-# 3. "Smart Pocket" → https://smartpocket.example.com
+// variant: 'development' | 'quality' | 'production'
+// apiBaseUrl: variant-specific API endpoint
+// debugEnabled: boolean
 ```
 
 ## Troubleshooting
 
-### "Cannot use multiple bundle identifiers"
+### Wrong bundle ID
 
-**Issue**: Trying to install multiple variants with same package name
-
-**Solution**: Variants use different `applicationIdSuffix`:
-- Development: `.dev` suffix → `com.smartpocket.app.dev`
-- QA: `.qa` suffix → `com.smartpocket.app.qa`
-- Production: no suffix → `com.smartpocket.app`
-
-### "API endpoint not changing per variant"
-
-**Check**:
-1. Verify `eas.json` has correct `env` variables
-2. Verify `env.ts` is reading from correct source
-3. Check `Constants.expoConfig` shows correct variant
-4. Ensure app was built with correct profile
-
-### "App name shows generic in all variants"
-
-**Fix**: Ensure `app.json` `extra.variants` are configured with `displayName`:
-```json
-{
-  "variants": {
-    "development": {
-      "displayName": "Smart Pocket (Dev)"
-    }
-  }
-}
+Verify the build used the correct profile:
+```bash
+aapt dump badging app.apk | grep package
 ```
 
-## Future: 4th Variant for Automated Testing
+Should show variant-specific package name.
 
-When adding automated testing variant:
+### Wrong API endpoint
 
-```json
-{
-  "test": {
-    "env": {
-      "VARIANT": "test",
-      "API_ENDPOINT": "http://test-server:3001",
-      "OCR_ENABLED": "false"
-    },
-    "android": {
-      "applicationIdSuffix": ".test"
-    }
-  }
-}
-```
+Check build logs for `APP_VARIANT` environment variable. If missing, ensure eas.json has the env set correctly.
 
-**Use case**: E2E tests with mock API endpoints, feature flag toggle testing, CI test suite execution
+## Migration Notes
 
----
+We migrated from `app.json` (static) to `app.config.js` (dynamic) to support variants. The old file is backed up as `app.json.backup`.
 
-**Status**: ✅ All three variants configured and integrated into CI/CD
+## References
+
+- [Expo App Variants](https://docs.expo.dev/build-reference/variants/)
+- [EAS Build Environment Variables](https://docs.expo.dev/build-reference/variables/)

@@ -7,47 +7,30 @@
       "channel": "development",
       "distribution": "internal",
       "env": {
-        "VARIANT": "development",
-        "API_ENDPOINT": "http://localhost:3001",
-        "OCR_ENABLED": "false"
+        "APP_VARIANT": "development"
       },
       "android": {
-        "buildType": "apk",
-        "applicationIdSuffix": ".dev"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.dev"
+        "buildType": "apk"
       }
     },
-    "qa": {
-      "channel": "qa",
+    "quality": {
+      "channel": "quality",
       "distribution": "internal",
       "env": {
-        "VARIANT": "qa",
-        "API_ENDPOINT": "http://localhost:3002",
-        "OCR_ENABLED": "false"
+        "APP_VARIANT": "quality"
       },
       "android": {
-        "buildType": "apk",
-        "applicationIdSuffix": ".qa"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.qa"
+        "buildType": "apk"
       }
     },
     "production": {
       "channel": "production",
       "distribution": "internal",
       "env": {
-        "VARIANT": "production",
-        "API_ENDPOINT": "https://smartpocket.example.com",
-        "OCR_ENABLED": "false"
+        "APP_VARIANT": "production"
       },
       "android": {
         "buildType": "apk"
-      },
-      "ios": {
-        "bundleIdentifier": "com.smartpocket.app"
       }
     }
   },

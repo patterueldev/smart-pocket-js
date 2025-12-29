@@ -1,6 +1,6 @@
 /**
  * Environment configuration for mobile app
- * Supports multiple app variants: development, qa, production
+ * Supports multiple app variants: development, quality, production
  * Controls API endpoints, feature flags, and app behavior
  */
 
@@ -8,14 +8,7 @@ import Constants from 'expo-constants';
 
 const isDev = __DEV__ || process.env.NODE_ENV === 'development';
 
-type AppVariant = 'development' | 'qa' | 'production';
-
-interface VariantConfig {
-  displayName: string;
-  apiEndpoint: string;
-  ocrEnabled: boolean;
-  debugEnabled: boolean;
-}
+type AppVariant = 'development' | 'quality' | 'production';
 
 interface EnvConfig {
   isDev: boolean;
@@ -30,12 +23,14 @@ interface EnvConfig {
 
 /**
  * Detect app variant from environment
- * Priority: EAS env var > bundle ID > default to production
+ * Priority: APP_VARIANT env var > bundle ID > default to production
  */
 function detectVariant(): AppVariant {
-  // EAS Build sets VARIANT env var
-  const variant = process.env.VARIANT as AppVariant | undefined;
-  if (variant && ['development', 'qa', 'production'].includes(variant)) {
+  const expoExtra = Constants.expoConfig?.extra || {};
+  
+  // Primary: APP_VARIANT from eas.json env
+  const variant = expoExtra.APP_VARIANT as AppVariant | undefined;
+  if (variant && ['development', 'quality', 'production'].includes(variant)) {
     return variant;
   }
 
@@ -43,8 +38,8 @@ function detectVariant(): AppVariant {
   const bundleId = Constants.expoConfig?.ios?.bundleIdentifier || 
                   Constants.expoConfig?.android?.package || '';
   
-  if (bundleId.includes('.dev')) return 'development';
-  if (bundleId.includes('.qa')) return 'qa';
+  if (bundleId.includes('.development')) return 'development';
+  if (bundleId.includes('.quality')) return 'quality';
   
   return 'production';
 }
@@ -52,31 +47,25 @@ function detectVariant(): AppVariant {
 /**
  * Get environment configuration
  * Reads from:
- * - Expo Build environment variables (VARIANT)
- * - Expo extra config (app.json - variant-specific configs)
+ * - Expo app.config.js (APP_VARIANT, API_ENDPOINT, etc.)
  * - App bundle ID
  * - Hardcoded defaults
  */
 export function getEnvConfig(): EnvConfig {
   const expoExtra = Constants.expoConfig?.extra || {};
   const variant = detectVariant();
-  const variantConfig = (expoExtra.variants?.[variant] as VariantConfig) || {};
 
   return {
     isDev,
     variant,
-    // Display name from variant config
-    displayName: variantConfig.displayName || 'Smart Pocket',
-    // API endpoint from variant config
-    apiBaseUrl: variantConfig.apiEndpoint || expoExtra.API_BASE_URL || 'https://smartpocket.example.com',
-    // OCR feature flag from variant config
-    ocrEnabled: variantConfig.ocrEnabled === true || expoExtra.OCR_ENABLED === true,
-    // Debug mode from variant config
-    debugEnabled: variantConfig.debugEnabled === true,
-    // Dev prefill for server URL (for development variant)
-    devServerUrl: isDev && variant === 'development' ? expoExtra.DEV_SERVER_URL || null : null,
-    // Optional dev prefill for API key
-    devApiKey: isDev && variant === 'development' ? expoExtra.DEV_API_KEY || null : null,
+    displayName: Constants.expoConfig?.name || 'Smart Pocket',
+    // Use API_ENDPOINT from app.config.js (variant-specific)
+    apiBaseUrl: expoExtra.API_ENDPOINT || 'https://smartpocket.example.com',
+    ocrEnabled: expoExtra.OCR_ENABLED === true || expoExtra.OCR_ENABLED === 'true',
+    debugEnabled: expoExtra.DEBUG_ENABLED === true || expoExtra.DEBUG_ENABLED === 'true',
+    // Legacy dev environment variables (for backward compatibility)
+    devServerUrl: isDev ? expoExtra.DEV_SERVER_URL || null : null,
+    devApiKey: isDev ? expoExtra.DEV_API_KEY || null : null,
   };
 }
 
