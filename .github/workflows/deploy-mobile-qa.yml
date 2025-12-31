@@ -3,7 +3,7 @@ name: Deploy Mobile to QA
 on:
   push:
     branches:
-      - release/demo
+      - main
     paths:
       # Trigger on mobile app changes
       - 'apps/mobile/**'
@@ -28,72 +28,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # ============================================================================
-      # TEMPORARY: Using pre-built APK from Google Drive for rapid testing
-      # ============================================================================
-      # This workflow has been temporarily modified to skip the full Android build
-      # process and download a pre-built APK from Google Drive.
-      # 
-      # Google Drive link: https://drive.google.com/file/d/16eWISdLN3TAhXRmVZ7jvo3GKDf89ey1U/view?usp=sharing
-      # 
-      # This saves ~5-10 minutes per workflow run while debugging Firebase App
-      # Distribution upload issues.
-      #
-      # TO RESTORE FULL BUILD PROCESS:
-      # 1. Comment out the "Use pre-built APK" step below
-      # 2. Uncomment all the build steps (Install pnpm → Build Android APK)
-      # 3. Update this comment block to reflect restored state
-      #
-      # ORIGINAL BUILD STEPS (currently commented out):
-      # - Install pnpm
-      # - Setup Node.js
-      # - Setup Java 17
-      # - Setup Android SDK
-      # - Install dependencies (pnpm install)
-      # - Decode Google Services JSON
-      # - Run Expo prebuild (APP_VARIANT=quality)
-      # - Build Android APK (./gradlew assembleDebug)
-      # ============================================================================
-
-      # - name: Install pnpm
-      #   uses: pnpm/action-setup@v2
-      #   with:
-      #     version: 10
-
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
-      #     cache: 'pnpm'
-
-      # - name: Setup Java
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     distribution: 'temurin'
-      #     java-version: '17'
-
-      # - name: Setup Android SDK
-      #   uses: android-actions/setup-android@v3
-
-      # - name: Install dependencies
-      #   run: pnpm install
-
-      # - name: Decode Google Services JSON
-      #   working-directory: apps/mobile
-      #   run: |
-      #     echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
-      #     echo "✅ google-services.json created from base64 secret"
-
-      # - name: Run Expo prebuild (generate native projects)
-      #   working-directory: apps/mobile
-      #   env:
-      #     APP_VARIANT: quality
-      #   run: pnpx expo prebuild --clean --platform android
-
-      # - name: Build Android APK (Debug)
-      #   working-directory: apps/mobile/android
-      #   run: ./gradlew assembleDebug
 
       # Install pnpm
       - name: Install pnpm
@@ -173,7 +107,6 @@ jobs:
             echo "- Variant: \`quality\`" >> $GITHUB_STEP_SUMMARY
             echo "- Distribution: QA testers group" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️  **Note**: Currently using pre-built APK (see workflow comments for details)" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Android APK**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
