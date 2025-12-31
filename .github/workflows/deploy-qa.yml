@@ -258,6 +258,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Decode Google Services JSON
+        if: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 != '' }}
+        working-directory: apps/mobile/android/app
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
+          echo "✅ google-services.json created from base64 secret"
+
       - name: Run Expo prebuild (generate native projects)
         working-directory: apps/mobile
         env:
@@ -269,18 +276,19 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload to Firebase App Distribution (quality)
-        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' && secrets.FIREBASE_APP_ID_QUALITY != '' }}
+        if: steps.check-firebase.outputs.secrets_available == 'true'
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID_QUALITY }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
           file: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           groups: qa-testers
 
       - name: Skip Firebase upload (secrets missing)
-        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON == '' || secrets.FIREBASE_APP_ID_QUALITY == '' }}
+        if: steps.check-firebase.outputs.secrets_available == 'false'
         run: |
-          echo "Firebase upload skipped: missing FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_APP_ID_QUALITY secrets."
+          echo "⚠️  Firebase upload skipped: missing FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_APP_ID_QUALITY secrets."
+          echo "ℹ️  Set these in repository Settings → Secrets → Actions to enable Firebase distribution"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
