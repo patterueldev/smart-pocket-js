@@ -3,7 +3,7 @@ name: Deploy to QA
 on:
   push:
     branches:
-      - main
+      - release/demo
     paths:
       # Trigger on all changes except version files
       - 'apps/server/**'
@@ -264,7 +264,7 @@ jobs:
           APP_VARIANT: quality
         run: pnpx expo prebuild --clean --platform android
 
-        - name: Build Android APK (Debug)
+      - name: Build Android APK (Debug)
         working-directory: apps/mobile/android
         run: ./gradlew assembleDebug
 

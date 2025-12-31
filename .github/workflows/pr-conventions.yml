@@ -10,7 +10,7 @@ on:
 jobs:
   # Validate PR title follows Conventional Commits with issue number and optional platform
   validate-pr-title:
-    name: PR - Validate Conventions
+    name: PR - Validate Title
     runs-on: ubuntu-latest
     steps:
       - name: Check PR title format
