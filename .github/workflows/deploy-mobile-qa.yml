@@ -111,6 +111,20 @@ jobs:
           ls -lh apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
       # ============================================================================
 
+      - name: Debug Firebase Secrets (TEMPORARY - REMOVE AFTER DEBUGGING)
+        run: |
+          echo "🔍 Firebase App ID:"
+          echo "${{ secrets.FIREBASE_APP_ID_QUALITY }}"
+          echo ""
+          echo "🔍 Service Account JSON (first 500 chars):"
+          echo "${{ secrets.CREDENTIAL_FILE_CONTENT }}" | head -c 500
+          echo ""
+          echo "🔍 Service Account Email:"
+          echo "${{ secrets.CREDENTIAL_FILE_CONTENT }}" | jq -r '.client_email' || echo "Failed to parse JSON"
+          echo ""
+          echo "🔍 Project ID:"
+          echo "${{ secrets.CREDENTIAL_FILE_CONTENT }}" | jq -r '.project_id' || echo "Failed to parse JSON"
+
       - name: Upload to Firebase App Distribution (quality)
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
