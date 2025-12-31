@@ -112,17 +112,11 @@ jobs:
           
           echo ""
           echo "🔍 DEBUG: Firebase Secrets (TEMPORARY - REMOVE AFTER DEBUGGING)"
-          echo "🔍 Firebase App ID:"
-          echo "FIREBASE_APP_ID_QUALITY: ${{ secrets.FIREBASE_APP_ID_QUALITY }}"
+          echo "🔍 Firebase App ID (first 100 chars):"
+          echo "FIREBASE_APP_ID_QUALITY: ${{ secrets.FIREBASE_APP_ID_QUALITY }}" | head -c 100
           echo ""
           echo "🔍 Service Account JSON (first 500 chars):"
           echo "CREDENTIAL_FILE_CONTENT: ${{ secrets.CREDENTIAL_FILE_CONTENT }}" | head -c 500
-          echo ""
-          echo "🔍 Service Account Email:"
-          echo "CREDENTIAL_FILE_CONTENT.client_email: ${{ secrets.CREDENTIAL_FILE_CONTENT }}" | jq -r '.client_email' || echo "Failed to parse JSON"
-          echo ""
-          echo "🔍 Project ID:"
-          echo "CREDENTIAL_FILE_CONTENT.project_id: ${{ secrets.CREDENTIAL_FILE_CONTENT }}" | jq -r '.project_id' || echo "Failed to parse JSON"
       # ============================================================================
 
       - name: Upload to Firebase App Distribution (quality)
