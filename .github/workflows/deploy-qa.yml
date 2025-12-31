@@ -259,7 +259,6 @@ jobs:
         run: pnpm install
 
       - name: Decode Google Services JSON
-        if: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 != '' }}
         working-directory: apps/mobile/android/app
         run: |
           echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
@@ -276,7 +275,6 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload to Firebase App Distribution (quality)
-        if: steps.check-firebase.outputs.secrets_available == 'true'
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID_QUALITY }}
