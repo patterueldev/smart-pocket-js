@@ -113,11 +113,11 @@ jobs:
           
           echo ""
           echo "🔍 DEBUG: Firebase Secrets (TEMPORARY - REMOVE AFTER DEBUGGING)"
-          echo "🔍 Firebase App ID:"
-          echo "FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}"
+          echo "🔍 Firebase App ID (first 20 chars):"
+          echo "FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}" | head -c 20
           echo ""
-          echo "🔍 Service Account JSON:"
-          echo "CREDENTIAL_FILE_CONTENT: ${{ secrets.CREDENTIAL_FILE_CONTENT }}"
+          echo "🔍 Service Account JSON (first 500 chars):"
+          echo "CREDENTIAL_FILE_CONTENT: ${{ secrets.CREDENTIAL_FILE_CONTENT }}" | head -c 500
       # ============================================================================
 
       - name: Upload to Firebase App Distribution (quality)
