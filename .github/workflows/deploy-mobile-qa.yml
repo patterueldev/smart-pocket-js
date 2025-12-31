@@ -95,30 +95,52 @@ jobs:
       #   working-directory: apps/mobile/android
       #   run: ./gradlew assembleDebug
 
-      # ============================================================================
-      # TEMPORARY STEP: Download pre-built APK from Google Drive
-      # ============================================================================
-      - name: Use pre-built APK (temporary)
+      # Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # Setup Java
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Setup Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install
+
+      # Decode Google Services JSON
+      - name: Decode Google Services JSON
+        working-directory: apps/mobile
         run: |
-          echo "⚠️  Downloading pre-built APK from Google Drive"
-          echo "⚠️  This is temporary - full build process is commented out above"
-          mkdir -p apps/mobile/android/app/build/outputs/apk/debug
-          
-          # Download from Google Drive (direct download link)
-          curl -L "${{ secrets.TEMP_APK_URL }}" \
-            -o apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-          
-          echo "✅ Pre-built APK downloaded to expected location"
-          ls -lh apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
-          
-          echo ""
-          echo "🔍 DEBUG: Firebase Secrets (TEMPORARY - REMOVE AFTER DEBUGGING)"
-          echo "🔍 Firebase App ID (first 40 chars):"
-          echo "appId: ${{ secrets.FIREBASE_APP_ID }}" | head -c 40
-          echo ""
-          echo "🔍 Service Account JSON (first 500 chars):"
-          echo "credFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}" | head -c 500
-      # ============================================================================
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
+          echo "✅ google-services.json created from base64 secret"
+
+      # Run Expo prebuild (generate native projects)
+      - name: Run Expo prebuild (generate native projects)
+        working-directory: apps/mobile
+        env:
+          APP_VARIANT: quality
+        run: pnpx expo prebuild --clean --platform android
+
+      # Build Android APK (Debug)
+      - name: Build Android APK (Debug)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug
 
       - name: Upload to Firebase App Distribution (quality)
         uses: wzieba/Firebase-Distribution-Github-Action@v1
