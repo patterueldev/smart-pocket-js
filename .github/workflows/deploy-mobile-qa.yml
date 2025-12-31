@@ -124,8 +124,8 @@ jobs:
         run: |
           echo "${{ secrets.CREDENTIAL_FILE_CONTENT }}" | base64 --decode > /tmp/firebase-service-account.json
           echo "✅ Service account JSON decoded"
-          echo "🔍 DEBUG: Service Account JSON (first 500 chars):
-            head -c 500 /tmp/firebase-service-account.json"
+          echo "🔍 DEBUG: Service Account JSON (first 500 chars):"
+          head -c 500 /tmp/firebase-service-account.json
 
       - name: Upload to Firebase App Distribution (quality)
         uses: wzieba/Firebase-Distribution-Github-Action@v1
