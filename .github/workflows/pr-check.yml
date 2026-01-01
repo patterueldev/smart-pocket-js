@@ -46,11 +46,6 @@ jobs:
               - 'deploy/docker/**'
               - 'deploy/scripts/*.sh'
               - 'docker-compose*.yml'
-              - '!**/*.md'
-              - '!**/docs/**'
-              - '!**/*.test.ts'
-              - '!**/*.test.js'
-              - '!**/__tests__/**'
       
       - name: Debug - Show filter results
         run: |
