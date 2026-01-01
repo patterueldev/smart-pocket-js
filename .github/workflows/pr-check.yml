@@ -43,16 +43,17 @@ jobs:
               - '!**/*.test.js'
               - '!**/__tests__/**'
             docker:
-              - 'packages/**/src/**'
               - 'apps/server/src/**'
               - 'apps/server/package.json'
+              - 'packages/shared/src/**'
               - 'deploy/docker/**'
               - 'deploy/scripts/**'
               - 'docker-compose*.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
               - '!**/*.md'
               - '!**/docs/**'
+              - '!**/*.test.ts'
+              - '!**/*.test.js'
+              - '!**/__tests__/**'
   lint-and-test:
     name: PR - Lint & Unit Tests
     runs-on: ubuntu-latest
