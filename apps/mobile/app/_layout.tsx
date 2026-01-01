@@ -2,14 +2,33 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, Platform } from 'react-native';
+import { Pressable, Platform, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SessionProvider, useSession } from '@/hooks/useSession';
-import { ocrEnabled } from '@/config/env';
+import { ocrEnabled, variant } from '@/config/env';
+
+/**
+ * Environment banner - displays visual indicator for non-production builds
+ */
+function EnvironmentBanner() {
+  if (variant === 'production') return null;
+  
+  const isQuality = variant === 'quality';
+  const backgroundColor = isQuality ? '#9C27B0' : '#4CAF50';
+  const label = isQuality ? 'QA' : 'DEV';
+  
+  return (
+    <View style={{ backgroundColor, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
+        {label} ENVIRONMENT
+      </Text>
+    </View>
+  );
+}
 
 export const unstable_settings = {
   initialRouteName: 'setup',
@@ -75,6 +94,7 @@ function RootLayoutNav() {
       style={{ flex: 1, backgroundColor: headerBackground }}
       edges={['top', 'left', 'right']}
     >
+      <EnvironmentBanner />
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{

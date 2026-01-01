@@ -17,8 +17,8 @@ interface EnvConfig {
   apiBaseUrl: string;
   ocrEnabled: boolean;
   debugEnabled: boolean;
-  devServerUrl: string | null;
-  devApiKey: string | null;
+  prefilledApiBaseUrl: string;
+  prefilledApiKey: string;
 }
 
 /**
@@ -63,9 +63,9 @@ export function getEnvConfig(): EnvConfig {
     apiBaseUrl: expoExtra.API_ENDPOINT || 'https://smartpocket.example.com',
     ocrEnabled: expoExtra.OCR_ENABLED === true || expoExtra.OCR_ENABLED === 'true',
     debugEnabled: expoExtra.DEBUG_ENABLED === true || expoExtra.DEBUG_ENABLED === 'true',
-    // Legacy dev environment variables (for backward compatibility)
-    devServerUrl: isDev ? expoExtra.DEV_SERVER_URL || null : null,
-    devApiKey: isDev ? expoExtra.DEV_API_KEY || null : null,
+    // Prefilled values from GitHub Secrets (injected at build time)
+    prefilledApiBaseUrl: expoExtra.PREFILLED_API_BASEURL || '',
+    prefilledApiKey: expoExtra.PREFILLED_API_KEY || '',
   };
 }
 
@@ -77,5 +77,5 @@ export const apiBaseUrl = envConfig.apiBaseUrl;
 export const ocrEnabled = envConfig.ocrEnabled;
 export const debugEnabled = envConfig.debugEnabled;
 export const isDevelopment = envConfig.isDev;
-export const devServerUrl = envConfig.devServerUrl;
-export const devApiKey = envConfig.devApiKey;
+export const prefilledApiBaseUrl = envConfig.prefilledApiBaseUrl;
+export const prefilledApiKey = envConfig.prefilledApiKey;

@@ -5,20 +5,22 @@ import { router } from 'expo-router';
 import { TextInput } from '../components/TextInput';
 import { useSession } from '../hooks/useSession';
 import { authService, AuthError, AuthErrorType } from '@/services/authService';
-import { isDevelopment, devServerUrl, devApiKey } from '@/config/env';
+import { isDevelopment, prefilledApiBaseUrl, prefilledApiKey } from '@/config/env';
 
 /**
  * Setup Screen - Initial connection to server
  * 
  * User enters server URL and API key to connect to their personal Smart Pocket server.
- * In development mode, inputs are pre-filled from environment config.
+ * Values can be prefilled from environment configuration (.env files or GitHub Secrets).
  */
 export default function SetupScreen() {
   const { saveSession } = useSession();
-  const [serverUrl, setServerUrl] = useState(devServerUrl || 'http://localhost:3001');
-  const [apiKey, setApiKey] = useState(devApiKey || '');
+  // Priority: GitHub Secrets prefilled values > empty (user enters)
+  const [serverUrl, setServerUrl] = useState(prefilledApiBaseUrl || '');
+  const [apiKey, setApiKey] = useState(prefilledApiKey || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const hasPrefilledValues = !!(prefilledApiBaseUrl && prefilledApiKey);
 
   const handleConnect = async () => {
     if (!serverUrl || !apiKey) {
@@ -106,9 +108,9 @@ export default function SetupScreen() {
       <Text style={styles.helpText}>
         ℹ️ Get your API key from your server configuration
       </Text>
-      {isDevelopment && (
+      {(isDevelopment || hasPrefilledValues) && (
         <Text style={styles.devNote}>
-          [DEV MODE] Server URL and API Key are pre-filled from environment config
+          {hasPrefilledValues ? '✓ Pre-filled from GitHub Secrets' : '[DEV MODE] Pre-filled from environment config'}
         </Text>
       )}
     </ScrollView>

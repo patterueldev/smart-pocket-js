@@ -10,26 +10,47 @@
  * Each variant has:
  * - Different bundle identifier (can install all variants simultaneously)
  * - Different display name (distinguish in app drawer)
- * - Different default API endpoints
+ * - API endpoints loaded from .env.{variant} files
  * - Different feature flags
+ * 
+ * NOTE: Expo automatically loads .env.{NODE_ENV} files before app.config.js runs.
+ * We manually load the correct .env.{APP_VARIANT} file below.
  */
 
-const IS_DEV = process.env.APP_VARIANT === 'development';
-const IS_QA = process.env.APP_VARIANT === 'quality';
-const IS_PROD = process.env.APP_VARIANT === 'production';
+const path = require('path');
+const fs = require('fs');
 
-// Default to development if no variant specified
+// Determine which .env file to load based on APP_VARIANT
 const APP_VARIANT = process.env.APP_VARIANT || 'development';
+const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
+
+// Load the variant-specific .env file manually
+// Use override: true to ensure variant-specific values take precedence
+if (fs.existsSync(envFilePath)) {
+  require('dotenv').config({ path: envFilePath, override: true });
+  console.log(`✅ Loaded .env.${APP_VARIANT}`);
+} else {
+  console.warn(`⚠️  Missing .env.${APP_VARIANT} at ${envFilePath}`);
+}
+
+console.log('🔧 app.config.js - Loading environment:');
+console.log('   APP_VARIANT:', APP_VARIANT);
+console.log('   PREFILLED_API_BASEURL:', process.env.PREFILLED_API_BASEURL);
+console.log('   PREFILLED_API_KEY:', process.env.PREFILLED_API_KEY ? '***' : '(empty)');
+
+const IS_DEV = APP_VARIANT === 'development';
+const IS_QA = APP_VARIANT === 'quality';
+const IS_PROD = APP_VARIANT === 'production';
 
 /**
  * Variant configurations
+ * API endpoints are loaded from .env.{variant} files via dotenv
  */
 const variants = {
   development: {
     name: 'Smart Pocket (Dev)',
     bundleIdentifier: 'io.patterueldev.smartpocket.development',
     package: 'io.patterueldev.smartpocket.development',
-    apiEndpoint: 'http://thursday.local:3001',
     ocrEnabled: false,
     debugEnabled: true,
   },
@@ -37,7 +58,6 @@ const variants = {
     name: 'Smart Pocket (QA)',
     bundleIdentifier: 'io.patterueldev.smartpocket.quality',
     package: 'io.patterueldev.smartpocket.quality',
-    apiEndpoint: 'http://localhost:3002',
     ocrEnabled: false,
     debugEnabled: true,
   },
@@ -45,7 +65,6 @@ const variants = {
     name: 'Smart Pocket',
     bundleIdentifier: 'io.patterueldev.smartpocket',
     package: 'io.patterueldev.smartpocket',
-    apiEndpoint: 'https://smartpocket.example.com',
     ocrEnabled: false,
     debugEnabled: false,
   },
@@ -128,15 +147,16 @@ module.exports = {
     },
     
     extra: {
-      // Legacy dev environment variables (for backward compatibility)
-      DEV_SERVER_URL: 'http://thursday.local:3001',
-      DEV_API_KEY: 'dev_api_key_change_me',
-      
       // Current variant configuration
       APP_VARIANT: APP_VARIANT,
-      API_ENDPOINT: currentVariant.apiEndpoint,
+      // Prefilled base URL from .env.{variant} or GitHub Secrets (optional)
+      // App uses this to prefill setup screen - user can customize on connect
+      PREFILLED_API_BASEURL: process.env.PREFILLED_API_BASEURL || '',
       OCR_ENABLED: currentVariant.ocrEnabled,
       DEBUG_ENABLED: currentVariant.debugEnabled,
+      
+      // Prefilled values from GitHub Secrets (optional - injected at build time)
+      PREFILLED_API_KEY: process.env.PREFILLED_API_KEY || '',
       
       // All variant configs (for debugging/info screens)
       variants: variants,
