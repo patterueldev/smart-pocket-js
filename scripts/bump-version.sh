@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Smart Pocket Version Bump Script
-# Updates version across all version files:
-# - package.json (server + monorepo root)
-# - apps/mobile/app.json
-# - apps/mobile/android/app/build.gradle
+# Smart Pocket Version Bump Script (Production Releases)
+# Updates semantic version across all version files:
+# - package.json (monorepo root - source of truth)
+# - apps/server/package.json
+# - apps/mobile/package.json
+# - apps/mobile/app.config.js (version, versionCode +1, buildNumber +1)
 # 
 # Usage: ./scripts/bump-version.sh <new-version>
 # Example: ./scripts/bump-version.sh 0.2.0
@@ -41,15 +42,14 @@ echo -e "${YELLOW}🔄 Bumping version to $NEW_VERSION${NC}"
 echo "Working directory: $REPO_ROOT"
 echo ""
 
-# 1. Update root package.json
-echo -e "${YELLOW}📦 Updating package.json${NC}"
+# 1. Update root package.json (source of truth)
+echo -e "${YELLOW}📦 Updating root package.json${NC}"
 PACKAGE_JSON="$REPO_ROOT/package.json"
 if [ ! -f "$PACKAGE_JSON" ]; then
   echo -e "${RED}❌ Error: package.json not found at $PACKAGE_JSON${NC}"
   exit 1
 fi
 
-# Use node/npm to update package.json (more reliable than sed)
 node -e "
   const fs = require('fs');
   const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
@@ -58,57 +58,88 @@ node -e "
   console.log('   ✅ Updated to v$NEW_VERSION');
 "
 
-# 2. Update apps/mobile/app.json
-echo -e "${YELLOW}📱 Updating apps/mobile/app.json${NC}"
-APP_JSON="$REPO_ROOT/apps/mobile/app.json"
-if [ ! -f "$APP_JSON" ]; then
-  echo -e "${RED}❌ Error: app.json not found at $APP_JSON${NC}"
+# 2. Update apps/server/package.json
+echo -e "${YELLOW}🖥️  Updating apps/server/package.json${NC}"
+SERVER_PACKAGE="$REPO_ROOT/apps/server/package.json"
+if [ -f "$SERVER_PACKAGE" ]; then
+  node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('$SERVER_PACKAGE', 'utf8'));
+    pkg.version = '$NEW_VERSION';
+    fs.writeFileSync('$SERVER_PACKAGE', JSON.stringify(pkg, null, 2) + '\n');
+    console.log('   ✅ Updated to v$NEW_VERSION');
+  "
+else
+  echo -e "${YELLOW}   ⚠️  Skipped (file not found)${NC}"
+fi
+
+# 3. Update apps/mobile/package.json
+echo -e "${YELLOW}📱 Updating apps/mobile/package.json${NC}"
+MOBILE_PACKAGE="$REPO_ROOT/apps/mobile/package.json"
+if [ -f "$MOBILE_PACKAGE" ]; then
+  node -e "
+    const fs = require('fs');
+    const pkg = JSON.parse(fs.readFileSync('$MOBILE_PACKAGE', 'utf8'));
+    pkg.version = '$NEW_VERSION';
+    fs.writeFileSync('$MOBILE_PACKAGE', JSON.stringify(pkg, null, 2) + '\n');
+    console.log('   ✅ Updated to v$NEW_VERSION');
+  "
+else
+  echo -e "${YELLOW}   ⚠️  Skipped (file not found)${NC}"
+fi
+
+# 4. Update apps/mobile/app.config.js (version + increment build numbers)
+echo -e "${YELLOW}📲 Updating apps/mobile/app.config.js${NC}"
+APP_CONFIG="$REPO_ROOT/apps/mobile/app.config.js"
+if [ ! -f "$APP_CONFIG" ]; then
+  echo -e "${RED}❌ Error: app.config.js not found at $APP_CONFIG${NC}"
   exit 1
 fi
 
-node -e "
-  const fs = require('fs');
-  const app = JSON.parse(fs.readFileSync('$APP_JSON', 'utf8'));
-  app.version = '$NEW_VERSION';
-  fs.writeFileSync('$APP_JSON', JSON.stringify(app, null, 2) + '\n');
-  console.log('   ✅ Updated to v$NEW_VERSION');
-"
+# Get current build numbers
+CURRENT_BUILD_INFO=$(node -e "
+  const config = require('$APP_CONFIG');
+  const versionCode = config.expo.android?.versionCode || 1;
+  const buildNumber = config.expo.ios?.buildNumber || '1';
+  console.log(\`\${versionCode},\${buildNumber}\`);
+")
 
-# 3. Update apps/mobile/android/app/build.gradle (versionName and versionCode)
-echo -e "${YELLOW}🤖 Updating apps/mobile/android/app/build.gradle${NC}"
-GRADLE_FILE="$REPO_ROOT/apps/mobile/android/app/build.gradle"
-if [ ! -f "$GRADLE_FILE" ]; then
-  echo -e "${RED}❌ Error: build.gradle not found at $GRADLE_FILE${NC}"
-  exit 1
-fi
+CURRENT_VERSION_CODE=$(echo "$CURRENT_BUILD_INFO" | cut -d',' -f1)
+CURRENT_BUILD_NUMBER=$(echo "$CURRENT_BUILD_INFO" | cut -d',' -f2)
 
-# Parse version components
-MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
-MINOR=$(echo "$NEW_VERSION" | cut -d. -f2)
-PATCH=$(echo "$NEW_VERSION" | cut -d. -f3)
+# Increment build numbers by 1
+NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+NEW_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
 
-# Calculate versionCode as MAJOR*10000 + MINOR*100 + PATCH (allows up to 99 patches)
-VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+echo "   Current versionCode: $CURRENT_VERSION_CODE → New: $NEW_VERSION_CODE"
+echo "   Current buildNumber: $CURRENT_BUILD_NUMBER → New: $NEW_BUILD_NUMBER"
 
-# Update versionName and versionCode using sed (cross-platform)
-sed -i.bak "s/versionName \"[^\"]*\"/versionName \"$NEW_VERSION\"/g" "$GRADLE_FILE"
-sed -i.bak "s/versionCode [0-9]*/versionCode $VERSION_CODE/g" "$GRADLE_FILE"
-rm -f "$GRADLE_FILE.bak"
+# Update app.config.js
+# Note: This uses sed to update the specific fields in the JavaScript file
+sed -i.bak "s/version: '[^']*'/version: '$NEW_VERSION'/g" "$APP_CONFIG"
+sed -i.bak "s/versionCode: [0-9]*/versionCode: $NEW_VERSION_CODE/g" "$APP_CONFIG"
+sed -i.bak "s/buildNumber: '[^']*'/buildNumber: '$NEW_BUILD_NUMBER'/g" "$APP_CONFIG"
+rm -f "$APP_CONFIG.bak"
 
-echo "   ✅ Updated versionName to $NEW_VERSION"
-echo "   ✅ Updated versionCode to $VERSION_CODE"
+echo "   ✅ Updated version to $NEW_VERSION"
+echo "   ✅ Updated versionCode to $NEW_VERSION_CODE"
+echo "   ✅ Updated buildNumber to $NEW_BUILD_NUMBER"
 
-# 4. Summary
+# 5. Summary
 echo ""
 echo -e "${GREEN}✅ Version bump complete!${NC}"
 echo ""
 echo "Updated files:"
-echo "  • package.json"
-echo "  • apps/mobile/app.json"
-echo "  • apps/mobile/android/app/build.gradle"
+echo "  • package.json → v$NEW_VERSION"
+echo "  • apps/server/package.json → v$NEW_VERSION"
+echo "  • apps/mobile/package.json → v$NEW_VERSION"
+echo "  • apps/mobile/app.config.js:"
+echo "    - version: $NEW_VERSION"
+echo "    - android.versionCode: $NEW_VERSION_CODE"
+echo "    - ios.buildNumber: $NEW_BUILD_NUMBER"
 echo ""
 echo "Next steps:"
 echo "  1. Review changes: ${YELLOW}git diff${NC}"
 echo "  2. Commit: ${YELLOW}git add . && git commit -m \"chore: Bump version to $NEW_VERSION\"${NC}"
-echo "  3. Tag and push: ${YELLOW}git tag v$NEW_VERSION && git push origin main --tags${NC}"
+echo "  3. Create PR with ${YELLOW}prod-release${NC} label"
 echo ""

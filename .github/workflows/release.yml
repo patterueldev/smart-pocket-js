@@ -16,10 +16,10 @@ on:
 jobs:
   build-and-push:
     name: Production Release - Build Docker Image
-    # Only run if PR was merged with 'release' label
+    # Only run if PR was merged with 'prod-release' label
     if: |
       github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'release')
+      contains(github.event.pull_request.labels.*.name, 'prod-release')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -39,9 +39,9 @@ jobs:
       - name: Check if release should trigger
         id: check
         run: |
-          # If we reach here, PR had 'release' label and was merged
+          # If we reach here, PR had 'prod-release' label and was merged
           echo "should_release=true" >> $GITHUB_OUTPUT
-          echo "✅ Production release triggered by 'release' label"
+          echo "✅ Production release triggered by 'prod-release' label"
       
       - name: Set up Docker Buildx
         if: steps.check.outputs.should_release == 'true'
