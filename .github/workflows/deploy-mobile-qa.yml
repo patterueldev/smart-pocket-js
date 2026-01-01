@@ -1,14 +1,10 @@
 name: Deploy Mobile to QA
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths:
-      # Trigger on mobile app changes
-      - 'apps/mobile/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
 
   workflow_dispatch:
     inputs:
@@ -17,9 +13,26 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: mobile-qa-deploy
+  cancel-in-progress: true
+
 jobs:
   android-qa:
     name: QA Mobile - Build Android APK
+    # Only run if:
+    # 1. PR was merged, AND
+    # 2. PR has 'qa-release' label (explicit trigger), AND
+    # 3. Either 'mobile' label exists OR mobile-related files changed
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'qa-release') &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'mobile') ||
+        contains(github.event.pull_request.files.*.filename, 'apps/mobile/') ||
+        contains(github.event.pull_request.files.*.filename, 'packages/shared/') ||
+        contains(github.event.pull_request.files.*.filename, 'docs/api-spec.yaml')
+      )
     environment: Quality
     runs-on: ubuntu-latest
     permissions:

@@ -15,15 +15,6 @@ This directory contains CI/CD automation for Smart Pocket JS.
 
 **Required for merge**: Lint & Unit Tests + Docker Build & Smoke Tests must pass
 
-### 🚀 Main Branch CI (`main-ci.yml`)
-**Triggers**: On push to `main` branch or manual dispatch
-
-**Jobs**:
-1. **Build & Test** - Full build and test suite with coverage
-2. **Full Docker Test** - Runs complete `test-build.sh` script
-3. **Build Images** - Builds and pushes Docker images to registry (if secrets configured)
-4. **Notify** - Reports build status
-
 ### 🌙 Nightly Tests (`nightly.yml`)
 **Triggers**: Daily at 2 AM UTC or manual dispatch
 
@@ -87,7 +78,6 @@ Add these to your README.md:
 
 ```markdown
 ![PR Checks](https://github.com/YOUR_USERNAME/smart-pocket-js/actions/workflows/pr-check.yml/badge.svg)
-![Main CI](https://github.com/YOUR_USERNAME/smart-pocket-js/actions/workflows/main-ci.yml/badge.svg)
 ![Nightly Tests](https://github.com/YOUR_USERNAME/smart-pocket-js/actions/workflows/nightly.yml/badge.svg)
 ```
 

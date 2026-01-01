@@ -55,6 +55,85 @@ Smart Pocket uses a Docker-based deployment model suitable for homeserver enviro
    - Port: 5006 (internal/external based on preference)
    - Persistent volume for budget data
 
+## Mobile Build Strategy
+
+### Label-Based Build Triggers
+
+Smart Pocket uses **explicit label-based triggers** for controlled deployments:
+
+**QA Releases (`qa-release` label)**:
+- Requires manual versionCode bump in PR
+- Optional versionName bump (can stay same version)
+- Can build mobile-only, server-only, or both
+- Path-based auto-detection as fallback
+
+**Production Releases (`release` label)**:
+- Requires BOTH versionCode AND versionName bump
+- Strict CI validation (fails if versions unchanged)
+- ALWAYS builds both server + mobile
+- Enforced consistency across stack
+
+**Flexible Merging**:
+- Merge without labels → No build triggered
+- Allows code updates without cutting releases
+- Explicit `skip-build` label for clarity
+
+### Build Number Management
+
+Smart Pocket uses **manual version control with PR validation**:
+
+- **versionCode**: Manually incremented in PR (1, 2, 3...)
+- **versionName**: Optional for QA, required for production
+- **Validation**: CI checks version bumps before merge
+- **Security**: No branch protection bypass needed
+
+**Example flow**:
+```
+PR #45: feat + NO label    → Merged, no build ✓
+PR #46: build + qa-release → 0.1.1 (1) ✅ QA build
+PR #47: fix + NO label     → Merged, no build ✓
+PR #48: build + qa-release → 0.1.1 (2) ✅ QA build
+PR #49: release + release  → 0.1.2 (3) 🚀 Production
+```
+
+**Benefits**:
+- Security first (no auto-commits to protected branch)
+- Explicit control over when builds trigger
+- Clear audit trail in PRs
+- Flexible workflow (merge without building)
+
+See [MOBILE_BUILD_NUMBERS.md](MOBILE_BUILD_NUMBERS.md) for comprehensive guide.
+
+### Path-Based Auto-Detection
+
+When explicit `mobile`/`server` labels absent, workflows auto-detect from changed files:
+
+**Mobile build triggers if**:
+- `apps/mobile/**` - Mobile app code changes
+- `packages/shared/**` - Shared types/utilities
+- `docs/api-spec.yaml` - API contract changes
+
+**Server build triggers if**:
+- `apps/server/**` - Backend changes
+- `packages/shared/**` - Shared code
+- `docs/api-spec.yaml` - API changes
+- `deploy/docker/**` - Docker config
+- `deploy/scripts/**` - Deploy scripts
+
+**Explicit labels override auto-detection**.
+
+### Concurrency Control
+
+Workflows use concurrency groups to prevent build pile-ups:
+
+```yaml
+concurrency:
+  group: mobile-qa-deploy
+  cancel-in-progress: true  # Latest build wins
+```
+
+If multiple commits merge quickly, older builds are cancelled in favor of latest.
+
 ## Environments
 
 ### Development Environment

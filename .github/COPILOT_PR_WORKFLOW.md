@@ -101,7 +101,7 @@ gh pr create --title "feat: add external API documentation" \
 **Copilot Prompt**:
 ```
 Generate a PR description following our template for these changes:
-- Added GitHub Actions workflows (pr-check, main-ci, nightly)
+- Added GitHub Actions workflows (pr-check, nightly)
 - Created external API documentation (Actual Budget, OpenAI, PostgreSQL, Google Sheets)
 - Added PR template and contribution guide
 - Updated main README with new docs links

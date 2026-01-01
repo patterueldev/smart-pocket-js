@@ -148,6 +148,119 @@ Once merged, the `release.yml` workflow automatically:
 6. ✅ **Creates GitHub Release** with auto-generated notes
 
 **Monitor the workflow**:
+
+## Mobile Build Numbers (versionCode)
+
+### Strategy
+
+Smart Pocket uses **manual version bumps with label-based build triggers**:
+- **QA builds**: versionCode increments (1, 2, 3...), versionName optional
+- **Production**: BOTH versionCode AND versionName must bump
+- **Explicit triggers**: Use GitHub labels (`qa-release`, `release`)
+- **Flexible workflow**: Can merge to main without building
+
+### Example Timeline
+
+```
+Development PRs (merged without qa-release label):
+├─ PR #45: feat: Add feature A → Merged, no build ✓
+├─ PR #46: fix: Fix bug B → Merged, no build ✓
+    ↓
+QA Release (explicit with qa-release label):
+├─ PR #47: build: bump versionCode to 1
+├─ Add label: "qa-release" + "mobile"
+├─ Merge → Triggers QA build
+└─ 0.1.1 (1) ← Built and uploaded to Firebase ✅
+
+More development:
+├─ PR #48: feat: Add feature C → Merged, no build ✓
+├─ PR #49: fix: Fix bug D → Merged, no build ✓
+    ↓
+Another QA Release:
+├─ PR #50: build: bump versionCode to 2
+├─ Add label: "qa-release" + "mobile"
+└─ 0.1.1 (2) ← Same version, new build number ✅
+    ↓
+    QA tester approves ✅ "Ready for production"
+    ↓
+Production Release (strict - both versions bump):
+├─ PR #51: release: version 0.1.2
+├─ Update versionCode: 2 → 3
+├─ Update versionName: "0.1.1" → "0.1.2"
+├─ Update package.json: "0.1.1" → "0.1.2"
+├─ Add label: "release"
+├─ Merge → Triggers production release
+└─ 0.1.2 (3) ← New version, builds both server + mobile 🚀
+    ↓
+    Released to users 🚀 (GitHub Release)
+    ↓
+Next QA cycle:
+├─ PR #52: feat: New feature → Merged, no build ✓
+├─ PR #53: build: bump versionCode to 4 + qa-release label
+└─ 0.1.2 (4) ← QA build with new version base ✅
+```
+
+### Why This Works
+
+1. **Security first**: No branch protection bypass - all versions committed via PR
+2. **Explicit control**: Labels make intent crystal clear
+3. **Flexible workflow**: Can merge without building (3.1) or build on merge (3.2)
+4. **Android requirement**: versionCode still monotonically increases
+5. **Production consistency**: Always builds both server + mobile together
+
+### Build Triggers
+
+**QA Builds** (Automatic on merge to `main`):
+
+Triggers when these paths change:
+- `apps/mobile/**` - Mobile app code
+- `packages/shared/**` - Shared types/utilities (affects mobile!)
+- `docs/api-spec.yaml` - API contract changes (integration point!)
+- `package.json` / `pnpm-lock.yaml` - Dependency updates
+
+**Skips** mobile build when only these change:
+- `apps/server/**` only - Backend-only changes
+- `docs/**` only - Documentation updates
+- `README.md` - Repo documentation
+
+**Production Builds** (Version Bump PR):
+
+Triggers when:
+- `package.json` version field changes
+- Builds **both** server Docker + mobile APK (full integration)
+
+**Manual Override**:
+
+Both workflows support manual triggering:
+```bash
+# Trigger QA build manually
+gh workflow run deploy-mobile-qa.yml
+
+# Trigger production release manually  
+gh workflow run release.yml
+```
+
+### versionCode Management
+
+**Automated** (workflows handle this):
+- QA builds: Read current → increment → commit → build
+- Production builds: Read current → increment → commit → build
+
+**Manual** (rarely needed):
+```bash
+# Only if workflow fails or you need to skip ahead
+# Edit apps/mobile/android/app/build.gradle
+versionCode 150  # ← Change this
+
+git add apps/mobile/android/app/build.gradle
+git commit -m "chore: bump mobile versionCode to 150"
+```
+
+### Related Documentation
+
+See [MOBILE_BUILD_NUMBERS.md](MOBILE_BUILD_NUMBERS.md) for comprehensive mobile versioning guide.
+
+**Monitor the workflow**:
 ```bash
 gh run list --workflow=release.yml --limit 3
 gh run view <run-id> --log
