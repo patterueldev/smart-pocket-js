@@ -86,7 +86,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: currentVariant.bundleIdentifier,
-      buildNumber: '2',
+      buildNumber: '1',
       infoPlist: {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true,
@@ -111,7 +111,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: currentVariant.package,
-      versionCode: 2,
+      versionCode: 1,
     },
     
     web: {
