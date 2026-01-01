@@ -32,8 +32,10 @@ jobs:
             code:
               - 'packages/**/src/**'
               - 'packages/**/package.json'
-              - 'apps/**/src/**'
-              - 'apps/**/package.json'
+              - 'apps/mobile/src/**'
+              - 'apps/mobile/package.json'
+              - 'apps/server/src/**'
+              - 'apps/server/package.json'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -42,7 +44,6 @@ jobs:
               - '!**/*.test.ts'
               - '!**/*.test.js'
               - '!**/__tests__/**'
-              - '!.github/**'
             docker:
               - 'apps/server/src/**'
               - 'apps/server/package.json'
@@ -55,7 +56,6 @@ jobs:
               - '!**/*.test.ts'
               - '!**/*.test.js'
               - '!**/__tests__/**'
-              - '!.github/**'
       
       - name: Debug - Show filter results
         run: |
