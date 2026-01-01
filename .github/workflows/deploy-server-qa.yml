@@ -1,7 +1,8 @@
 name: Deploy Server to QA
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
 
@@ -17,58 +18,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-labels:
-    name: Check for qa-server label
-    runs-on: ubuntu-latest
-    outputs:
-      should_deploy: ${{ steps.check.outputs.should_deploy }}
-      pr_number: ${{ steps.check.outputs.pr_number }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2  # Need last 2 commits to get merge commit message
-      
-      - name: Extract PR number and check for qa-server label
-        id: check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Extract PR number from merge commit message (format: "... (#68)")
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP '\(#\K\d+(?=\))')
-          
-          if [ -z "$PR_NUMBER" ]; then
-            echo "No PR number found in commit message"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          echo "PR number: $PR_NUMBER"
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          
-          # Fetch PR labels via GitHub API
-          LABELS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
-            | jq -r '.labels[].name')
-          
-          echo "PR labels:"
-          echo "$LABELS"
-          
-          # Check if qa-server label exists
-          if echo "$LABELS" | grep -q "^qa-server$"; then
-            echo "✅ qa-server label found - will deploy"
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ qa-server label not found - skipping deployment"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
-          fi
-
   build-and-push:
     name: QA Server - Build Docker Image
-    needs: [check-labels]
-    if: needs.check-labels.outputs.should_deploy == 'true' || github.event_name == 'workflow_dispatch'
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'qa-server')
     runs-on: ubuntu-latest
     permissions:
       contents: read
