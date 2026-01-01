@@ -32,8 +32,10 @@ jobs:
             code:
               - 'packages/**/src/**'
               - 'packages/**/package.json'
-              - 'apps/**/src/**'
-              - 'apps/**/package.json'
+              - 'apps/mobile/src/**'
+              - 'apps/mobile/package.json'
+              - 'apps/server/src/**'
+              - 'apps/server/package.json'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -54,6 +56,15 @@ jobs:
               - '!**/*.test.ts'
               - '!**/*.test.js'
               - '!**/__tests__/**'
+      
+      - name: Debug - Show filter results
+        run: |
+          echo "=== Changed Files Detection ==="
+          echo "Code changed: ${{ steps.filter.outputs.code }}"
+          echo "Docker changed: ${{ steps.filter.outputs.docker }}"
+          echo ""
+          echo "All filter outputs:"
+          echo "${{ toJson(steps.filter.outputs) }}"
   lint-and-test:
     name: PR - Lint & Unit Tests
     runs-on: ubuntu-latest
