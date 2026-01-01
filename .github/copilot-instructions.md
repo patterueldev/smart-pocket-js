@@ -31,6 +31,19 @@ Smart Pocket is a personal finance management application with OCR receipt scann
 
 Run all commands directly with `pnpm` from the repository root.
 
+### Version Management
+
+**Source of Truth: Root package.json**
+- `version`: Semantic version (x.y.z) - used for all releases
+- `buildNumber`: Continuous build number - used for iOS buildNumber and Android versionCode
+- Both fields must be bumped manually in PRs (no auto-increment)
+
+**Version Sync Validation:**
+- Root package.json has `version` and `buildNumber`
+- apps/mobile/app.config.js has hardcoded `BUILD_NUMBER` constant
+- apps/server/package.json has `version`
+- GitHub Actions validates all three files match before allowing merge
+
 ### PNPM Monorepo (CRITICAL)
 
 **This is a pnpm workspace monorepo - NEVER use npm, npx, or direct expo commands.**

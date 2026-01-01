@@ -72,11 +72,15 @@ const variants = {
 
 const currentVariant = variants[APP_VARIANT];
 
+// Version and build number - must match root package.json (validated by CI)
+const VERSION = '0.1.1';
+const BUILD_NUMBER = 3;
+
 module.exports = {
   expo: {
     name: currentVariant.name,
     slug: 'smart-pocket',
-    version: '0.1.1',
+    version: VERSION,
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'smartpocket',
@@ -86,7 +90,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: currentVariant.bundleIdentifier,
-      buildNumber: '2',
+      buildNumber: String(BUILD_NUMBER),
       infoPlist: {
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true,
@@ -111,7 +115,7 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: currentVariant.package,
-      versionCode: 2,
+      versionCode: BUILD_NUMBER,
     },
     
     web: {

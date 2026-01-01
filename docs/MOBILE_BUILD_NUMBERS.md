@@ -15,6 +15,22 @@ z = PATCH version (bug fixes, hotfixes, security patches)
 w = BUILD NUMBER / versionCode (continuous, never resets, Android-required)
 ```
 
+### Source of Truth
+
+**Root package.json is the source of truth:**
+- `version`: "0.1.1" - Semantic version string
+- `buildNumber`: 3 - Continuous build number (shared by iOS and Android)
+
+**Files that must be kept in sync:**
+1. Root `package.json` - `version` and `buildNumber`
+2. `apps/mobile/app.config.js` - `version` and `BUILD_NUMBER` constant
+3. `apps/server/package.json` - `version`
+
+**GitHub Actions validation:**
+- CI checks all three files match before merge
+- Prevents version mismatches from reaching main branch
+- Manual bumps in PRs ensure intentional version changes
+
 ### Examples
 
 ```

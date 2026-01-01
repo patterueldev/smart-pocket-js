@@ -1,0 +1,105 @@
+name: Deploy Mobile to Production
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force production release'
+        required: false
+        default: 'false'
+
+jobs:
+  build-android:
+    name: Production - Build Android APK
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'prod-release')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building release version: $VERSION"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Expo prebuild (generate native projects)
+        working-directory: apps/mobile
+        env:
+          APP_VARIANT: production
+        run: pnpx expo prebuild --clean --platform android
+
+      - name: Build Android APK (Debug)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug
+
+      - name: Rename APK for release
+        run: |
+          mv apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
+          mkdir -p ${{ github.workspace }}/apks
+          cp smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk ${{ github.workspace }}/apks/
+          echo "✅ APK ready for release upload"
+
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          files: apks/smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    name: Production - Mobile Summary
+    needs: [build-android]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 📱 Mobile Release ${{ needs.build-android.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.build-android.result }}" == "success" ]; then
+            echo "✅ **Android APK**: Built and uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY
+            echo "- Download from: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build-android.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Android APK**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi

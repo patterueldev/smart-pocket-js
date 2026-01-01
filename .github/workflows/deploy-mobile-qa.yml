@@ -1,7 +1,8 @@
 name: Deploy Mobile to QA
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
 
@@ -17,62 +18,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-labels:
-    name: Check for qa-mobile label
-    runs-on: ubuntu-latest
-    outputs:
-      should_deploy: ${{ steps.check.outputs.should_deploy }}
-      pr_number: ${{ steps.check.outputs.pr_number }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2  # Need last 2 commits to get merge commit message
-      
-      - name: Extract PR number and check for qa-mobile label
-        id: check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Extract PR number from merge commit message (format: "... (#68)")
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          PR_NUMBER=$(echo "$COMMIT_MSG" | grep -oP '\(#\K\d+(?=\))')
-          
-          if [ -z "$PR_NUMBER" ]; then
-            echo "No PR number found in commit message"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          echo "PR number: $PR_NUMBER"
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          
-          # Fetch PR labels via GitHub API
-          LABELS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
-            | jq -r '.labels[].name')
-          
-          echo "PR labels:"
-          echo "$LABELS"
-          
-          # Check if qa-mobile label exists
-          if echo "$LABELS" | grep -q "^qa-mobile$"; then
-            echo "✅ qa-mobile label found - will deploy"
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ qa-mobile label not found - skipping deployment"
-            echo "should_deploy=false" >> $GITHUB_OUTPUT
-          fi
-
   android-qa:
     name: QA Mobile - Build Android APK
-    needs: [check-labels]
-    if: needs.check-labels.outputs.should_deploy == 'true' || github.event_name == 'workflow_dispatch'
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'qa-mobile')
     environment: Quality
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    
+    outputs:
+      pr_number: ${{ github.event.pull_request.number }}
 
     steps:
       - name: Checkout code
@@ -141,16 +98,16 @@ jobs:
 
   summary:
     name: QA Mobile - Summary
-    needs: [check-labels, android-qa]
+    needs: [android-qa]
     runs-on: ubuntu-latest
-    if: always() && needs.check-labels.outputs.should_deploy == 'true'
+    if: always()
     
     steps:
       - name: Generate summary
         run: |
           echo "## 📱 QA Mobile Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**PR**: #${{ needs.check-labels.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: #${{ needs.android-qa.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.android-qa.result }}" == "success" ]; then
