@@ -1,17 +1,10 @@
 name: Deploy Server to QA
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths:
-      # Trigger on server/backend changes only
-      - 'apps/server/**'
-      - 'packages/shared/**'
-      - 'deploy/docker/**'
-      - 'deploy/scripts/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
 
   workflow_dispatch:
     inputs:
@@ -20,9 +13,28 @@ on:
         required: false
         default: 'false'
 
+concurrency:
+  group: server-qa-deploy
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     name: QA Server - Build Docker Image
+    # Only run if:
+    # 1. PR was merged, AND
+    # 2. PR has 'qa-release' label (explicit trigger), AND
+    # 3. Either 'server' label exists OR server-related files changed
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'qa-release') &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'server') ||
+        contains(github.event.pull_request.files.*.filename, 'apps/server/') ||
+        contains(github.event.pull_request.files.*.filename, 'packages/shared/') ||
+        contains(github.event.pull_request.files.*.filename, 'docs/api-spec.yaml') ||
+        contains(github.event.pull_request.files.*.filename, 'deploy/docker/') ||
+        contains(github.event.pull_request.files.*.filename, 'deploy/scripts/')
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read

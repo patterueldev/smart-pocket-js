@@ -33,13 +33,6 @@ Runs on every pull request:
 
 **Blocks merge if**: Unit tests or Docker smoke tests fail
 
-#### **Main Branch CI** (`.github/workflows/main-ci.yml`)
-Runs on push to `main`:
-- 🏗️ **Build & Test** - Full build + coverage
-- 🐳 **Full Docker Test** - Complete `test-build.sh` suite
-- 📦 **Build Images** - Builds + pushes Docker images (optional, needs secrets)
-- 📊 **Notify** - Build status report
-
 #### **Nightly Tests** (`.github/workflows/nightly.yml`)
 Runs daily at 2 AM UTC:
 - 🌙 **Full Integration Test** - Tests across Node.js 18, 20, 21
@@ -72,20 +65,6 @@ GitHub Actions triggers pr-check.yml
 All checks pass ✅
     ↓
 PR is ready for review
-```
-
-### Main Branch Flow
-```
-PR merged to main
-    ↓
-GitHub Actions triggers main-ci.yml
-    ↓
-├─ Full build (pnpm run build)
-├─ Test coverage report
-├─ Complete test-build.sh suite
-└─ Build + push Docker images (if configured)
-    ↓
-Deployed images available
 ```
 
 ## Local Equivalents
@@ -187,7 +166,6 @@ For enhanced coverage reporting:
 ├── PULL_REQUEST_TEMPLATE.md    # PR template
 └── workflows/
     ├── pr-check.yml             # PR validation
-    ├── main-ci.yml              # Main branch CI
     ├── nightly.yml              # Nightly tests
     └── README.md                # Workflow docs
 CONTRIBUTING.md                  # Contribution guide

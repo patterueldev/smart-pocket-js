@@ -1,0 +1,268 @@
+name: Validate Version Bump
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  validate-qa-release:
+    name: Validate QA Release Version
+    if: contains(github.event.pull_request.labels.*.name, 'qa-release')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Get base branch versionCode
+        id: base_version
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git checkout origin/${{ github.event.pull_request.base.ref }}
+          
+          # Check if build.gradle exists (might be gitignored)
+          if [ ! -f apps/mobile/android/app/build.gradle ]; then
+            echo "⚠️  build.gradle not in repo (Expo managed workflow)"
+            echo "Base versionCode check skipped - will validate on prebuild"
+            echo "version_code=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          BASE_VERSION=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
+          echo "Base versionCode: $BASE_VERSION"
+          echo "version_code=$BASE_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Get PR branch versionCode
+        id: pr_version
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+          
+          # Check if build.gradle exists
+          if [ ! -f apps/mobile/android/app/build.gradle ]; then
+            echo "⚠️  build.gradle not in repo (Expo managed workflow)"
+            echo "PR versionCode check skipped - will validate on prebuild"
+            echo "version_code=0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          PR_VERSION=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
+          echo "PR versionCode: $PR_VERSION"
+          echo "version_code=$PR_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Validate versionCode increment
+        if: steps.base_version.outputs.version_code != '0'
+        run: |
+          BASE=${{ steps.base_version.outputs.version_code }}
+          PR=${{ steps.pr_version.outputs.version_code }}
+          
+          if [ "$PR" -le "$BASE" ]; then
+            echo "❌ ERROR: QA release requires versionCode bump!"
+            echo ""
+            echo "Current (main): $BASE"
+            echo "Your PR:        $PR"
+            echo ""
+            echo "Please increment versionCode in apps/mobile/android/app/build.gradle"
+            echo "Example: versionCode $BASE → versionCode $((BASE + 1))"
+            exit 1
+          fi
+          
+          echo "✅ versionCode incremented: $BASE → $PR"
+
+  validate-production-release:
+    name: Validate Production Release Version
+    if: contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Get base branch versions
+        id: base_version
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git checkout origin/${{ github.event.pull_request.base.ref }}
+          
+          # Get versionCode
+          if [ ! -f apps/mobile/android/app/build.gradle ]; then
+            echo "⚠️  build.gradle not in repo - validation will run during build"
+            echo "version_code=0" >> $GITHUB_OUTPUT
+            echo "version_name=unknown" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          BASE_VERSION_CODE=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
+          BASE_VERSION_NAME=$(grep 'versionName' apps/mobile/android/app/build.gradle | head -1 | sed 's/.*versionName "\(.*\)".*/\1/')
+          
+          echo "Base versionCode: $BASE_VERSION_CODE"
+          echo "Base versionName: $BASE_VERSION_NAME"
+          echo "version_code=$BASE_VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$BASE_VERSION_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Get PR branch versions
+        id: pr_version
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+          
+          if [ ! -f apps/mobile/android/app/build.gradle ]; then
+            echo "⚠️  build.gradle not in repo - validation will run during build"
+            echo "version_code=0" >> $GITHUB_OUTPUT
+            echo "version_name=unknown" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          PR_VERSION_CODE=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
+          PR_VERSION_NAME=$(grep 'versionName' apps/mobile/android/app/build.gradle | head -1 | sed 's/.*versionName "\(.*\)".*/\1/')
+          
+          echo "PR versionCode: $PR_VERSION_CODE"
+          echo "PR versionName: $PR_VERSION_NAME"
+          echo "version_code=$PR_VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "version_name=$PR_VERSION_NAME" >> $GITHUB_OUTPUT
+      
+      - name: Validate version bumps
+        if: steps.base_version.outputs.version_code != '0'
+        run: |
+          BASE_CODE=${{ steps.base_version.outputs.version_code }}
+          PR_CODE=${{ steps.pr_version.outputs.version_code }}
+          BASE_NAME=${{ steps.base_version.outputs.version_name }}
+          PR_NAME=${{ steps.pr_version.outputs.version_name }}
+          
+          ERRORS=0
+          
+          echo "🔍 Validating production release requirements..."
+          echo ""
+          echo "versionCode: $BASE_CODE → $PR_CODE"
+          echo "versionName: $BASE_NAME → $PR_NAME"
+          echo ""
+          
+          # Check versionCode increment
+          if [ "$PR_CODE" -le "$BASE_CODE" ]; then
+            echo "❌ ERROR: versionCode must increment for production release!"
+            echo "   Expected: > $BASE_CODE, Got: $PR_CODE"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ versionCode incremented"
+          fi
+          
+          # Check versionName change
+          if [ "$BASE_NAME" == "$PR_NAME" ]; then
+            echo "❌ ERROR: versionName must change for production release!"
+            echo "   Current: $BASE_NAME"
+            echo "   Suggestions:"
+            echo "   - Feature release: $(echo $BASE_NAME | awk -F. '{print $1"."$2+1".0"}')"
+            echo "   - Hotfix/patch: $(echo $BASE_NAME | awk -F. '{print $1"."$2"."$3+1}')"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ versionName changed"
+          fi
+          
+          echo ""
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ Production release validation failed with $ERRORS error(s)"
+            echo ""
+            echo "Please update both versionCode AND versionName for production releases."
+            exit 1
+          fi
+          
+          echo "✅ Production release validation passed!"
+
+  validate-no-conflicts:
+    name: Check for Label Conflicts
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check conflicting labels
+        run: |
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          
+          HAS_QA=false
+          HAS_RELEASE=false
+          HAS_SKIP=false
+          
+          if echo "$LABELS" | grep -q "qa-release"; then
+            HAS_QA=true
+          fi
+          
+          if echo "$LABELS" | grep -q "release"; then
+            HAS_RELEASE=true
+          fi
+          
+          if echo "$LABELS" | grep -q "skip-build"; then
+            HAS_SKIP=true
+          fi
+          
+          CONFLICTS=0
+          
+          # Check for qa-release + release conflict
+          if [ "$HAS_QA" == "true" ] && [ "$HAS_RELEASE" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'qa-release' and 'release' labels"
+            echo "   Choose one: qa-release for QA builds, release for production"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          # Check for skip-build + qa-release conflict
+          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_QA" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'skip-build' and 'qa-release' labels"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          # Check for skip-build + release conflict
+          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_RELEASE" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'skip-build' and 'release' labels"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          if [ $CONFLICTS -gt 0 ]; then
+            echo ""
+            echo "Please remove conflicting labels before merging."
+            exit 1
+          fi
+          
+          echo "✅ No label conflicts detected"
+
+  validation-summary:
+    name: Version Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-qa-release, validate-production-release, validate-no-conflicts]
+    if: always()
+    
+    steps:
+      - name: Check validation results
+        run: |
+          echo "🔍 Validation Results:"
+          echo "   QA Release: ${{ needs.validate-qa-release.result }}"
+          echo "   Production Release: ${{ needs.validate-production-release.result }}"
+          echo "   No Conflicts: ${{ needs.validate-no-conflicts.result }}"
+          echo ""
+          
+          # Check for conflicts (this must always pass)
+          if [ "${{ needs.validate-no-conflicts.result }}" == "failure" ]; then
+            echo "❌ Label conflicts detected"
+            exit 1
+          fi
+          
+          # If QA release validation ran and failed, block
+          if [ "${{ needs.validate-qa-release.result }}" == "failure" ]; then
+            echo "❌ QA release validation failed"
+            exit 1
+          fi
+          
+          # If production release validation ran and failed, block
+          if [ "${{ needs.validate-production-release.result }}" == "failure" ]; then
+            echo "❌ Production release validation failed"
+            exit 1
+          fi
+          
+          # All validations either passed or were skipped (no build labels)
+          echo "✅ All version validations passed"

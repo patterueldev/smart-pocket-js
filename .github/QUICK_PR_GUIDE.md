@@ -25,7 +25,7 @@ gh copilot suggest "generate a commit message for adding GitHub Actions workflow
 # Or use this message:
 git commit -m "ci: add CI/CD infrastructure and API documentation
 
-- Add GitHub Actions workflows (pr-check, main-ci, nightly)
+- Add GitHub Actions workflows (pr-check, nightly)
 - Add PR template and contribution guide
 - Create external API documentation directory
   - Actual Budget integration guide
@@ -73,7 +73,7 @@ This PR adds comprehensive CI/CD infrastructure and external API reference docum
 - [x] Documentation update
 
 ## Changes Made
-- Added GitHub Actions workflows for PR validation, main branch CI, and nightly tests
+- Added GitHub Actions workflows for PR validation and nightly tests
 - Created PR template following project conventions
 - Added contribution guide with development workflow
 - Created external API documentation for:

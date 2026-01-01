@@ -1,20 +1,25 @@
 name: Release (server + android)
 
 on:
-  push:
-    tags:
-      - 'v*'
+  pull_request:
+    types: [closed]
     branches:
       - main
-    paths:
-      # Trigger on version file changes (version bump commits)
-      - 'package.json'
-      - 'apps/mobile/app.json'
-      - 'apps/mobile/android/app/build.gradle'
+
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force production release'
+        required: false
+        default: 'false'
 
 jobs:
   build-and-push:
     name: Production Release - Build Docker Image
+    # Only run if PR was merged with 'release' label
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,26 +39,9 @@ jobs:
       - name: Check if release should trigger
         id: check
         run: |
-          # For tag-based releases, always proceed
-          if [[ "$GITHUB_REF" =~ ^refs/tags/v ]]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "✅ Tag-based release detected"
-            exit 0
-          fi
-          
-          # For main push, check if version files changed
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            git diff HEAD^ HEAD -- package.json | grep -q '"version"' && VERSION_CHANGED=true || VERSION_CHANGED=false
-            
-            if [ "$VERSION_CHANGED" = "true" ]; then
-              echo "should_release=true" >> $GITHUB_OUTPUT
-              CURRENT_VERSION=$(node -p "require('./package.json').version")
-              echo "✅ Version changed to $CURRENT_VERSION - will create release"
-            else
-              echo "should_release=false" >> $GITHUB_OUTPUT
-              echo "ℹ️ No version change detected - skipping release"
-            fi
-          fi
+          # If we reach here, PR had 'release' label and was merged
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "✅ Production release triggered by 'release' label"
       
       - name: Set up Docker Buildx
         if: steps.check.outputs.should_release == 'true'

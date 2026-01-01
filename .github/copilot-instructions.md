@@ -383,7 +383,7 @@ npm run test:build        # Build & smoke test
 - Unit tests with Jest (70% coverage threshold in PRs)
 - Integration tests for API endpoints
 - Docker smoke tests for full stack validation
-- Main branch CI runs tests without coverage enforcement (already validated in PR)
+- Tests validated in PR checks before merge
 
 ## Common Patterns
 

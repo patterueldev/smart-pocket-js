@@ -30,22 +30,30 @@ jobs:
         with:
           filters: |
             code:
-              - 'packages/**'
-              - 'apps/**'
+              - 'packages/**/src/**'
+              - 'packages/**/package.json'
+              - 'apps/**/src/**'
+              - 'apps/**/package.json'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '!**/*.md'
-              - '!docs/**'
-              - '!.github/ISSUE_TEMPLATE/**'
+              - '!**/docs/**'
+              - '!**/*.test.ts'
+              - '!**/*.test.js'
+              - '!**/__tests__/**'
             docker:
-              - 'packages/**'
-              - 'apps/**'
-              - 'deploy/**'
-              - 'Dockerfile'
+              - 'apps/server/src/**'
+              - 'apps/server/package.json'
+              - 'packages/shared/src/**'
+              - 'deploy/docker/**'
+              - 'deploy/scripts/*.sh'
               - 'docker-compose*.yml'
               - '!**/*.md'
-              - '!docs/**'
+              - '!**/docs/**'
+              - '!**/*.test.ts'
+              - '!**/*.test.js'
+              - '!**/__tests__/**'
   lint-and-test:
     name: PR - Lint & Unit Tests
     runs-on: ubuntu-latest
