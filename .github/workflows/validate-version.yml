@@ -190,16 +190,16 @@ jobs:
           HAS_RELEASE=false
           HAS_SKIP=false
           
-          if echo "$LABELS" | grep -q "qa-release"; then
+          if echo "$LABELS" | grep -q '"qa-release"'; then
             HAS_QA=true
           fi
           
-          # Match "release" as whole word only (not "qa-release")
-          if echo "$LABELS" | grep -qw "release"; then
+          # Match exact "release" label in JSON (with quotes to avoid matching "qa-release")
+          if echo "$LABELS" | grep -q '"release"'; then
             HAS_RELEASE=true
           fi
           
-          if echo "$LABELS" | grep -q "skip-build"; then
+          if echo "$LABELS" | grep -q '"skip-build"'; then
             HAS_SKIP=true
           fi
           
