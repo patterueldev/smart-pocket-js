@@ -47,7 +47,7 @@ jobs:
               - 'apps/server/package.json'
               - 'packages/shared/src/**'
               - 'deploy/docker/**'
-              - 'deploy/scripts/**'
+              - 'deploy/scripts/*.sh'
               - 'docker-compose*.yml'
               - '!**/*.md'
               - '!**/docs/**'
