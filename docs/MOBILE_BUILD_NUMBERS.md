@@ -57,29 +57,28 @@ Post-MVP with hotfixes:
 
 ### QA Release Labels
 
-**`qa-release`** (required)
-- Triggers QA build deployment
-- Must have versionCode bump (validated by CI)
+**`qa-mobile`** (optional)
+- Triggers QA build for mobile app only
+- Must have versionCode/buildNumber bump (validated by CI)
 - versionName bump optional (can stay same version)
+- Can coexist with `qa-server` to build both
 
-**`mobile`** (optional)
-- Explicitly build mobile only
-- If absent, auto-detects from changed files
-
-**`server`** (optional)
-- Explicitly build server only
-- Can combine with `mobile` to build both
+**`qa-server`** (optional)
+- Triggers QA build for server only
+- Can coexist with `qa-mobile` to build both
+- No version validation required for server-only builds
 
 **`skip-build`** (optional)
 - Merge PR without triggering any builds
-- Conflicts with `qa-release` and `release` labels
+- Conflicts with all release labels
 
 ### Production Release Labels
 
-**`release`** (required)
+**`prod-release`** (required)
 - Triggers production deployment
 - Must have BOTH versionCode AND versionName bump
-- ALWAYS builds both server + mobile (even if one unchanged)
+- ALWAYS builds both server + mobile (no individual selection)
+- Cannot coexist with QA labels
 
 ---
 
@@ -112,21 +111,19 @@ git add apps/mobile/android/app/build.gradle
 git commit -m "build: bump versionCode to 2 for QA release"
 git push
 
-# Create PR with qa-release label
+# Create PR with qa-mobile label
 gh pr create \
   --title "feat: Add new feature" \
-  --label "qa-release" \
-  --label "mobile"
+  --label "qa-mobile"
 ```
 
 **On PR page**:
 - CI validates versionCode bump: ✅ Pass (1→2)
-- Reviewer sees `qa-release` label → knows this will trigger build
+- Reviewer sees `qa-mobile` label → knows this will trigger mobile build
 - Merge PR
 
 **After merge**:
-- Workflow detects `qa-release` label
-- Path detection: Only `apps/mobile/**` changed → Mobile-only build
+- Workflow detects `qa-mobile` label from merged PR
 - Builds APK: **0.1.1 (versionCode 2)**
 - Deploys to Firebase App Distribution
 
@@ -144,12 +141,12 @@ git checkout -b feat/#124-another-feature
 git commit -m "feat: add another feature"
 git push
 
-# Create PR WITHOUT qa-release label
+# Create PR WITHOUT qa-mobile or qa-server label
 gh pr create --title "feat: Add another feature"
 ```
 
 **On merge**:
-- No `qa-release` label → **No build triggered**
+- No release labels → **No build triggered**
 - Changes merged to main
 - Can cut build later with separate version bump PR
 
@@ -175,12 +172,11 @@ git push
 
 gh pr create \
   --title "build: QA release v0.1.1 (3)" \
-  --label "qa-release" \
-  --label "mobile"
+  --label "qa-mobile"
 ```
 
 **On merge**:
-- Detects `qa-release` label
+- Detects `qa-mobile` label
 - No functional changes, just version bump → Build anyway (label is explicit)
 - Builds APK: **0.1.1 (versionCode 3)**
 
@@ -213,8 +209,8 @@ git push
 
 gh pr create \
   --title "release: Version 0.1.2" \
-  --label "release"
-# Note: NO mobile/server labels - production ALWAYS builds both
+  --label "prod-release"
+# Note: prod-release ALWAYS builds both server + mobile
 ```
 
 **On merge**:
@@ -252,7 +248,7 @@ git push
 
 gh pr create \
   --title "release: Version 0.1.3 (hotfix)" \
-  --label "release"
+  --label "prod-release"
 ```
 
 **Result**: Production release 0.1.3 (versionCode 7)
@@ -263,22 +259,22 @@ gh pr create \
 
 ```
 QA Builds (continuous, same versionName):
-PR #45 (feat) + qa-release     → 0.1.1 (1) ✅ QA build
-PR #46 (fix)  + qa-release     → 0.1.1 (2) ✅ QA build
+PR #45 (feat) + qa-mobile      → 0.1.1 (1) ✅ QA build
+PR #46 (fix)  + qa-mobile      → 0.1.1 (2) ✅ QA build
 PR #47 (feat) NO LABEL         → No build ✓ (flexible)
-PR #48 (build) + qa-release    → 0.1.1 (3) ✅ QA build
+PR #48 (build) + qa-mobile     → 0.1.1 (3) ✅ QA build
 PR #49 (chore) NO LABEL        → No build ✓
-PR #50 (build) + qa-release    → 0.1.1 (4) ✅ QA build
+PR #50 (build) + qa-mobile     → 0.1.1 (4) ✅ QA build
 
 Production Release:
-PR #51 (release) + release     → 0.1.2 (5) 🚀 Production
+PR #51 (release) + prod-release → 0.1.2 (5) 🚀 Production
 
 QA Builds (continue with new versionName):
-PR #52 (feat) + qa-release     → 0.1.2 (6) ✅ QA build
-PR #53 (feat) + qa-release     → 0.1.2 (7) ✅ QA build
+PR #52 (feat) + qa-mobile      → 0.1.2 (6) ✅ QA build
+PR #53 (feat) + qa-mobile      → 0.1.2 (7) ✅ QA build
 
 Hotfix Production:
-PR #54 (release) + release     → 0.1.3 (8) 🚀 Hotfix
+PR #54 (release) + prod-release → 0.1.3 (8) 🚀 Hotfix
 ```
 
 ---
@@ -289,14 +285,15 @@ PR #54 (release) + release     → 0.1.3 (8) 🚀 Hotfix
 
 **`.github/workflows/validate-version.yml`** runs on PR open/update/label change:
 
-#### For `qa-release` label:
+#### For `qa-mobile` or `qa-server` labels:
 ```yaml
-✅ Check: versionCode incremented (compared to main branch)
-❌ Fail if: versionCode unchanged or decreased
-✅ Pass: versionCode bumped (versionName can stay same)
+✅ Check: versionCode/buildNumber incremented (compared to main branch)
+❌ Fail if: versionCode/buildNumber unchanged or decreased
+✅ Pass: Build numbers bumped (versionName can stay same)
+⚠️  Warning: If versionName changes without prod-release label
 ```
 
-#### For `release` label:
+#### For `prod-release` label:
 ```yaml
 ✅ Check: versionCode incremented AND versionName changed
 ❌ Fail if: Either unchanged
@@ -305,9 +302,8 @@ PR #54 (release) + release     → 0.1.3 (8) 🚀 Hotfix
 
 #### Label conflicts:
 ```yaml
-❌ Fail if: qa-release + release (choose one)
-❌ Fail if: skip-build + qa-release
-❌ Fail if: skip-build + release
+❌ Fail if: (qa-mobile OR qa-server) + prod-release (choose one)
+❌ Fail if: skip-build + any release label
 ```
 
 ---
@@ -317,46 +313,43 @@ PR #54 (release) + release     → 0.1.3 (8) 🚀 Hotfix
 ### QA Builds (`.github/workflows/deploy-mobile-qa.yml`)
 
 **Triggers**:
-- PR merged to main with `qa-release` label
-- Either `mobile` label OR mobile files changed
+- Push to main branch (after PR merge)
+- Extracts PR number from merge commit message
+- Checks if PR had `qa-mobile` label
 
 **Process**:
-1. Check labels and changed files
-2. If conditions met, run build
-3. Build APK with current versionCode (no auto-increment)
-4. Deploy to Firebase App Distribution
+1. Extract PR number from commit message pattern: `(#123)`
+2. Fetch PR labels via GitHub API
+3. Check for `qa-mobile` label
+4. If found, run build
+5. Build APK with current versionCode (no auto-increment)
+6. Deploy to Firebase App Distribution
+
+**Note**: No path-based detection. Relies entirely on explicit `qa-mobile` label.
 
 ### Production Builds (`.github/workflows/release.yml`)
 
 **Triggers**:
-- PR merged to main with `release` label
+- PR merged to main with `prod-release` label
 
 **Process**:
-1. Check `release` label (already validated in PR)
-2. **ALWAYS** build both server + mobile (ignore path changes)
+1. Check `prod-release` label (already validated in PR)
+2. **ALWAYS** build both server + mobile (no individual selection)
 3. Build Docker image with version tag
 4. Build Android APK with versionName and versionCode
 5. Create GitHub Release with both artifacts
 
 ---
 
-## Path-Based Auto-Detection
+## Label-Based Explicit Build System
 
-If no explicit `mobile`/`server` labels, workflows auto-detect from changed files:
+**No Path-Based Detection**: This project uses explicit labels only. PRs merged without release labels will NOT trigger builds, regardless of which files changed.
 
-**Mobile build triggers if**:
-- `apps/mobile/**` changed, OR
-- `packages/shared/**` changed, OR
-- `docs/api-spec.yaml` changed
-
-**Server build triggers if**:
-- `apps/server/**` changed, OR
-- `packages/shared/**` changed, OR
-- `docs/api-spec.yaml` changed, OR
-- `deploy/docker/**` changed, OR
-- `deploy/scripts/**` changed
-
-**Explicit labels override auto-detection**.
+**Why Explicit Labels?**
+- Clear intent: Labels make it obvious when a build is intended
+- Flexible updates: Merge code changes without cutting builds
+- No surprises: Builds only happen when explicitly requested
+- Controlled releases: Version bumps are deliberate, not automatic
 
 ---
 
@@ -387,36 +380,50 @@ Keep these synchronized during production releases.
 
 ## Helper Scripts
 
-### Manual versionCode Increment
+### QA Release: Increment Build Numbers Only
 
 ```bash
-./scripts/increment-version-code.sh
+./scripts/increment-build-numbers.sh
 ```
 
-**Use case**: Quickly bump versionCode before committing
+**Use case**: Bump versionCode/buildNumber for QA release (version unchanged)
+**What it does**:
+- Increments android.versionCode by 1
+- Increments ios.buildNumber by 1
+- Leaves version field unchanged
+- Updates apps/mobile/app.config.js
 
-### Version Bump Script (Future Enhancement)
+### Production Release: Bump Everything
 
 ```bash
-./scripts/bump-version.sh --qa        # QA: versionCode only
-./scripts/bump-version.sh --release   # Production: both versions
-./scripts/bump-version.sh --hotfix    # Hotfix: patch + versionCode
+./scripts/bump-version.sh 0.2.0
+```
+
+**Use case**: Production release with new semantic version
+**What it does**:
+- Updates version in: root package.json, apps/server/package.json, apps/mobile/package.json
+- Updates version in apps/mobile/app.config.js
+- Increments android.versionCode by 1
+- Increments ios.buildNumber by 1
 ```
 
 ---
 
 ## Troubleshooting
 
-### Error: "QA release requires versionCode bump"
+### Error: "QA release requires versionCode/buildNumber bump"
 
-**Problem**: PR has `qa-release` label but versionCode unchanged
+**Problem**: PR has `qa-mobile` label but versionCode/buildNumber unchanged
 
 **Solution**:
 ```bash
-# Edit apps/mobile/android/app/build.gradle
-versionCode X → versionCode X+1
+# Edit apps/mobile/app.config.js
+# Increment versionCode and buildNumber by 1
 
-git add apps/mobile/android/app/build.gradle
+# Or use helper script:
+./scripts/increment-build-numbers.sh
+
+git add apps/mobile/app.config.js
 git commit --amend --no-edit
 git push --force
 ```
@@ -425,17 +432,18 @@ git push --force
 
 ### Error: "Production release requires versionName bump"
 
-**Problem**: PR has `release` label but versionName unchanged
+**Problem**: PR has `prod-release` label but versionName unchanged
 
 **Solution**:
 ```bash
-# Edit both files:
-# apps/mobile/android/app/build.gradle
-versionName "0.1.1" → versionName "0.1.2"
-versionCode X → versionCode X+1
+# Use helper script:
+./scripts/bump-version.sh 0.1.2
 
-# package.json
-"version": "0.1.1" → "version": "0.1.2"
+# This updates:
+# - root package.json
+# - apps/server/package.json
+# - apps/mobile/package.json
+# - apps/mobile/app.config.js (version + increment versionCode/buildNumber)
 
 git add .
 git commit --amend --no-edit
@@ -447,14 +455,15 @@ git push --force
 ### Build doesn't trigger after merge
 
 **Possible causes**:
-1. Missing `qa-release` or `release` label
-2. No mobile files changed (for QA) and no explicit `mobile` label
-3. Label conflicts (e.g., `qa-release` + `skip-build`)
+1. Missing `qa-mobile`, `qa-server`, or `prod-release` label
+2. Label conflicts (e.g., `qa-mobile` + `skip-build`)
+3. PR number extraction failed (unusual commit message format)
 
 **Solution**:
 - Check PR labels before merging
-- Add explicit `mobile`/`server` labels if auto-detection misses
+- Ensure merge commit includes PR number: `(#123)`
 - Remove conflicting labels
+- **No path-based detection** - labels are required
 
 ---
 
@@ -475,20 +484,22 @@ versionCode 5 → versionCode 6  # Use next available number
 ## Best Practices
 
 ### ✅ Do:
-- Always increment versionCode for ANY build (QA or production)
-- Use `qa-release` label when ready to cut QA build
-- Use `release` label for production (strict validation)
-- Bump BOTH versions for production
+- Always increment versionCode/buildNumber for ANY build (QA or production)
+- Use `qa-mobile` or `qa-server` labels when ready to cut QA build
+- Use `prod-release` label for production (strict validation)
+- Bump BOTH version and build numbers for production
 - Merge without labels when not ready to build
 - Check CI validation before merging
+- Use helper scripts (increment-build-numbers.sh, bump-version.sh)
 
 ### ❌ Don't:
-- Skip versionCode increments (breaks Android deployment)
+- Skip versionCode/buildNumber increments (breaks Android deployment)
 - Use same versionCode twice (even across variants)
 - Bypass CI validation failures
-- Mix `qa-release` and `release` labels
-- Merge with `release` label without version bumps
+- Mix QA labels (`qa-mobile`/`qa-server`) with `prod-release`
+- Merge with `prod-release` label without version bumps
 - Assume builds auto-trigger (they don't without labels)
+- Rely on path-based detection (it doesn't exist)
 
 ---
 
@@ -513,18 +524,31 @@ If coming from auto-increment approach:
 ## Quick Reference
 
 ```bash
-# QA release (versionCode only)
-1. Bump versionCode in build.gradle
-2. Commit: "build: bump versionCode to X for QA"
-3. PR with label: "qa-release"
-4. Merge → QA build deployed
+# QA release (mobile only - build numbers only)
+1. Run: ./scripts/increment-build-numbers.sh
+2. Commit: "chore: Increment build numbers to X"
+3. PR with label: "qa-mobile"
+4. Merge → Mobile QA build deployed
 
-# Production release (both versions)
-1. Bump versionCode AND versionName in build.gradle
-2. Bump version in package.json
-3. Update CHANGELOG.md
-4. Commit: "release: version X.Y.Z"
-5. PR with label: "release"
+# QA release (server only - no version required)
+1. Make server changes
+2. Commit: "feat: Add server feature"
+3. PR with label: "qa-server"
+4. Merge → Server QA image built
+
+# QA release (both components)
+1. Run: ./scripts/increment-build-numbers.sh
+2. Commit: "chore: Increment build numbers to X"
+3. PR with labels: "qa-mobile" AND "qa-server"
+4. Merge → Both QA builds deployed
+
+# Production release (always both components)
+1. Run: ./scripts/bump-version.sh X.Y.Z
+2. Update CHANGELOG.md
+3. Commit: "release: version X.Y.Z"
+4. PR with label: "prod-release"
+5. Merge → Production build deployed
+```
 6. Merge → Production released
 
 # Merge without build

@@ -9,78 +9,84 @@ permissions:
   contents: read
 
 jobs:
-  validate-qa-release:
-    name: Validate QA Release Version
-    if: contains(github.event.pull_request.labels.*.name, 'qa-release')
+  validate-no-conflicts:
+    name: Check for Label Conflicts
+    if: always()
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-      
-      - name: Get base branch versionCode
-        id: base_version
+      - name: Check conflicting labels
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git checkout origin/${{ github.event.pull_request.base.ref }}
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
           
-          # Check if build.gradle exists (might be gitignored)
-          if [ ! -f apps/mobile/android/app/build.gradle ]; then
-            echo "⚠️  build.gradle not in repo (Expo managed workflow)"
-            echo "Base versionCode check skipped - will validate on prebuild"
-            echo "version_code=0" >> $GITHUB_OUTPUT
-            exit 0
+          HAS_QA_MOBILE=false
+          HAS_QA_SERVER=false
+          HAS_PROD=false
+          HAS_SKIP=false
+          
+          if echo "$LABELS" | grep -q '"qa-mobile"'; then
+            HAS_QA_MOBILE=true
           fi
           
-          BASE_VERSION=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
-          echo "Base versionCode: $BASE_VERSION"
-          echo "version_code=$BASE_VERSION" >> $GITHUB_OUTPUT
-      
-      - name: Get PR branch versionCode
-        id: pr_version
-        run: |
-          git checkout ${{ github.event.pull_request.head.sha }}
-          
-          # Check if build.gradle exists
-          if [ ! -f apps/mobile/android/app/build.gradle ]; then
-            echo "⚠️  build.gradle not in repo (Expo managed workflow)"
-            echo "PR versionCode check skipped - will validate on prebuild"
-            echo "version_code=0" >> $GITHUB_OUTPUT
-            exit 0
+          if echo "$LABELS" | grep -q '"qa-server"'; then
+            HAS_QA_SERVER=true
           fi
           
-          PR_VERSION=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
-          echo "PR versionCode: $PR_VERSION"
-          echo "version_code=$PR_VERSION" >> $GITHUB_OUTPUT
-      
-      - name: Validate versionCode increment
-        if: steps.base_version.outputs.version_code != '0'
-        run: |
-          BASE=${{ steps.base_version.outputs.version_code }}
-          PR=${{ steps.pr_version.outputs.version_code }}
+          if echo "$LABELS" | grep -q '"prod-release"'; then
+            HAS_PROD=true
+          fi
           
-          if [ "$PR" -le "$BASE" ]; then
-            echo "❌ ERROR: QA release requires versionCode bump!"
+          if echo "$LABELS" | grep -q '"skip-build"'; then
+            HAS_SKIP=true
+          fi
+          
+          CONFLICTS=0
+          
+          # Check for QA + prod conflict
+          if ([ "$HAS_QA_MOBILE" == "true" ] || [ "$HAS_QA_SERVER" == "true" ]) && [ "$HAS_PROD" == "true" ]; then
+            echo "❌ ERROR: Cannot mix QA labels (qa-mobile, qa-server) with prod-release"
+            echo "   Choose either QA or production, not both"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          # Check for skip-build + qa-mobile conflict
+          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_QA_MOBILE" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'skip-build' and 'qa-mobile' labels"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          # Check for skip-build + qa-server conflict
+          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_QA_SERVER" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'skip-build' and 'qa-server' labels"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          # Check for skip-build + prod-release conflict
+          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_PROD" == "true" ]; then
+            echo "❌ ERROR: Cannot have both 'skip-build' and 'prod-release' labels"
+            CONFLICTS=$((CONFLICTS + 1))
+          fi
+          
+          if [ $CONFLICTS -gt 0 ]; then
             echo ""
-            echo "Current (main): $BASE"
-            echo "Your PR:        $PR"
-            echo ""
-            echo "Please increment versionCode in apps/mobile/android/app/build.gradle"
-            echo "Example: versionCode $BASE → versionCode $((BASE + 1))"
+            echo "Please remove conflicting labels before merging."
             exit 1
           fi
           
-          echo "✅ versionCode incremented: $BASE → $PR"
+          echo "✅ No label conflicts detected"
 
-  validate-production-release:
-    name: Validate Production Release Version
-    if: contains(github.event.pull_request.labels.*.name, 'release')
+  validate-qa-build:
+    name: Validate QA Build Version
+    if: contains(github.event.pull_request.labels.*.name, 'qa-mobile') || contains(github.event.pull_request.labels.*.name, 'qa-server')
     runs-on: ubuntu-latest
+    needs: [validate-no-conflicts]
     
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
@@ -93,158 +99,340 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git checkout origin/${{ github.event.pull_request.base.ref }}
           
-          # Get versionCode
-          if [ ! -f apps/mobile/android/app/build.gradle ]; then
-            echo "⚠️  build.gradle not in repo - validation will run during build"
-            echo "version_code=0" >> $GITHUB_OUTPUT
-            echo "version_name=unknown" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          # Extract versions from app.config.js using Node.js
+          cat > extract-version.js << 'EOF'
+          const config = require('./apps/mobile/app.config.js');
+          const versionCode = config.expo.android?.versionCode || 0;
+          const buildNumber = config.expo.ios?.buildNumber || '0';
+          const version = config.expo.version || '0.0.0';
+          console.log(`VERSION_CODE=${versionCode}`);
+          console.log(`BUILD_NUMBER=${buildNumber}`);
+          console.log(`VERSION=${version}`);
+          EOF
           
-          BASE_VERSION_CODE=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
-          BASE_VERSION_NAME=$(grep 'versionName' apps/mobile/android/app/build.gradle | head -1 | sed 's/.*versionName "\(.*\)".*/\1/')
+          VERSIONS=$(node extract-version.js)
+          BASE_VERSION_CODE=$(echo "$VERSIONS" | grep VERSION_CODE | cut -d'=' -f2)
+          BASE_BUILD_NUMBER=$(echo "$VERSIONS" | grep BUILD_NUMBER | cut -d'=' -f2)
+          BASE_VERSION=$(echo "$VERSIONS" | grep "^VERSION=" | cut -d'=' -f2)
           
           echo "Base versionCode: $BASE_VERSION_CODE"
-          echo "Base versionName: $BASE_VERSION_NAME"
+          echo "Base buildNumber: $BASE_BUILD_NUMBER"
+          echo "Base version: $BASE_VERSION"
           echo "version_code=$BASE_VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "version_name=$BASE_VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "build_number=$BASE_BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
       
       - name: Get PR branch versions
         id: pr_version
         run: |
           git checkout ${{ github.event.pull_request.head.sha }}
           
-          if [ ! -f apps/mobile/android/app/build.gradle ]; then
-            echo "⚠️  build.gradle not in repo - validation will run during build"
-            echo "version_code=0" >> $GITHUB_OUTPUT
-            echo "version_name=unknown" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          # Extract versions from app.config.js
+          cat > extract-version.js << 'EOF'
+          const config = require('./apps/mobile/app.config.js');
+          const versionCode = config.expo.android?.versionCode || 0;
+          const buildNumber = config.expo.ios?.buildNumber || '0';
+          const version = config.expo.version || '0.0.0';
+          console.log(`VERSION_CODE=${versionCode}`);
+          console.log(`BUILD_NUMBER=${buildNumber}`);
+          console.log(`VERSION=${version}`);
+          EOF
           
-          PR_VERSION_CODE=$(grep 'versionCode' apps/mobile/android/app/build.gradle | head -1 | sed 's/[^0-9]*//g')
-          PR_VERSION_NAME=$(grep 'versionName' apps/mobile/android/app/build.gradle | head -1 | sed 's/.*versionName "\(.*\)".*/\1/')
+          VERSIONS=$(node extract-version.js)
+          PR_VERSION_CODE=$(echo "$VERSIONS" | grep VERSION_CODE | cut -d'=' -f2)
+          PR_BUILD_NUMBER=$(echo "$VERSIONS" | grep BUILD_NUMBER | cut -d'=' -f2)
+          PR_VERSION=$(echo "$VERSIONS" | grep "^VERSION=" | cut -d'=' -f2)
           
           echo "PR versionCode: $PR_VERSION_CODE"
-          echo "PR versionName: $PR_VERSION_NAME"
+          echo "PR buildNumber: $PR_BUILD_NUMBER"
+          echo "PR version: $PR_VERSION"
           echo "version_code=$PR_VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "version_name=$PR_VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "build_number=$PR_BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "version=$PR_VERSION" >> $GITHUB_OUTPUT
       
-      - name: Validate version bumps
-        if: steps.base_version.outputs.version_code != '0'
+      - name: Validate build number increments
         run: |
           BASE_CODE=${{ steps.base_version.outputs.version_code }}
           PR_CODE=${{ steps.pr_version.outputs.version_code }}
-          BASE_NAME=${{ steps.base_version.outputs.version_name }}
-          PR_NAME=${{ steps.pr_version.outputs.version_name }}
+          BASE_BUILD=${{ steps.base_version.outputs.build_number }}
+          PR_BUILD=${{ steps.pr_version.outputs.build_number }}
+          BASE_VERSION=${{ steps.base_version.outputs.version }}
+          PR_VERSION=${{ steps.pr_version.outputs.version }}
+          
+          ERRORS=0
+          
+          echo "🔍 Validating QA build requirements..."
+          echo ""
+          echo "android.versionCode: $BASE_CODE → $PR_CODE"
+          echo "ios.buildNumber:     $BASE_BUILD → $PR_BUILD"
+          echo "version:             $BASE_VERSION → $PR_VERSION"
+          echo ""
+          
+          # Check versionCode increment (+1 only)
+          EXPECTED_CODE=$((BASE_CODE + 1))
+          if [ "$PR_CODE" -ne "$EXPECTED_CODE" ]; then
+            echo "❌ ERROR: android.versionCode must increment by exactly 1"
+            echo "   Expected: $EXPECTED_CODE, Got: $PR_CODE"
+            echo ""
+            echo "Please update apps/mobile/app.config.js:"
+            echo "   android: { versionCode: $EXPECTED_CODE }"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ versionCode incremented correctly: $BASE_CODE → $PR_CODE"
+          fi
+          
+          # Check buildNumber increment (+1 only)
+          EXPECTED_BUILD=$((BASE_BUILD + 1))
+          if [ "$PR_BUILD" -ne "$EXPECTED_BUILD" ]; then
+            echo "❌ ERROR: ios.buildNumber must increment by exactly 1"
+            echo "   Expected: $EXPECTED_BUILD, Got: $PR_BUILD"
+            echo ""
+            echo "Please update apps/mobile/app.config.js:"
+            echo "   ios: { buildNumber: '$EXPECTED_BUILD' }"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ buildNumber incremented correctly: $BASE_BUILD → $PR_BUILD"
+          fi
+          
+          # Version can stay the same for QA builds
+          if [ "$BASE_VERSION" != "$PR_VERSION" ]; then
+            echo "⚠️  WARNING: version changed from $BASE_VERSION to $PR_VERSION"
+            echo "   QA builds typically keep the same semantic version"
+            echo "   Only build numbers should increment for QA"
+          else
+            echo "✅ version unchanged (expected for QA builds)"
+          fi
+          
+          echo ""
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ QA build validation failed with $ERRORS error(s)"
+            exit 1
+          fi
+          
+          echo "✅ QA build validation passed!"
+
+  validate-prod-release:
+    name: Validate Production Release Version
+    if: contains(github.event.pull_request.labels.*.name, 'prod-release')
+    runs-on: ubuntu-latest
+    needs: [validate-no-conflicts]
+    
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Get base branch versions
+        id: base_version
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git checkout origin/${{ github.event.pull_request.base.ref }}
+          
+          # Get root package.json version
+          BASE_ROOT_VERSION=$(node -p "require('./package.json').version")
+          
+          # Extract mobile versions from app.config.js
+          cat > extract-version.js << 'EOF'
+          const config = require('./apps/mobile/app.config.js');
+          const versionCode = config.expo.android?.versionCode || 0;
+          const buildNumber = config.expo.ios?.buildNumber || '0';
+          const version = config.expo.version || '0.0.0';
+          console.log(`VERSION_CODE=${versionCode}`);
+          console.log(`BUILD_NUMBER=${buildNumber}`);
+          console.log(`VERSION=${version}`);
+          EOF
+          
+          VERSIONS=$(node extract-version.js)
+          BASE_VERSION_CODE=$(echo "$VERSIONS" | grep VERSION_CODE | cut -d'=' -f2)
+          BASE_BUILD_NUMBER=$(echo "$VERSIONS" | grep BUILD_NUMBER | cut -d'=' -f2)
+          BASE_MOBILE_VERSION=$(echo "$VERSIONS" | grep "^VERSION=" | cut -d'=' -f2)
+          
+          echo "Base root version:   $BASE_ROOT_VERSION"
+          echo "Base mobile version: $BASE_MOBILE_VERSION"
+          echo "Base versionCode:    $BASE_VERSION_CODE"
+          echo "Base buildNumber:    $BASE_BUILD_NUMBER"
+          
+          echo "root_version=$BASE_ROOT_VERSION" >> $GITHUB_OUTPUT
+          echo "mobile_version=$BASE_MOBILE_VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$BASE_VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "build_number=$BASE_BUILD_NUMBER" >> $GITHUB_OUTPUT
+      
+      - name: Get PR branch versions
+        id: pr_version
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+          
+          # Get root package.json version
+          PR_ROOT_VERSION=$(node -p "require('./package.json').version")
+          
+          # Extract mobile versions from app.config.js
+          cat > extract-version.js << 'EOF'
+          const config = require('./apps/mobile/app.config.js');
+          const versionCode = config.expo.android?.versionCode || 0;
+          const buildNumber = config.expo.ios?.buildNumber || '0';
+          const version = config.expo.version || '0.0.0';
+          console.log(`VERSION_CODE=${versionCode}`);
+          console.log(`BUILD_NUMBER=${buildNumber}`);
+          console.log(`VERSION=${version}`);
+          EOF
+          
+          VERSIONS=$(node extract-version.js)
+          PR_VERSION_CODE=$(echo "$VERSIONS" | grep VERSION_CODE | cut -d'=' -f2)
+          PR_BUILD_NUMBER=$(echo "$VERSIONS" | grep BUILD_NUMBER | cut -d'=' -f2)
+          PR_MOBILE_VERSION=$(echo "$VERSIONS" | grep "^VERSION=" | cut -d'=' -f2)
+          
+          echo "PR root version:   $PR_ROOT_VERSION"
+          echo "PR mobile version: $PR_MOBILE_VERSION"
+          echo "PR versionCode:    $PR_VERSION_CODE"
+          echo "PR buildNumber:    $PR_BUILD_NUMBER"
+          
+          echo "root_version=$PR_ROOT_VERSION" >> $GITHUB_OUTPUT
+          echo "mobile_version=$PR_MOBILE_VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$PR_VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "build_number=$PR_BUILD_NUMBER" >> $GITHUB_OUTPUT
+      
+      - name: Validate version bumps
+        run: |
+          BASE_ROOT=${{ steps.base_version.outputs.root_version }}
+          PR_ROOT=${{ steps.pr_version.outputs.root_version }}
+          BASE_MOBILE=${{ steps.base_version.outputs.mobile_version }}
+          PR_MOBILE=${{ steps.pr_version.outputs.mobile_version }}
+          BASE_CODE=${{ steps.base_version.outputs.version_code }}
+          PR_CODE=${{ steps.pr_version.outputs.version_code }}
+          BASE_BUILD=${{ steps.base_version.outputs.build_number }}
+          PR_BUILD=${{ steps.pr_version.outputs.build_number }}
           
           ERRORS=0
           
           echo "🔍 Validating production release requirements..."
           echo ""
-          echo "versionCode: $BASE_CODE → $PR_CODE"
-          echo "versionName: $BASE_NAME → $PR_NAME"
+          echo "Root version:        $BASE_ROOT → $PR_ROOT"
+          echo "Mobile version:      $BASE_MOBILE → $PR_MOBILE"
+          echo "android.versionCode: $BASE_CODE → $PR_CODE"
+          echo "ios.buildNumber:     $BASE_BUILD → $PR_BUILD"
           echo ""
           
-          # Check versionCode increment
-          if [ "$PR_CODE" -le "$BASE_CODE" ]; then
-            echo "❌ ERROR: versionCode must increment for production release!"
-            echo "   Expected: > $BASE_CODE, Got: $PR_CODE"
+          # Check root semantic version change
+          if [ "$BASE_ROOT" == "$PR_ROOT" ]; then
+            echo "❌ ERROR: Root package.json version must change for production release"
+            echo "   Current: $BASE_ROOT"
+            echo "   Suggestions:"
+            echo "   - Feature release: $(echo $BASE_ROOT | awk -F. '{print $1"."$2+1".0"}')"
+            echo "   - Hotfix/patch:    $(echo $BASE_ROOT | awk -F. '{print $1"."$2"."$3+1}')"
             ERRORS=$((ERRORS + 1))
           else
-            echo "✅ versionCode incremented"
+            echo "✅ Root version changed: $BASE_ROOT → $PR_ROOT"
           fi
           
-          # Check versionName change
-          if [ "$BASE_NAME" == "$PR_NAME" ]; then
-            echo "❌ ERROR: versionName must change for production release!"
-            echo "   Current: $BASE_NAME"
-            echo "   Suggestions:"
-            echo "   - Feature release: $(echo $BASE_NAME | awk -F. '{print $1"."$2+1".0"}')"
-            echo "   - Hotfix/patch: $(echo $BASE_NAME | awk -F. '{print $1"."$2"."$3+1}')"
+          # Check versionCode increment (+1 only)
+          EXPECTED_CODE=$((BASE_CODE + 1))
+          if [ "$PR_CODE" -ne "$EXPECTED_CODE" ]; then
+            echo "❌ ERROR: android.versionCode must increment by exactly 1"
+            echo "   Expected: $EXPECTED_CODE, Got: $PR_CODE"
             ERRORS=$((ERRORS + 1))
           else
-            echo "✅ versionName changed"
+            echo "✅ versionCode incremented correctly: $BASE_CODE → $PR_CODE"
+          fi
+          
+          # Check buildNumber increment (+1 only)
+          EXPECTED_BUILD=$((BASE_BUILD + 1))
+          if [ "$PR_BUILD" -ne "$EXPECTED_BUILD" ]; then
+            echo "❌ ERROR: ios.buildNumber must increment by exactly 1"
+            echo "   Expected: $EXPECTED_BUILD, Got: $PR_BUILD"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ buildNumber incremented correctly: $BASE_BUILD → $PR_BUILD"
           fi
           
           echo ""
           if [ $ERRORS -gt 0 ]; then
             echo "❌ Production release validation failed with $ERRORS error(s)"
             echo ""
-            echo "Please update both versionCode AND versionName for production releases."
+            echo "For production releases, update:"
+            echo "1. Root package.json version (semantic version x.y.z)"
+            echo "2. apps/mobile/app.config.js android.versionCode (+1)"
+            echo "3. apps/mobile/app.config.js ios.buildNumber (+1)"
             exit 1
           fi
           
           echo "✅ Production release validation passed!"
 
-  validate-no-conflicts:
-    name: Check for Label Conflicts
-    if: always()
+  validate-version-sync:
+    name: Validate Version Sync
+    if: contains(github.event.pull_request.labels.*.name, 'qa-mobile') || contains(github.event.pull_request.labels.*.name, 'qa-server') || contains(github.event.pull_request.labels.*.name, 'prod-release')
     runs-on: ubuntu-latest
+    needs: [validate-no-conflicts, validate-qa-build, validate-prod-release]
+    # Run even if previous validations were skipped (but not if they failed)
     
     steps:
-      - name: Check conflicting labels
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Check version synchronization
         run: |
-          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          # Get root package.json version
+          ROOT_VERSION=$(node -p "require('./package.json').version")
           
-          HAS_QA=false
-          HAS_RELEASE=false
-          HAS_SKIP=false
+          # Get mobile app.config.js version
+          cat > extract-version.js << 'EOF'
+          const config = require('./apps/mobile/app.config.js');
+          console.log(config.expo.version || '0.0.0');
+          EOF
           
-          if echo "$LABELS" | grep -q '"qa-release"'; then
-            HAS_QA=true
-          fi
+          MOBILE_VERSION=$(node extract-version.js)
           
-          # Match exact "release" label in JSON (with quotes to avoid matching "qa-release")
-          if echo "$LABELS" | grep -q '"release"'; then
-            HAS_RELEASE=true
-          fi
+          echo "🔍 Checking version synchronization..."
+          echo ""
+          echo "Root package.json:  $ROOT_VERSION"
+          echo "Mobile app.config:  $MOBILE_VERSION"
+          echo ""
           
-          if echo "$LABELS" | grep -q '"skip-build"'; then
-            HAS_SKIP=true
-          fi
-          
-          CONFLICTS=0
-          
-          # Check for qa-release + release conflict
-          if [ "$HAS_QA" == "true" ] && [ "$HAS_RELEASE" == "true" ]; then
-            echo "❌ ERROR: Cannot have both 'qa-release' and 'release' labels"
-            echo "   Choose one: qa-release for QA builds, release for production"
-            CONFLICTS=$((CONFLICTS + 1))
-          fi
-          
-          # Check for skip-build + qa-release conflict
-          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_QA" == "true" ]; then
-            echo "❌ ERROR: Cannot have both 'skip-build' and 'qa-release' labels"
-            CONFLICTS=$((CONFLICTS + 1))
-          fi
-          
-          # Check for skip-build + release conflict
-          if [ "$HAS_SKIP" == "true" ] && [ "$HAS_RELEASE" == "true" ]; then
-            echo "❌ ERROR: Cannot have both 'skip-build' and 'release' labels"
-            CONFLICTS=$((CONFLICTS + 1))
-          fi
-          
-          if [ $CONFLICTS -gt 0 ]; then
+          if [ "$ROOT_VERSION" != "$MOBILE_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch detected!"
             echo ""
-            echo "Please remove conflicting labels before merging."
+            echo "The semantic version in apps/mobile/app.config.js MUST match root package.json"
+            echo ""
+            echo "Current values:"
+            echo "  package.json version:        $ROOT_VERSION"
+            echo "  app.config.js expo.version:  $MOBILE_VERSION"
+            echo ""
+            echo "Please update apps/mobile/app.config.js:"
+            echo "  version: '$ROOT_VERSION'"
+            echo ""
+            echo "Root package.json is the source of truth for semantic versioning."
             exit 1
           fi
           
-          echo "✅ No label conflicts detected"
+          echo "✅ Versions are synchronized"
 
   validation-summary:
     name: Version Validation Summary
     runs-on: ubuntu-latest
-    needs: [validate-qa-release, validate-production-release, validate-no-conflicts]
+    needs: [validate-no-conflicts, validate-qa-build, validate-prod-release, validate-version-sync]
     if: always()
     
     steps:
       - name: Check validation results
         run: |
           echo "🔍 Validation Results:"
-          echo "   QA Release: ${{ needs.validate-qa-release.result }}"
-          echo "   Production Release: ${{ needs.validate-production-release.result }}"
-          echo "   No Conflicts: ${{ needs.validate-no-conflicts.result }}"
+          echo "   Label Conflicts:    ${{ needs.validate-no-conflicts.result }}"
+          echo "   QA Build:           ${{ needs.validate-qa-build.result }}"
+          echo "   Production Release: ${{ needs.validate-prod-release.result }}"
+          echo "   Version Sync:       ${{ needs.validate-version-sync.result }}"
           echo ""
           
           # Check for conflicts (this must always pass)
@@ -253,15 +441,21 @@ jobs:
             exit 1
           fi
           
-          # If QA release validation ran and failed, block
-          if [ "${{ needs.validate-qa-release.result }}" == "failure" ]; then
-            echo "❌ QA release validation failed"
+          # If QA build validation ran and failed, block
+          if [ "${{ needs.validate-qa-build.result }}" == "failure" ]; then
+            echo "❌ QA build validation failed"
             exit 1
           fi
           
           # If production release validation ran and failed, block
-          if [ "${{ needs.validate-production-release.result }}" == "failure" ]; then
+          if [ "${{ needs.validate-prod-release.result }}" == "failure" ]; then
             echo "❌ Production release validation failed"
+            exit 1
+          fi
+          
+          # If version sync validation ran and failed, block
+          if [ "${{ needs.validate-version-sync.result }}" == "failure" ]; then
+            echo "❌ Version sync validation failed"
             exit 1
           fi
           
