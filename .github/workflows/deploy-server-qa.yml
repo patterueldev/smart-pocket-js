@@ -25,6 +25,11 @@ jobs:
       pr_number: ${{ steps.check.outputs.pr_number }}
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need last 2 commits to get merge commit message
+      
       - name: Extract PR number and check for qa-server label
         id: check
         env:
