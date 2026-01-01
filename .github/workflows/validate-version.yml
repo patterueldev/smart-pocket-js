@@ -384,40 +384,110 @@ jobs:
       
       - name: Check version synchronization
         run: |
-          # Get root package.json version
+          # Get root package.json version and buildNumber
           ROOT_VERSION=$(node -p "require('./package.json').version")
+          ROOT_BUILD_NUMBER=$(node -p "require('./package.json').buildNumber")
           
-          # Get mobile app.config.js version
+          # Get server package.json version
+          SERVER_VERSION=$(node -p "require('./apps/server/package.json').version")
+          
+          # Get mobile app.config.js version and build number
           cat > extract-version.js << 'EOF'
           const config = require('./apps/mobile/app.config.js');
-          console.log(config.expo.version || '0.0.0');
+          const versionCode = config.expo.android?.versionCode || 0;
+          const buildNumber = config.expo.ios?.buildNumber || '0';
+          const version = config.expo.version || '0.0.0';
+          console.log(`VERSION=${version}`);
+          console.log(`BUILD_NUMBER=${buildNumber}`);
+          console.log(`VERSION_CODE=${versionCode}`);
           EOF
           
-          MOBILE_VERSION=$(node extract-version.js)
+          VERSIONS=$(node extract-version.js)
+          MOBILE_VERSION=$(echo "$VERSIONS" | grep "^VERSION=" | cut -d'=' -f2)
+          MOBILE_BUILD_NUMBER=$(echo "$VERSIONS" | grep BUILD_NUMBER | cut -d'=' -f2)
+          MOBILE_VERSION_CODE=$(echo "$VERSIONS" | grep VERSION_CODE | cut -d'=' -f2)
           
-          echo "🔍 Checking version synchronization..."
+          echo "🔍 Checking version synchronization across all files..."
           echo ""
-          echo "Root package.json:  $ROOT_VERSION"
-          echo "Mobile app.config:  $MOBILE_VERSION"
+          echo "Root package.json:"
+          echo "  version:      $ROOT_VERSION"
+          echo "  buildNumber:  $ROOT_BUILD_NUMBER"
+          echo ""
+          echo "Server package.json:"
+          echo "  version:      $SERVER_VERSION"
+          echo ""
+          echo "Mobile app.config.js:"
+          echo "  version:      $MOBILE_VERSION"
+          echo "  buildNumber:  $MOBILE_BUILD_NUMBER (iOS)"
+          echo "  versionCode:  $MOBILE_VERSION_CODE (Android)"
           echo ""
           
+          ERRORS=0
+          
+          # Check root vs mobile version
           if [ "$ROOT_VERSION" != "$MOBILE_VERSION" ]; then
-            echo "❌ ERROR: Version mismatch detected!"
+            echo "❌ ERROR: Version mismatch between root and mobile!"
+            echo "   Root package.json version:    $ROOT_VERSION"
+            echo "   Mobile app.config.js version: $MOBILE_VERSION"
             echo ""
-            echo "The semantic version in apps/mobile/app.config.js MUST match root package.json"
+            echo "Update apps/mobile/app.config.js:"
+            echo "   const VERSION = '$ROOT_VERSION';"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ Root and mobile versions match: $ROOT_VERSION"
+          fi
+          
+          # Check root vs server version
+          if [ "$ROOT_VERSION" != "$SERVER_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch between root and server!"
+            echo "   Root package.json version:   $ROOT_VERSION"
+            echo "   Server package.json version: $SERVER_VERSION"
             echo ""
-            echo "Current values:"
-            echo "  package.json version:        $ROOT_VERSION"
-            echo "  app.config.js expo.version:  $MOBILE_VERSION"
+            echo "Update apps/server/package.json:"
+            echo "   \"version\": \"$ROOT_VERSION\""
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ Root and server versions match: $ROOT_VERSION"
+          fi
+          
+          # Check root buildNumber vs mobile buildNumber
+          if [ "$ROOT_BUILD_NUMBER" != "$MOBILE_BUILD_NUMBER" ]; then
+            echo "❌ ERROR: Build number mismatch!"
+            echo "   Root package.json buildNumber:     $ROOT_BUILD_NUMBER"
+            echo "   Mobile app.config.js BUILD_NUMBER: $MOBILE_BUILD_NUMBER"
             echo ""
-            echo "Please update apps/mobile/app.config.js:"
-            echo "  version: '$ROOT_VERSION'"
+            echo "Update apps/mobile/app.config.js:"
+            echo "   const BUILD_NUMBER = $ROOT_BUILD_NUMBER;"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ Root and mobile build numbers match: $ROOT_BUILD_NUMBER"
+          fi
+          
+          # Check mobile iOS buildNumber vs Android versionCode
+          if [ "$MOBILE_BUILD_NUMBER" != "$MOBILE_VERSION_CODE" ]; then
+            echo "❌ ERROR: iOS buildNumber and Android versionCode don't match!"
+            echo "   ios.buildNumber:     $MOBILE_BUILD_NUMBER"
+            echo "   android.versionCode: $MOBILE_VERSION_CODE"
             echo ""
-            echo "Root package.json is the source of truth for semantic versioning."
+            echo "Both must use the same BUILD_NUMBER constant in app.config.js"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo "✅ iOS and Android build numbers match: $MOBILE_BUILD_NUMBER"
+          fi
+          
+          echo ""
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ Version synchronization failed with $ERRORS error(s)"
+            echo ""
+            echo "Source of truth: Root package.json"
+            echo "  version:     $ROOT_VERSION"
+            echo "  buildNumber: $ROOT_BUILD_NUMBER"
+            echo ""
+            echo "All files must match these values."
             exit 1
           fi
           
-          echo "✅ Versions are synchronized"
+          echo "✅ All versions and build numbers are synchronized"
 
   validation-summary:
     name: Version Validation Summary

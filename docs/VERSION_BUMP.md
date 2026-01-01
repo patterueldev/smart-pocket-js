@@ -46,25 +46,45 @@ git checkout -b chore/bump-version-0.2.0
 
 ### 3. Update Version in package.json
 
-**Root package.json**:
+**Root package.json** (source of truth):
 ```json
 {
   "name": "smart-pocket",
-  "version": "0.2.0",  // ← Update this
+  "version": "0.2.0",     // ← Update semantic version
+  "buildNumber": 51,      // ← Update build number (iOS + Android)
   "private": true,
   ...
 }
 ```
 
-**Server package.json** (keep in sync):
+**apps/mobile/app.config.js** (must match):
+```javascript
+// Build number for iOS buildNumber and Android versionCode
+// Must match root package.json buildNumber (validated by CI)
+const BUILD_NUMBER = 51;  // ← Update to match root
+
+module.exports = {
+  expo: {
+    version: '0.2.0',  // ← Update to match root
+    ...
+  }
+}
+```
+
+**apps/server/package.json** (must match):
 ```json
 {
   "name": "@smart-pocket/server",
-  "version": "0.2.0",  // ← Update this too
+  "version": "0.2.0",  // ← Update to match root
   "private": true,
   ...
 }
 ```
+
+**GitHub Actions Validation:**
+- CI automatically checks all three files have matching versions
+- Build will fail if versions don't match
+- Prevents accidental version mismatches
 
 ### 4. Update CHANGELOG.md
 
