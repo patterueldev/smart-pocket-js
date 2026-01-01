@@ -194,7 +194,8 @@ jobs:
             HAS_QA=true
           fi
           
-          if echo "$LABELS" | grep -q "release"; then
+          # Match "release" as whole word only (not "qa-release")
+          if echo "$LABELS" | grep -qw "release"; then
             HAS_RELEASE=true
           fi
           
