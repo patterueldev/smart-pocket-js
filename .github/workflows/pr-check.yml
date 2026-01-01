@@ -42,6 +42,7 @@ jobs:
               - '!**/*.test.ts'
               - '!**/*.test.js'
               - '!**/__tests__/**'
+              - '!.github/**'
             docker:
               - 'apps/server/src/**'
               - 'apps/server/package.json'
@@ -54,6 +55,16 @@ jobs:
               - '!**/*.test.ts'
               - '!**/*.test.js'
               - '!**/__tests__/**'
+              - '!.github/**'
+      
+      - name: Debug - Show filter results
+        run: |
+          echo "=== Changed Files Detection ==="
+          echo "Code changed: ${{ steps.filter.outputs.code }}"
+          echo "Docker changed: ${{ steps.filter.outputs.docker }}"
+          echo ""
+          echo "All filter outputs:"
+          echo "${{ toJson(steps.filter.outputs) }}"
   lint-and-test:
     name: PR - Lint & Unit Tests
     runs-on: ubuntu-latest
