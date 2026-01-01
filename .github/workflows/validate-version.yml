@@ -230,3 +230,39 @@ jobs:
           fi
           
           echo "✅ No label conflicts detected"
+
+  validation-summary:
+    name: Version Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-qa-release, validate-production-release, validate-no-conflicts]
+    if: always()
+    
+    steps:
+      - name: Check validation results
+        run: |
+          echo "🔍 Validation Results:"
+          echo "   QA Release: ${{ needs.validate-qa-release.result }}"
+          echo "   Production Release: ${{ needs.validate-production-release.result }}"
+          echo "   No Conflicts: ${{ needs.validate-no-conflicts.result }}"
+          echo ""
+          
+          # Check for conflicts (this must always pass)
+          if [ "${{ needs.validate-no-conflicts.result }}" == "failure" ]; then
+            echo "❌ Label conflicts detected"
+            exit 1
+          fi
+          
+          # If QA release validation ran and failed, block
+          if [ "${{ needs.validate-qa-release.result }}" == "failure" ]; then
+            echo "❌ QA release validation failed"
+            exit 1
+          fi
+          
+          # If production release validation ran and failed, block
+          if [ "${{ needs.validate-production-release.result }}" == "failure" ]; then
+            echo "❌ Production release validation failed"
+            exit 1
+          fi
+          
+          # All validations either passed or were skipped (no build labels)
+          echo "✅ All version validations passed"
