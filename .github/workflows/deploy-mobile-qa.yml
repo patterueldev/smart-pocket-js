@@ -95,7 +95,10 @@ jobs:
           name: android-quality-apk
           path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
-android-qa]
+
+  summary:
+    name: QA Mobile - Summary
+    needs: [android-qa]
     runs-on: ubuntu-latest
     if: always()
     
@@ -104,10 +107,7 @@ android-qa]
         run: |
           echo "## 📱 QA Mobile Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**PR**: #${{ needs.android-qa
-          echo "## 📱 QA Mobile Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**PR**: #${{ needs.check-labels.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: #${{ needs.android-qa.outputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.android-qa.result }}" == "success" ]; then
