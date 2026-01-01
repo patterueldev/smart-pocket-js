@@ -39,11 +39,6 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
-              - '!**/*.md'
-              - '!**/docs/**'
-              - '!**/*.test.ts'
-              - '!**/*.test.js'
-              - '!**/__tests__/**'
             docker:
               - 'apps/server/src/**'
               - 'apps/server/package.json'
