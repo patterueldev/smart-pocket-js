@@ -202,6 +202,11 @@ The default remains NO AUTO-COMMIT. The following clarifications apply to make i
    git checkout -b <type>/#<issue>-<short-desc>
    ```
    Examples: `feat/#22-ocr-screen`, `fix/#30-camera-bug`, `docs/#40-api-docs`
+   
+   **Experimental Branches:** For experimentation without creating an issue yet, use a placeholder:
+   - Format: `<type>/#n-<description>`
+   - Example: `feat/#n-improvements`, `fix/#n-camera-experiment`
+   - Create a proper issue and branch once ready for PR
 
 3. **Make Changes** (NO AUTO-COMMIT - show user changes first!)
 
