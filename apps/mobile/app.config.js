@@ -18,19 +18,26 @@
  */
 
 const path = require('path');
-const fs = require('fs');
+
+// App version and build number
+// NOTE: CHANGE THESE TO MATCH root package.json WHEN UPDATING RELEASES
+const VERSION = '0.1.1';
+const BUILD_NUMBER = 4;
 
 // Determine which .env file to load based on APP_VARIANT
 const APP_VARIANT = process.env.APP_VARIANT || 'development';
-const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
 
-// Load the variant-specific .env file manually
-// Use override: true to ensure variant-specific values take precedence
+// Load variant-specific .env file if it exists (optional for local dev)
+const fs = require('fs');
+const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
 if (fs.existsSync(envFilePath)) {
-  require('dotenv').config({ path: envFilePath, override: true });
+  require('dotenv').config({
+    path: envFilePath,
+    override: true,
+  });
   console.log(`✅ Loaded .env.${APP_VARIANT}`);
 } else {
-  console.warn(`⚠️  Missing .env.${APP_VARIANT} at ${envFilePath}`);
+  console.log(`ℹ️  .env.${APP_VARIANT} not found - using process.env variables`);
 }
 
 console.log('🔧 app.config.js - Loading environment:');
@@ -72,9 +79,7 @@ const variants = {
 
 const currentVariant = variants[APP_VARIANT];
 
-// Version and build number - must match root package.json (validated by CI)
-const VERSION = '0.1.1';
-const BUILD_NUMBER = 3;
+console.log('📦 Version:', VERSION, '| Build:', BUILD_NUMBER);
 
 module.exports = {
   expo: {
@@ -142,6 +147,8 @@ module.exports = {
         {
           android: {
             usesCleartextTraffic: true,
+            enableProguardInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: false,
           },
         },
       ],
@@ -153,6 +160,11 @@ module.exports = {
     },
     
     extra: {
+      // EAS Project ID
+      eas: {
+        projectId: 'a1e89f9a-d846-4bf1-a569-2d01ccae3f61',
+      },
+      
       // Current variant configuration
       APP_VARIANT: APP_VARIANT,
       // Prefilled base URL from .env.{variant} or GitHub Secrets (optional)

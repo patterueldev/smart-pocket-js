@@ -70,30 +70,52 @@ jobs:
           echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
           echo "✅ google-services.json created from base64 secret"
 
-      # Run Expo prebuild (generate native projects)
-      - name: Run Expo prebuild (generate native projects)
+      # Decode Android Keystore
+      - name: Decode Android Keystore
+        working-directory: apps/mobile
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+          echo "✅ release.keystore created from base64 secret"
+
+      # Create credentials.json for EAS Build
+      - name: Create credentials.json
+        working-directory: apps/mobile
+        run: |
+          cat > credentials.json << EOF
+          {
+            "android": {
+              "keystore": {
+                "keystorePath": "release.keystore",
+                "keystorePassword": "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}",
+                "keyAlias": "${{ secrets.ANDROID_KEY_ALIAS }}",
+                "keyPassword": "${{ secrets.ANDROID_KEY_PASSWORD }}"
+              }
+            }
+          }
+          EOF
+          echo "✅ credentials.json created for EAS Build"
+
+      # Build Android APK with EAS Build
+      - name: Build Android APK with EAS Build
         working-directory: apps/mobile
         env:
-          APP_VARIANT: quality
-        run: pnpx expo prebuild --clean --platform android
-
-      # Build Android APK (Debug)
-      - name: Build Android APK (Debug)
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: |
+          pnpx eas-cli build --platform android --profile quality --local --non-interactive --output=./app-quality.apk
+          echo "✅ APK built successfully"
 
       - name: Upload to Firebase App Distribution (quality)
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
-          file: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          file: apps/mobile/app-quality.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-quality-apk
-          path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          path: apps/mobile/app-quality.apk
           retention-days: 30
 
   summary:

@@ -17,6 +17,13 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.keystore
+
+# Gradle properties (contains signing passwords)
+gradle.properties
+
+# EAS credentials
+credentials.json
 
 # Metro
 .metro-health-check*

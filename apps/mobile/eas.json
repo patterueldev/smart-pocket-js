@@ -4,42 +4,40 @@
   },
   "build": {
     "development": {
-      "channel": "development",
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "development"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "credentialsSource": "local"
       }
     },
     "quality": {
-      "channel": "quality",
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "quality"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "credentialsSource": "local"
       }
     },
     "production": {
-      "channel": "production",
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "production"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "credentialsSource": "local"
       }
     }
   },
   "submit": {
-    "production": {
-      "android": {
-        "serviceAccount": "./deploy/secrets/google-play-service-account.json",
-        "track": "production"
-      }
-    }
+    "production": {}
   }
 }

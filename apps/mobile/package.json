@@ -12,7 +12,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "expo lint",
-    "api:generate": "orval"
+    "api:generate": "orval",
+    "build:dev": "eas build --platform android --profile development --local",
+    "build:qa": "eas build --platform android --profile quality --local",
+    "build:prod": "eas build --platform android --profile production --local"
   },
   "dependencies": {
     "@expo/vector-icons": "catalog:",
@@ -29,6 +32,7 @@
     "@smart-pocket/transaction-ui": "workspace:*",
     "expo": "catalog:",
     "expo-constants": "catalog:",
+    "expo-dev-client": "catalog:",
     "expo-font": "catalog:",
     "expo-haptics": "catalog:",
     "expo-image": "catalog:",
@@ -56,7 +60,8 @@
     "eslint": "catalog:",
     "eslint-config-expo": "catalog:",
     "react-test-renderer": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "eas-cli": "catalog:"
   },
   "private": true
 }

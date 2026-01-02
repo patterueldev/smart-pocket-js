@@ -12,6 +12,8 @@ coverage/
 dist/
 build/
 *.tgz
+*.apk
+*.aab
 
 # Environment variables
 .env
