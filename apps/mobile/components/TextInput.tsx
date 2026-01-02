@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     fontSize: 16,
+    color: '#000',
     backgroundColor: '#fff',
   },
   inputWithButton: {

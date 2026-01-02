@@ -14,6 +14,7 @@ export default function DashboardScreen() {
   const [recentTransactions] = useState<Transaction[]>([]);
   const [googleSheetsSyncEnabled] = useState(true); // Enable Google Sheets sync
   const [menuVisible, setMenuVisible] = useState(false);
+  const showOcrFeatures = ocrEnabled;
 
   const handleScanReceipt = () => {
     console.log('Scan receipt pressed');
@@ -101,39 +102,32 @@ export default function DashboardScreen() {
           </Card>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-          {recentTransactions.length === 0 ? (
-            <Card style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No transactions yet</Text>
-              <Text style={styles.emptyHint}>Tap &quot;Scan Receipt&quot; to get started</Text>
-            </Card>
-          ) : (
-            recentTransactions.slice(0, 5).map(txn => (
-              <Card key={txn.id} style={styles.transactionCard}>
-                <View style={styles.transactionRow}>
-                  <View style={styles.transactionInfo}>
-                    <Text style={styles.transactionPayee}>{txn.payeeName}</Text>
-                    <Text style={styles.transactionDate}>{txn.date}</Text>
+        {showOcrFeatures && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            {recentTransactions.length > 0 && (
+              recentTransactions.slice(0, 5).map(txn => (
+                <Card key={txn.id} style={styles.transactionCard}>
+                  <View style={styles.transactionRow}>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionPayee}>{txn.payeeName}</Text>
+                      <Text style={styles.transactionDate}>{txn.date}</Text>
+                    </View>
+                    <Text style={styles.transactionAmount}>
+                      ${txn.total.amount}
+                    </Text>
                   </View>
-                  <Text style={styles.transactionAmount}>
-                    ${txn.total.amount}
-                  </Text>
-                </View>
-              </Card>
-            ))
-          )}
-        </View>
+                </Card>
+              ))
+            )}
+          </View>
+        )}
 
-        <View style={styles.section}>
-          {ocrEnabled ? (
+        {showOcrFeatures && (
+          <View style={styles.section}>
             <Button title="📸 Scan Receipt" onPress={handleScanReceipt} size="large" />
-          ) : (
-            <Card style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Receipt scanning is temporarily disabled for this release.</Text>
-            </Card>
-          )}
-        </View>
+          </View>
+        )}
 
         {googleSheetsSyncEnabled && (
           <View style={styles.section}>
@@ -141,15 +135,17 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <Pressable style={styles.quickAction} onPress={handleManualTransaction}>
-            <Text style={styles.quickActionText}>• Manual Transaction</Text>
-          </Pressable>
-          <Pressable style={styles.quickAction}>
-            <Text style={styles.quickActionText}>• View All Transactions</Text>
-          </Pressable>
-        </View>
+        {showOcrFeatures && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Pressable style={styles.quickAction} onPress={handleManualTransaction}>
+              <Text style={styles.quickActionText}>• Manual Transaction</Text>
+            </Pressable>
+            <Pressable style={styles.quickAction}>
+              <Text style={styles.quickActionText}>• View All Transactions</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       <SideMenu
