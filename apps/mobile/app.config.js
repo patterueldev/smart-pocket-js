@@ -21,8 +21,8 @@ const path = require('path');
 
 // App version and build number
 // NOTE: CHANGE THESE TO MATCH root package.json WHEN UPDATING RELEASES
-const VERSION = '0.1.1';
-const BUILD_NUMBER = 6;
+const VERSION = '0.2.0';
+const BUILD_NUMBER = 7;
 
 // Determine which .env file to load based on APP_VARIANT
 const APP_VARIANT = process.env.APP_VARIANT || 'development';
