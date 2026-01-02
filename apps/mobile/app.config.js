@@ -18,7 +18,6 @@
  */
 
 const path = require('path');
-const fs = require('fs');
 
 // App version and build number
 // NOTE: CHANGE THESE TO MATCH root package.json WHEN UPDATING RELEASES
@@ -27,15 +26,18 @@ const BUILD_NUMBER = 3;
 
 // Determine which .env file to load based on APP_VARIANT
 const APP_VARIANT = process.env.APP_VARIANT || 'development';
-const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
 
-// Load the variant-specific .env file manually
-// Use override: true to ensure variant-specific values take precedence
+// Load variant-specific .env file if it exists (optional for local dev)
+const fs = require('fs');
+const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
 if (fs.existsSync(envFilePath)) {
-  require('dotenv').config({ path: envFilePath, override: true });
+  require('dotenv').config({
+    path: envFilePath,
+    override: true,
+  });
   console.log(`✅ Loaded .env.${APP_VARIANT}`);
 } else {
-  console.warn(`⚠️  Missing .env.${APP_VARIANT} at ${envFilePath}`);
+  console.log(`ℹ️  .env.${APP_VARIANT} not found - using process.env variables`);
 }
 
 console.log('🔧 app.config.js - Loading environment:');
