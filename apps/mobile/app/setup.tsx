@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button } from '../components/Button';
 import { router } from 'expo-router';
 import { TextInput } from '../components/TextInput';
@@ -66,54 +66,72 @@ export default function SetupScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.logoContainer}>
-        <Text style={styles.logo}>💰</Text>
-        <Text style={styles.title}>Smart Pocket</Text>
-        <Text style={styles.subtitle}>Connect to your server</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.select({ ios: 'padding', android: 'height' })}
+      keyboardVerticalOffset={Platform.select({ ios: 64, android: 0 })}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.logoContainer}>
+          <Text style={styles.logo}>💰</Text>
+          <Text style={styles.title}>Smart Pocket</Text>
+          <Text style={styles.subtitle}>Connect to your server</Text>
+        </View>
 
-      <View style={styles.form}>
-        <TextInput
-          label="Server URL"
-          value={serverUrl}
-          onChangeText={setServerUrl}
-          placeholder="https://smartpocket.example.com"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          editable={!loading}
-        />
+        <View style={styles.form}>
+          <TextInput
+            label="Server URL"
+            value={serverUrl}
+            onChangeText={setServerUrl}
+            placeholder="https://smartpocket.example.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            editable={!loading}
+            autoComplete="username"
+            textContentType="username"
+            returnKeyType="next"
+          />
 
-        <TextInput
-          label="API Key"
-          value={apiKey}
-          onChangeText={setApiKey}
-          placeholder="Enter your API key"
-          secureTextEntry
-          showToggleVisibility
-          editable={!loading}
-        />
+          <TextInput
+            label="API Key"
+            value={apiKey}
+            onChangeText={setApiKey}
+            placeholder="Enter your API key"
+            secureTextEntry
+            showToggleVisibility
+            editable={!loading}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="go"
+          />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Button
-          title="Connect to Server"
-          onPress={handleConnect}
-          loading={loading}
-          disabled={!serverUrl || !apiKey || loading}
-        />
-      </View>
+          <Button
+            title="Connect to Server"
+            onPress={handleConnect}
+            loading={loading}
+            disabled={!serverUrl || !apiKey || loading}
+          />
+        </View>
 
-      <Text style={styles.helpText}>
-        ℹ️ Get your API key from your server configuration
-      </Text>
-      {(isDevelopment || hasPrefilledValues) && (
-        <Text style={styles.devNote}>
-          {hasPrefilledValues ? '✓ Pre-filled from GitHub Secrets' : '[DEV MODE] Pre-filled from environment config'}
+        <Text style={styles.helpText}>
+          ℹ️ Get your API key from your server configuration
         </Text>
-      )}
-    </ScrollView>
+        {(isDevelopment || hasPrefilledValues) && (
+          <Text style={styles.devNote}>
+            {hasPrefilledValues ? '✓ Pre-filled from GitHub Secrets' : '[DEV MODE] Pre-filled from environment config'}
+          </Text>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

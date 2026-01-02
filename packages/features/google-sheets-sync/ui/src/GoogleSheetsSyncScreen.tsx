@@ -109,13 +109,15 @@ export function GoogleSheetsSyncScreen({
 
   const formatAmount = (amount: string, currency: string): string => {
     const numAmount = parseFloat(amount);
+    const isNegative = numAmount < 0;
+    const absoluteAmount = Math.abs(numAmount);
     const symbol = getCurrencySymbol(currency);
     // Use toLocaleString for thousands separators
-    const formatted = numAmount.toLocaleString('en-US', {
+    const formatted = absoluteAmount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    return `${symbol}${formatted}`;
+    return isNegative ? `-${symbol}${formatted}` : `${symbol}${formatted}`;
   };
 
   const renderBalanceChange = (
