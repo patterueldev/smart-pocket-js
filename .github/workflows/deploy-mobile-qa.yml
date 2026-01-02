@@ -100,6 +100,7 @@ jobs:
         working-directory: apps/mobile
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           pnpx eas-cli build --platform android --profile quality --local --non-interactive --output=./app-quality.apk
           echo "✅ APK built successfully"
