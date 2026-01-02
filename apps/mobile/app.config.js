@@ -20,6 +20,11 @@
 const path = require('path');
 const fs = require('fs');
 
+// App version and build number
+// NOTE: CHANGE THESE TO MATCH root package.json WHEN UPDATING RELEASES
+const VERSION = '0.1.1';
+const BUILD_NUMBER = 3;
+
 // Determine which .env file to load based on APP_VARIANT
 const APP_VARIANT = process.env.APP_VARIANT || 'development';
 const envFilePath = path.resolve(__dirname, `.env.${APP_VARIANT}`);
@@ -72,9 +77,7 @@ const variants = {
 
 const currentVariant = variants[APP_VARIANT];
 
-// Version and build number - must match root package.json (validated by CI)
-const VERSION = '0.1.1';
-const BUILD_NUMBER = 3;
+console.log('📦 Version:', VERSION, '| Build:', BUILD_NUMBER);
 
 module.exports = {
   expo: {
@@ -142,6 +145,8 @@ module.exports = {
         {
           android: {
             usesCleartextTraffic: true,
+            enableProguardInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: false,
           },
         },
       ],
@@ -153,6 +158,11 @@ module.exports = {
     },
     
     extra: {
+      // EAS Project ID
+      eas: {
+        projectId: 'a1e89f9a-d846-4bf1-a569-2d01ccae3f61',
+      },
+      
       // Current variant configuration
       APP_VARIANT: APP_VARIANT,
       // Prefilled base URL from .env.{variant} or GitHub Secrets (optional)
