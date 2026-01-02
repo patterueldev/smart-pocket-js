@@ -13,9 +13,9 @@
     "test:coverage": "jest --coverage",
     "lint": "expo lint",
     "api:generate": "orval",
-    "build:dev": "eas build --platform android --profile development --local",
-    "build:qa": "eas build --platform android --profile quality --local",
-    "build:prod": "eas build --platform android --profile production --local"
+    "build:dev": "eas build --platform android --profile development --local --output ./builds/mobile-dev.apk",
+    "build:qa": "eas build --platform android --profile quality --local --output ./builds/mobile-qa.apk",
+    "build:prod": "eas build --platform android --profile production --local --output ./builds/mobile-prod.apk"
   },
   "dependencies": {
     "@expo/vector-icons": "catalog:",

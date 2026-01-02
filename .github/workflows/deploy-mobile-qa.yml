@@ -110,6 +110,8 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          groups: 'qa-testers'
+          releaseNotes: 'Automated QA build from PR #${{ github.event.pull_request.number }}'
           file: apps/mobile/app-quality.apk
 
       - name: Upload APK
