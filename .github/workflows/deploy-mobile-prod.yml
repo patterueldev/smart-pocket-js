@@ -19,9 +19,10 @@ jobs:
     if: |
       github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'prod-release')
+    environment: production
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
@@ -40,7 +41,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -97,24 +98,26 @@ jobs:
         working-directory: apps/mobile
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           pnpx eas-cli build --platform android --profile production --local --non-interactive --output=./app-production.apk
           echo "✅ APK built successfully"
 
-      - name: Rename APK for release
-        run: |
-          mv apps/mobile/app-production.apk smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
-          mkdir -p ${{ github.workspace }}/apks
-          cp smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk ${{ github.workspace }}/apks/
-          echo "✅ APK ready for release upload"
-
-      - name: Upload APK to GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload to Firebase App Distribution (production)
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          files: apks/smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+          groups: 'production-testers'
+          releaseNotes: 'Production release v${{ steps.version.outputs.VERSION }}'
+          file: apps/mobile/app-production.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-production-apk
+          path: apps/mobile/app-production.apk
+          retention-days: 30
 
   summary:
     name: Production - Mobile Summary
@@ -129,8 +132,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.build-android.result }}" == "success" ]; then
-            echo "✅ **Android APK**: Built and uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY
-            echo "- Download from: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build-android.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Android APK**: Built and uploaded to Firebase App Distribution" >> $GITHUB_STEP_SUMMARY
+            echo "- Variant: \`production\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Distribution: Production testers group" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Android APK**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
+          echo "2. Production testers should receive notification to download APK" >> $GITHUB_STEP_SUMMARY
