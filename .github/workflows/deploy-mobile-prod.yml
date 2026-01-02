@@ -60,19 +60,50 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run Expo prebuild (generate native projects)
+      # Decode Google Services JSON
+      - name: Decode Google Services JSON
+        working-directory: apps/mobile
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
+          echo "✅ google-services.json created from base64 secret"
+
+      # Decode Android Keystore
+      - name: Decode Android Keystore
+        working-directory: apps/mobile
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+          echo "✅ release.keystore created from base64 secret"
+
+      # Create credentials.json for EAS Build
+      - name: Create credentials.json
+        working-directory: apps/mobile
+        run: |
+          cat > credentials.json << EOF
+          {
+            "android": {
+              "keystore": {
+                "keystorePath": "release.keystore",
+                "keystorePassword": "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}",
+                "keyAlias": "${{ secrets.ANDROID_KEY_ALIAS }}",
+                "keyPassword": "${{ secrets.ANDROID_KEY_PASSWORD }}"
+              }
+            }
+          }
+          EOF
+          echo "✅ credentials.json created for EAS Build"
+
+      # Build Android APK with EAS Build
+      - name: Build Android APK with EAS Build
         working-directory: apps/mobile
         env:
-          APP_VARIANT: production
-        run: pnpx expo prebuild --clean --platform android
-
-      - name: Build Android APK (Debug)
-        working-directory: apps/mobile/android
-        run: ./gradlew assembleDebug
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: |
+          pnpx eas-cli build --platform android --profile production --local --non-interactive --output=./app-production.apk
+          echo "✅ APK built successfully"
 
       - name: Rename APK for release
         run: |
-          mv apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
+          mv apps/mobile/app-production.apk smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk
           mkdir -p ${{ github.workspace }}/apks
           cp smart-pocket-android-${{ steps.version.outputs.VERSION }}-debug.apk ${{ github.workspace }}/apks/
           echo "✅ APK ready for release upload"
