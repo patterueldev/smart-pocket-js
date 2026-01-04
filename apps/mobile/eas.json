@@ -12,6 +12,9 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "credentialsSource": "local"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
       }
     },
     "quality": {
@@ -23,6 +26,9 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "credentialsSource": "local"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
       }
     },
     "production": {
@@ -34,6 +40,9 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
         "credentialsSource": "local"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
       }
     }
   },

@@ -119,9 +119,74 @@ jobs:
           path: apps/mobile/app-production.apk
           retention-days: 30
 
+  build-ios:
+    name: Production - Build iOS IPA
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'prod-release')
+    environment: production
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building release version: $VERSION"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Setup Expo/EAS CLI
+      - name: Setup EAS CLI
+        run: pnpm add -g eas-cli
+
+      # Build iOS IPA with EAS Build
+      - name: Build iOS IPA with EAS Build
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          pnpx eas-cli build --platform ios --profile production --local --non-interactive --output=./app-production.ipa
+          echo "✅ IPA built successfully"
+
+      # TODO: Upload to distribution service
+      # Options for unsigned IPA distribution:
+      #   - AltStore (users sideload with personal Apple ID, re-sign every 7 days)
+      #   - Firebase App Distribution (requires signed IPA with provisioning profile)
+      #   - Diawi (private link sharing)
+      #   - TestFlight (requires App Store Connect API key and signed build)
+      # For now, IPA is available as GitHub Actions artifact only
+      # - name: Upload to [distribution service]
+      #   run: echo "Not implemented yet - IPA stored as artifact"
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-production-ipa
+          path: apps/mobile/app-production.ipa
+          retention-days: 30
+
   summary:
     name: Production - Mobile Summary
-    needs: [build-android]
+    needs: [build-android, build-ios]
     runs-on: ubuntu-latest
     if: always()
     
@@ -140,7 +205,18 @@ jobs:
             echo "❌ **Android APK**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
           
+          if [ "${{ needs.build-ios.result }}" == "success" ]; then
+            echo "✅ **iOS IPA**: Built and stored as artifact" >> $GITHUB_STEP_SUMMARY
+            echo "- Variant: \`production\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Distribution: GitHub Actions artifact (30 days retention)" >> $GITHUB_STEP_SUMMARY
+            echo "- Sideload: Download artifact and sideload via AltStore" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **iOS IPA**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
-          echo "2. Production testers should receive notification to download APK" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Android**: Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
+          echo "2. **iOS**: Download IPA artifact from Actions page, sideload via AltStore" >> $GITHUB_STEP_SUMMARY
+          echo "3. Production testers should test on devices" >> $GITHUB_STEP_SUMMARY
