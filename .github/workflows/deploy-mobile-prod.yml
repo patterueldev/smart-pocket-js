@@ -119,9 +119,91 @@ jobs:
           path: apps/mobile/app-production.apk
           retention-days: 30
 
+  build-ios:
+    name: Production - Build iOS IPA
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'prod-release')
+    environment: production
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building release version: $VERSION"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Setup Ruby and CocoaPods for iOS build
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods
+          echo "✅ CocoaPods installed"
+
+      # Build iOS IPA using local build script
+      - name: Build iOS IPA with local build script
+        working-directory: apps/mobile
+        run: |
+          chmod +x scripts/build-ios-local.sh
+          ./scripts/build-ios-local.sh production
+          echo "✅ IPA built successfully"
+          
+          # Verify IPA exists
+          if [ ! -f "builds/mobile-production.ipa" ]; then
+            echo "❌ IPA not found at expected location"
+            exit 1
+          fi
+          
+          # Move IPA to expected location for upload
+          cp builds/mobile-production.ipa app-production.ipa
+
+      # Upload to AltStore Source Manager for distribution
+      - name: Upload IPA to AltStore Source Manager
+        working-directory: apps/mobile
+        run: |
+          curl -X POST ${{ secrets.ALTSTORE_SOURCE_MANAGER_HOST }}/api/versions/ci-upload \
+            -H "X-Access-Key: ${{ secrets.ALTSTORE_ACCESS_KEY }}:${{ secrets.ALTSTORE_SECRET }}" \
+            -F "appId=${{ secrets.ALTSTORE_APP_ID }}" \
+            -F "localizedDescription=Production release ${{ steps.version.outputs.VERSION }}" \
+            -F "ipa=@app-production.ipa"
+          echo "✅ IPA uploaded to AltStore Source Manager"
+
+      - name: Upload IPA as artifact (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-production-ipa
+          path: apps/mobile/app-production.ipa
+          retention-days: 30
+
   summary:
     name: Production - Mobile Summary
-    needs: [build-android]
+    needs: [build-android, build-ios]
     runs-on: ubuntu-latest
     if: always()
     
@@ -140,7 +222,18 @@ jobs:
             echo "❌ **Android APK**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
           
+          if [ "${{ needs.build-ios.result }}" == "success" ]; then
+            echo "✅ **iOS IPA**: Built and uploaded to AltStore Source Manager" >> $GITHUB_STEP_SUMMARY
+            echo "- Variant: \`production\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Distribution: AltStore Source Manager" >> $GITHUB_STEP_SUMMARY
+            echo "- Fallback: GitHub Actions artifact (30 days retention)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **iOS IPA**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
-          echo "2. Production testers should receive notification to download APK" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Android**: Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
+          echo "2. **iOS**: Install via AltStore Source Manager or download IPA artifact" >> $GITHUB_STEP_SUMMARY
+          echo "3. Production testers should test on devices" >> $GITHUB_STEP_SUMMARY
