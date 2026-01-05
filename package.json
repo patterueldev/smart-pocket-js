@@ -1,7 +1,7 @@
 {
   "name": "smart-pocket",
-  "version": "0.2.2",
-  "buildNumber": 9,
+  "version": "0.2.3",
+  "buildNumber": 10,
   "private": true,
   "description": "Smart Pocket - Personal finance management with OCR receipt scanning",
   "workspaces": [
