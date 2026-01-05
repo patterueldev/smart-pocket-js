@@ -41,7 +41,21 @@ These secrets are required for both QA and Production mobile builds:
   ```
   Then paste the clipboard content as the secret value.
 
-### Firebase App Distribution (QA only)
+### Expo (Required for Android EAS Build)
+
+#### `EXPO_TOKEN`
+- **Description**: Expo authentication token for EAS CLI (Android builds only)
+- **How to generate**:
+  ```bash
+  npx expo login
+  npx expo whoami  # Verify logged in
+  # Generate token in: https://expo.dev/accounts/[account]/settings/access-tokens
+  ```
+- **Where to find**: Expo dashboard → Account Settings → Access Tokens
+- **Format**: String token from Expo dashboard
+- **Note**: iOS builds use local build script and don't require EAS
+
+### Firebase App Distribution (Android QA)
 
 #### `FIREBASE_APP_ID`
 - **Description**: Firebase App ID for the Smart Pocket app
@@ -56,6 +70,30 @@ These secrets are required for both QA and Production mobile builds:
   3. Copy entire JSON file content
   4. Paste as secret value
 
+### AltStore Source Manager (iOS Production)
+
+#### `ALTSTORE_SOURCE_MANAGER_HOST`
+- **Description**: URL of your AltStore Source Manager instance
+- **Format**: `https://your-altstore-host.com` (no trailing slash)
+- **Example**: `https://altstore.mydomain.com`
+
+#### `ALTSTORE_ACCESS_KEY`
+- **Description**: Access key for AltStore Source Manager API authentication
+- **Where to find**: Generated in your AltStore Source Manager admin panel
+- **Format**: String starting with `ak_`
+
+#### `ALTSTORE_SECRET`
+- **Description**: Secret token paired with the access key
+- **Where to find**: Generated alongside access key in AltStore Source Manager
+- **Format**: Long hexadecimal string
+- **Note**: Keep this secure - it grants upload permissions
+
+#### `ALTSTORE_APP_ID`
+- **Description**: App ID in AltStore Source Manager for Smart Pocket
+- **Where to find**: AltStore Source Manager admin panel → Apps list
+- **Format**: Hexadecimal string (24 characters)
+- **Example**: `695ad80cd9296d6f347818ee`
+
 ## How to Add Secrets to GitHub
 
 1. Go to your repository on GitHub
@@ -69,7 +107,12 @@ These secrets are required for both QA and Production mobile builds:
 
 After adding all secrets, you can verify they're configured by:
 1. Going to Settings → Secrets and variables → Actions
-2. Checking that all 7 required secrets are listed
+2. Checking that all **12 required secrets** are listed:
+   - 4 Android signing secrets
+   - 1 Google Services secret
+   - 1 Expo token (Android builds)
+   - 2 Firebase App Distribution secrets (Android QA/Prod)
+   - 4 AltStore Source Manager secrets (iOS Production)
 
 **Note**: Secret values are never displayed after creation. If you need to update a secret, you must replace it entirely.
 

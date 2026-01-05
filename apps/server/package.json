@@ -1,6 +1,6 @@
 {
   "name": "@smart-pocket/server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Smart Pocket Server - Node.js backend",
   "main": "dist/index.js",

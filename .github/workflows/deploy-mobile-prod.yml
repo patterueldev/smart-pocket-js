@@ -154,30 +154,46 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Setup Expo/EAS CLI
-      - name: Setup EAS CLI
-        run: pnpm add -g eas-cli
+      # Setup Ruby and CocoaPods for iOS build
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
 
-      # Build iOS IPA with EAS Build
-      - name: Build iOS IPA with EAS Build
-        working-directory: apps/mobile
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Install CocoaPods
         run: |
-          pnpx eas-cli build --platform ios --profile production --local --non-interactive --output=./app-production.ipa
+          gem install cocoapods
+          echo "✅ CocoaPods installed"
+
+      # Build iOS IPA using local build script
+      - name: Build iOS IPA with local build script
+        working-directory: apps/mobile
+        run: |
+          chmod +x scripts/build-ios-local.sh
+          ./scripts/build-ios-local.sh production
           echo "✅ IPA built successfully"
+          
+          # Verify IPA exists
+          if [ ! -f "builds/mobile-production.ipa" ]; then
+            echo "❌ IPA not found at expected location"
+            exit 1
+          fi
+          
+          # Move IPA to expected location for upload
+          cp builds/mobile-production.ipa app-production.ipa
 
-      # TODO: Upload to distribution service
-      # Options for unsigned IPA distribution:
-      #   - AltStore (users sideload with personal Apple ID, re-sign every 7 days)
-      #   - Firebase App Distribution (requires signed IPA with provisioning profile)
-      #   - Diawi (private link sharing)
-      #   - TestFlight (requires App Store Connect API key and signed build)
-      # For now, IPA is available as GitHub Actions artifact only
-      # - name: Upload to [distribution service]
-      #   run: echo "Not implemented yet - IPA stored as artifact"
+      # Upload to AltStore Source Manager for distribution
+      - name: Upload IPA to AltStore Source Manager
+        run: |
+          curl -X POST ${{ secrets.ALTSTORE_SOURCE_MANAGER_HOST }}/api/versions/ci-upload \
+            -H "X-Access-Key: ${{ secrets.ALTSTORE_ACCESS_KEY }}:${{ secrets.ALTSTORE_SECRET }}" \
+            -F "appId=${{ secrets.ALTSTORE_APP_ID }}" \
+            -F "localizedDescription=Production release ${{ needs.build-android.outputs.version }}" \
+            -F "ipa=@apps/mobile/app-production.ipa"
+          echo "✅ IPA uploaded to AltStore Source Manager"
 
-      - name: Upload IPA as artifact
+      - name: Upload IPA as artifact (backup)
         uses: actions/upload-artifact@v4
         with:
           name: ios-production-ipa
@@ -206,10 +222,10 @@ jobs:
           fi
           
           if [ "${{ needs.build-ios.result }}" == "success" ]; then
-            echo "✅ **iOS IPA**: Built and stored as artifact" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **iOS IPA**: Built and uploaded to AltStore Source Manager" >> $GITHUB_STEP_SUMMARY
             echo "- Variant: \`production\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Distribution: GitHub Actions artifact (30 days retention)" >> $GITHUB_STEP_SUMMARY
-            echo "- Sideload: Download artifact and sideload via AltStore" >> $GITHUB_STEP_SUMMARY
+            echo "- Distribution: AltStore Source Manager" >> $GITHUB_STEP_SUMMARY
+            echo "- Fallback: GitHub Actions artifact (30 days retention)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **iOS IPA**: Failed" >> $GITHUB_STEP_SUMMARY
@@ -218,5 +234,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "1. **Android**: Check Firebase App Distribution console" >> $GITHUB_STEP_SUMMARY
-          echo "2. **iOS**: Download IPA artifact from Actions page, sideload via AltStore" >> $GITHUB_STEP_SUMMARY
+          echo "2. **iOS**: Install via AltStore Source Manager or download IPA artifact" >> $GITHUB_STEP_SUMMARY
           echo "3. Production testers should test on devices" >> $GITHUB_STEP_SUMMARY
