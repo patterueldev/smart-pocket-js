@@ -1,8 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   configureHttpClient, 
-  clearHttpClientConfig 
+  clearHttpClientConfig, 
+  setTokenRefreshHandler, 
+  setOnAuthExpired,
 } from '../api/httpClient';
+import { isAuthRefreshEnabled } from '../config/features';
 import { 
   postApiV1Connect, 
   postApiV1Disconnect,
@@ -11,6 +14,7 @@ import {
   type ServerInfo
 } from '../api/generated';
 import { getDeviceId } from './deviceId';
+import { emitSessionCleared } from '../hooks/useSession';
 
 /**
  * Session data stored in AsyncStorage
@@ -20,6 +24,7 @@ export interface StoredSession {
   token: string;
   expiresAt: string;
   serverInfo: ServerInfo;
+  apiKey: string;
 }
 
 /**
@@ -30,6 +35,7 @@ export enum AuthErrorType {
   NetworkError = 'NETWORK_ERROR',
   InvalidApiKey = 'INVALID_API_KEY',
   ServerError = 'SERVER_ERROR',
+  SessionExpired = 'SESSION_EXPIRED',
   Unknown = 'UNKNOWN',
 }
 
@@ -52,6 +58,8 @@ export class AuthError extends Error {
         return 'Invalid API key. Please check and try again.';
       case AuthErrorType.ServerError:
         return 'Server error. Please try again later.';
+      case AuthErrorType.SessionExpired:
+        return 'Session expired. Please reconnect.';
       case AuthErrorType.Unknown:
         return 'Unknown error occurred. Please try again.';
     }
@@ -161,16 +169,18 @@ export class AuthService {
         expiresIn: connectData?.expiresIn,
       });
 
-      // Create session object
-      const expiresAt = new Date(
-        Date.now() + connectData.expiresIn * 1000
-      ).toISOString();
+      // Create session object using server-provided TTL
+      const serverTtl = typeof connectData.expiresIn === 'number' && connectData.expiresIn > 0
+        ? connectData.expiresIn
+        : 30 * 24 * 60 * 60; // fallback: 30 days
+      const expiresAt = new Date(Date.now() + serverTtl * 1000).toISOString();
 
       const session: StoredSession = {
         serverUrl: normalizedUrl,
         token: connectData.token,
         expiresAt,
         serverInfo: connectData.serverInfo,
+        apiKey,
       };
 
       // Store session
@@ -180,6 +190,16 @@ export class AuthService {
       configureHttpClient({
         baseUrl: normalizedUrl,
         token: connectData.token,
+        apiKey,
+      });
+
+      // Register handlers based on build flag
+      setTokenRefreshHandler(isAuthRefreshEnabled() ? () => this.refreshSessionFromStorage() : undefined);
+      setOnAuthExpired(() => {
+        console.warn('[authService] onAuthExpired callback triggered. Forcing disconnect...', {
+          timestamp: new Date().toISOString(),
+        });
+        this.forceDisconnect();
       });
 
       return session;
@@ -269,6 +289,10 @@ export class AuthService {
       // Always clear local session and HTTP client config
       await AsyncStorage.removeItem(STORAGE_KEY);
       clearHttpClientConfig();
+      setTokenRefreshHandler(undefined);
+      setOnAuthExpired(undefined);
+      // Notify provider to clear in-memory session and trigger navigation guard
+      emitSessionCleared();
     }
   }
 
@@ -277,17 +301,16 @@ export class AuthService {
    */
   async getSession(): Promise<StoredSession | null> {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        return null;
-      }
+      const session = await this.getStoredSession();
 
-      const session = JSON.parse(stored) as StoredSession;
-
-      // Check if expired
-      if (new Date() > new Date(session.expiresAt)) {
-        await AsyncStorage.removeItem(STORAGE_KEY);
-        return null;
+      if (session) {
+        configureHttpClient({
+          baseUrl: session.serverUrl,
+          token: session.token,
+          apiKey: session.apiKey,
+        });
+        setTokenRefreshHandler(isAuthRefreshEnabled() ? () => this.refreshSessionFromStorage() : undefined);
+        setOnAuthExpired(() => this.forceDisconnect());
       }
 
       return session;
@@ -307,6 +330,64 @@ export class AuthService {
       console.error('Error saving session:', error);
       throw new Error('Failed to save session');
     }
+  }
+
+  /**
+   * Refresh token using stored API key and server URL.
+   * Returns new token or null if refresh fails.
+   */
+  async refreshSessionFromStorage(): Promise<string | null> {
+    const stored = await this.getStoredSession(true);
+
+    if (!stored?.serverUrl || !stored.apiKey) {
+      console.warn('[authService] No stored session available for refresh');
+      return null;
+    }
+
+    try {
+      const refreshed = await this.connect(stored.serverUrl, stored.apiKey);
+      return refreshed.token;
+    } catch (error) {
+      console.error('[authService] Failed to refresh session from storage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Force disconnect without calling server (used on auth expiry).
+   */
+  async forceDisconnect(): Promise<void> {
+    try {
+      console.warn('[authService] Force disconnect due to auth expiry (or manual). Clearing session...', {
+        timestamp: new Date().toISOString(),
+      });
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } finally {
+      clearHttpClientConfig();
+      setTokenRefreshHandler(undefined);
+      setOnAuthExpired(undefined);
+      // Notify provider so UI updates immediately
+      emitSessionCleared();
+    }
+  }
+
+  /**
+   * Retrieve stored session; optionally include expired sessions for refresh attempts.
+   */
+  private async getStoredSession(includeExpired = false): Promise<StoredSession | null> {
+    const stored = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      return null;
+    }
+
+    const session = JSON.parse(stored) as StoredSession;
+
+    if (!includeExpired && new Date() > new Date(session.expiresAt)) {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+
+    return session;
   }
 
   /**
