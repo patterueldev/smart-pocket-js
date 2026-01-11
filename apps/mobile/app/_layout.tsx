@@ -72,7 +72,10 @@ function RootLayoutNav() {
       return;
     }
 
-    if (onFeatureRoute) {
+    // Allow feature routes only when connected; redirect if disconnected
+    if (onFeatureRoute && !isConnected) {
+      console.log('Redirecting to setup from feature route (not connected)');
+      router.replace('/setup');
       return;
     }
 

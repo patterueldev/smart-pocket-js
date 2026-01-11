@@ -24,6 +24,25 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
+// Simple event bus to notify external session changes (e.g., forced disconnect)
+type Listener = () => void;
+const sessionClearedListeners = new Set<Listener>();
+
+export function onSessionCleared(listener: Listener) {
+  sessionClearedListeners.add(listener);
+  return () => sessionClearedListeners.delete(listener);
+}
+
+export function emitSessionCleared() {
+  sessionClearedListeners.forEach((l) => {
+    try {
+      l();
+    } catch (err) {
+      console.error('SessionCleared listener error:', err);
+    }
+  });
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +50,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Load session on mount
   useEffect(() => {
     loadSession();
+  }, []);
+
+  // Subscribe to forced session clear events (e.g., auth expiry)
+  useEffect(() => {
+    const unsubscribe = onSessionCleared(async () => {
+      try {
+        await AsyncStorage.removeItem(SESSION_KEY);
+      } catch (error) {
+        console.error('Failed to handle external session clear:', error);
+      }
+      // Always clear state, even if storage fails
+      setSession(null);
+    });
+    return unsubscribe;
   }, []);
 
   const loadSession = async () => {

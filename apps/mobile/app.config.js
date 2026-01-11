@@ -172,6 +172,10 @@ module.exports = {
       PREFILLED_API_BASEURL: process.env.PREFILLED_API_BASEURL || '',
       OCR_ENABLED: currentVariant.ocrEnabled,
       DEBUG_ENABLED: currentVariant.debugEnabled,
+      // Build-level toggle for automatic auth token refresh on 401
+      AUTH_REFRESH_ENABLED: process.env.AUTH_REFRESH_ENABLED
+        ? process.env.AUTH_REFRESH_ENABLED === 'true'
+        : true,
       
       // Prefilled values from GitHub Secrets (optional - injected at build time)
       PREFILLED_API_KEY: process.env.PREFILLED_API_KEY || '',
