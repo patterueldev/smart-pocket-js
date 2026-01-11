@@ -11,7 +11,7 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || '30d';
  * Accepts number (seconds) or string with suffix d/h/m/s.
  */
 function getTokenExpirySeconds() {
-  const val = JWT_EXPIRY;
+  const val = process.env.JWT_EXPIRY || JWT_EXPIRY;
   if (typeof val === 'number') {
     return val;
   }
@@ -60,7 +60,8 @@ function authenticate(req, res, next) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const secret = process.env.JWT_SECRET || JWT_SECRET;
+      const decoded = jwt.verify(token, secret);
       req.user = decoded;
       next();
     } catch (error) {
@@ -90,6 +91,7 @@ function authenticate(req, res, next) {
  */
 function verifyApiKey(req, res, next) {
   const apiKey = req.headers['x-api-key'];
+  const expectedKey = process.env.API_KEY || API_KEY;
   
   if (!apiKey) {
     return res.status(401).json({
@@ -101,7 +103,7 @@ function verifyApiKey(req, res, next) {
     });
   }
   
-  if (apiKey !== API_KEY) {
+  if (apiKey !== expectedKey) {
     return res.status(401).json({
       error: 'invalid_api_key',
       message: 'Invalid API key'
@@ -115,8 +117,10 @@ function verifyApiKey(req, res, next) {
  * Generate bearer token using configured expiry (JWT_EXPIRY)
  */
 function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRY,
+  const secret = process.env.JWT_SECRET || JWT_SECRET;
+  const expiry = process.env.JWT_EXPIRY || JWT_EXPIRY;
+  return jwt.sign(payload, secret, {
+    expiresIn: expiry,
     issuer: 'smart-pocket-server',
   });
 }

@@ -309,13 +309,6 @@ describe('Auth Middleware', () => {
     });
   });
 
-      verifyApiKey(req, res, next);
-
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(next).not.toHaveBeenCalled();
-    });
-  });
-
   describe('authenticate', () => {
     it('should pass with valid token', () => {
       const token = jwt.sign({ device: 'test' }, process.env.JWT_SECRET);
@@ -324,7 +317,10 @@ describe('Auth Middleware', () => {
           authorization: `Bearer ${token}`,
         },
       };
-      const res = {};
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
       const next = jest.fn();
 
       authenticate(req, res, next);

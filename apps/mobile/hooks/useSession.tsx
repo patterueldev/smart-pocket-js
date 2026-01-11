@@ -57,10 +57,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSessionCleared(async () => {
       try {
         await AsyncStorage.removeItem(SESSION_KEY);
-        setSession(null);
       } catch (error) {
         console.error('Failed to handle external session clear:', error);
       }
+      // Always clear state, even if storage fails
+      setSession(null);
     });
     return unsubscribe;
   }, []);

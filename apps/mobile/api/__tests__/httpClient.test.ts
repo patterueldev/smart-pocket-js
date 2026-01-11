@@ -22,6 +22,16 @@ describe('httpClient', () => {
     clearHttpClientConfig();
   });
 
+  // Helper to create mock response with text() method
+  const createMockResponse = (status: number, data: any = {}, statusText: string = 'OK') => ({
+    ok: status >= 200 && status < 300,
+    status,
+    statusText,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: jest.fn().mockResolvedValue(data),
+    text: jest.fn().mockResolvedValue(typeof data === 'string' ? data : JSON.stringify(data)),
+  });
+
   describe('Configuration Management', () => {
     it('should configure baseUrl, apiKey, and token', () => {
       configureHttpClient({
@@ -68,12 +78,9 @@ describe('httpClient', () => {
         apiKey: mockApiKey,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        json: async () => ({ success: true }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(200, { success: true })
+      );
 
       await httpClient('/test');
 
@@ -93,12 +100,9 @@ describe('httpClient', () => {
         token: mockToken,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        json: async () => ({ success: true }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(200, { success: true })
+      );
 
       await httpClient('/test');
 
@@ -113,12 +117,9 @@ describe('httpClient', () => {
     });
 
     it('should use default baseUrl if not configured', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        json: async () => ({ success: true }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(200, { success: true })
+      );
 
       await httpClient('/test');
 
@@ -140,21 +141,14 @@ describe('httpClient', () => {
       setTokenRefreshHandler(mockRefreshHandler);
 
       // First call returns 401
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'token_expired' }, 'Unauthorized')
+      );
 
       // Retry call with new token succeeds
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        json: async () => ({ success: true }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(200, { success: true })
+      );
 
       const result = await httpClient('/test');
 
@@ -174,18 +168,12 @@ describe('httpClient', () => {
       setTokenRefreshHandler(mockRefreshHandler);
 
       (global.fetch as jest.Mock)
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          headers: new Headers(),
-          json: async () => ({ error: 'token_expired' }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          headers: new Headers(),
-          json: async () => ({ success: true }),
-        });
+        .mockResolvedValueOnce(
+          createMockResponse(401, { error: 'Unauthorized' })
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(200, { success: true })
+        );
 
       await httpClient('/test');
 
@@ -214,12 +202,9 @@ describe('httpClient', () => {
       const mockRefreshHandler = jest.fn().mockResolvedValue(mockNewToken);
       setTokenRefreshHandler(mockRefreshHandler);
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'Unauthorized' })
+      );
 
       await expect(
         httpClient('/test', { skipAuthRefresh: true })
@@ -236,12 +221,9 @@ describe('httpClient', () => {
 
       // No refresh handler set
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'token_expired' })
+      );
 
       await expect(httpClient('/test')).rejects.toThrow();
 
@@ -260,12 +242,9 @@ describe('httpClient', () => {
       const mockOnAuthExpired = jest.fn();
       setOnAuthExpired(mockOnAuthExpired);
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'token_expired' })
+      );
 
       await expect(httpClient('/test')).rejects.toThrow(AuthExpiredError);
       expect(mockOnAuthExpired).toHaveBeenCalledTimes(1);
@@ -283,12 +262,9 @@ describe('httpClient', () => {
       const mockOnAuthExpired = jest.fn();
       setOnAuthExpired(mockOnAuthExpired);
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'token_expired' })
+      );
 
       await expect(httpClient('/test')).rejects.toThrow(AuthExpiredError);
       expect(mockOnAuthExpired).toHaveBeenCalled();
@@ -307,30 +283,18 @@ describe('httpClient', () => {
 
       // Mock 401 responses for both requests
       (global.fetch as jest.Mock)
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          headers: new Headers(),
-          json: async () => ({ error: 'token_expired' }),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          headers: new Headers(),
-          json: async () => ({ error: 'token_expired' }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          headers: new Headers(),
-          json: async () => ({ success: 1 }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          headers: new Headers(),
-          json: async () => ({ success: 2 }),
-        });
+        .mockResolvedValueOnce(
+          createMockResponse(401, { error: 'token_expired' })
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(401, { error: 'token_expired' })
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(200, { success: 1 })
+        )
+        .mockResolvedValueOnce(
+          createMockResponse(200, { success: 2 })
+        );
 
       // Fire two concurrent requests
       const [result1, result2] = await Promise.all([
@@ -352,13 +316,9 @@ describe('httpClient', () => {
         token: mockToken,
       });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        headers: new Headers(),
-        json: async () => ({ error: 'server_error' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(500, { error: 'Server error' }, 'Internal Server Error')
+      );
 
       await expect(httpClient('/test')).rejects.toThrow('HTTP 500');
     });
@@ -385,11 +345,10 @@ describe('httpClient', () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         status: 200,
+        statusText: 'OK',
         headers: new Headers({ 'content-type': 'text/plain' }),
-        text: async () => 'Plain text response',
-        json: async () => {
-          throw new Error('Not JSON');
-        },
+        text: jest.fn().mockResolvedValue('Plain text response'),
+        json: jest.fn().mockRejectedValue(new Error('Not JSON')),
       });
 
       const result = await httpClient('/test');
@@ -410,12 +369,9 @@ describe('httpClient', () => {
       });
       setOnAuthExpired(mockOnAuthExpired);
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        headers: new Headers(),
-        json: async () => ({ error: 'token_expired' }),
-      });
+      (global.fetch as jest.Mock).mockResolvedValueOnce(
+        createMockResponse(401, { error: 'token_expired' })
+      );
 
       // Should still throw AuthExpiredError, not callback error
       await expect(httpClient('/test')).rejects.toThrow(AuthExpiredError);

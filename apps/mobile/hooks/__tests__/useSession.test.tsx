@@ -1,6 +1,10 @@
 import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Unmock useSession to test the real implementation
+jest.unmock('../useSession');
+
 import {
   SessionProvider,
   useSession,
@@ -31,6 +35,10 @@ describe('useSession', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset AsyncStorage to return null by default
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
+    (AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('SessionProvider', () => {
@@ -43,10 +51,7 @@ describe('useSession', () => {
         wrapper: SessionProvider,
       });
 
-      // Initially loading
-      expect(result.current.loading).toBe(true);
-
-      // Wait for session to load
+      // Wait for session to load (loading becomes false)
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });

@@ -11,7 +11,10 @@ jest.mock('@react-native-async-storage/async-storage');
 jest.mock('../../api/httpClient');
 jest.mock('../../api/generated');
 jest.mock('../../config/features');
-jest.mock('../../hooks/useSession');
+jest.mock('../../hooks/useSession', () => ({
+  emitSessionCleared: jest.fn(),
+  onSessionCleared: jest.fn(),
+}));
 jest.mock('../deviceId');
 
 describe('AuthService', () => {
@@ -124,7 +127,7 @@ describe('AuthService', () => {
 
     it('should throw ServerError for 500 response', async () => {
       (generated.postApiV1Connect as jest.Mock).mockRejectedValue(
-        new Error('HTTP 500: Internal Server Error')
+        new Error('500: Internal Server Error')
       );
 
       await expect(
