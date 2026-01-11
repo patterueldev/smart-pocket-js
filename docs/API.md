@@ -16,6 +16,7 @@ Smart Pocket uses a homeserver deployment model where each user runs their own s
 - App exchanges API key for bearer token
 - Bearer token used for all subsequent requests
 - Tokens expire after inactivity (default: 30 days)
+- Server-controlled TTL: configure via environment `JWT_EXPIRY` (supports values like `30d`, `12h`, `900s`)
 
 ### Headers
 
@@ -28,6 +29,12 @@ X-API-Key: <your-api-key>
 ```
 Authorization: Bearer <session-token>
 ```
+
+### Token Expiration Configuration
+
+- The server issues JWTs using the `JWT_EXPIRY` environment variable.
+- Supported formats: seconds (e.g., `2592000`) or time strings (`<number><unit>` where unit is `d`, `h`, `m`, `s`).
+- The `/api/v1/connect` response includes `expiresIn` as seconds, derived from `JWT_EXPIRY`.
 
 ## Base URL
 

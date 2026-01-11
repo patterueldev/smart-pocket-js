@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyApiKey, authenticate, generateToken } = require('../middleware/auth');
+const { verifyApiKey, authenticate, generateToken, getTokenExpirySeconds } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 /**
@@ -49,7 +49,8 @@ router.post('/connect', verifyApiKey, asyncHandler(async (req, res) => {
 
   const responseData = {
     token,
-    expiresIn: 30 * 24 * 60 * 60, // 30 days in seconds
+    // Use configured JWT expiry converted to seconds for client display
+    expiresIn: getTokenExpirySeconds(),
     serverInfo: {
       version: '0.1.0',
       features,
