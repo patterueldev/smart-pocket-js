@@ -119,40 +119,41 @@ export class GoogleSheetsSyncService {
    * Fetch a new sync draft with pending changes.
    */
   async createDraft(): Promise<SyncDraft> {
-    const response = await postApiV1GoogleSheetsSyncDraft();
-    
-    // Handle union response type - check for success status
-    if (response.status === 200) {
-      return mapSyncDraft(response.data);
+    try {
+      const response = await postApiV1GoogleSheetsSyncDraft();
+      if (response.status === 200) {
+        return mapSyncDraft(response.data);
+      }
+      throw new Error('Failed to create sync draft');
+    } catch (error: any) {
+      if (error?.status === 404) {
+        throw new Error('Google Sheets sync feature is not enabled on the server');
+      }
+      // Bubble 401 and other errors to centralized handling
+      throw error instanceof Error ? error : new Error(String(error));
     }
-    
-    // Handle error response (404 - feature not enabled)
-    throw new Error(
-      response.status === 404
-        ? 'Google Sheets sync feature is not enabled on the server'
-        : 'Failed to create sync draft'
-    );
   }
 
   /**
    * Approve and execute a sync draft.
    */
   async executeSync(draftId: string): Promise<SyncResult> {
-    const response = await postApiV1GoogleSheetsSyncApproveDraftId(draftId);
-    
-    // Handle union response type - check for success status
-    if (response.status === 200) {
-      return mapSyncResult(response.data);
+    try {
+      const response = await postApiV1GoogleSheetsSyncApproveDraftId(draftId);
+      if (response.status === 200) {
+        return mapSyncResult(response.data);
+      }
+      throw new Error('Failed to execute sync');
+    } catch (error: any) {
+      if (error?.status === 404) {
+        throw new Error('Sync draft not found or feature not enabled');
+      }
+      if (error?.status === 400) {
+        throw new Error('Invalid sync draft ID');
+      }
+      // Bubble 401 and other errors to centralized handling
+      throw error instanceof Error ? error : new Error(String(error));
     }
-    
-    // Handle error responses
-    throw new Error(
-      response.status === 404
-        ? 'Sync draft not found or feature not enabled'
-        : response.status === 400
-        ? 'Invalid sync draft ID'
-        : 'Failed to execute sync'
-    );
   }
 
   /**
