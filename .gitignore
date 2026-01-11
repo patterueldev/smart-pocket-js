@@ -121,3 +121,6 @@ web-build/
 keys/
 !keys/README.md
 !keys/.gitkeep
+
+# Local usage telemetry (ignored)
+.usage/
