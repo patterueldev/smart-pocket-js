@@ -45,6 +45,16 @@ export interface TransactionScreenProps {
    * Loading state
    */
   loading?: boolean;
+  
+  /**
+   * Callback to create a new payee
+   */
+  onCreatePayee?: (name: string) => Promise<Payee>;
+  
+  /**
+   * Callback to search payees (for fuzzy matching)
+   */
+  onSearchPayees?: (search: string) => Promise<Payee[]>;
 }
 
 /**
@@ -64,6 +74,8 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
   payees,
   accounts,
   loading = false,
+  onCreatePayee,
+  onSearchPayees,
 }) => {
   const [date, setDate] = useState(initialDraft?.date || new Date().toISOString().split('T')[0]);
   const [selectedPayeeId, setSelectedPayeeId] = useState(initialDraft?.payeeId || '');
@@ -71,9 +83,70 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
   const [items, setItems] = useState<LineItem[]>(initialDraft?.items || []);
   const [showPayeeSelector, setShowPayeeSelector] = useState(false);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
+  const [showCreatePayeeModal, setShowCreatePayeeModal] = useState(false);
+  const [newPayeeName, setNewPayeeName] = useState('');
+  const [payeeSearchQuery, setPayeeSearchQuery] = useState('');
+  const [searchedPayees, setSearchedPayees] = useState<Payee[]>(payees);
+  const [creatingPayee, setCreatingPayee] = useState(false);
 
   const selectedPayee = payees.find(p => p.id === selectedPayeeId);
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+
+  // Update searched payees when payees prop changes
+  useEffect(() => {
+    setSearchedPayees(payees);
+  }, [payees]);
+
+  // Handle payee search with fuzzy matching
+  const handlePayeeSearch = async (query: string) => {
+    setPayeeSearchQuery(query);
+    
+    if (!query.trim()) {
+      setSearchedPayees(payees);
+      return;
+    }
+
+    if (onSearchPayees) {
+      try {
+        const results = await onSearchPayees(query);
+        setSearchedPayees(results);
+      } catch (error) {
+        console.error('Failed to search payees:', error);
+        // Fallback to local filtering
+        const filtered = payees.filter(p =>
+          p.name.toLowerCase().includes(query.toLowerCase())
+        );
+        setSearchedPayees(filtered);
+      }
+    } else {
+      // Fallback to local filtering if no search callback
+      const filtered = payees.filter(p =>
+        p.name.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchedPayees(filtered);
+    }
+  };
+
+  // Handle create new payee
+  const handleCreatePayee = async () => {
+    if (!newPayeeName.trim() || !onCreatePayee) {
+      return;
+    }
+
+    setCreatingPayee(true);
+    try {
+      const newPayee = await onCreatePayee(newPayeeName.trim());
+      setSelectedPayeeId(newPayee.id);
+      setShowCreatePayeeModal(false);
+      setShowPayeeSelector(false);
+      setNewPayeeName('');
+    } catch (error) {
+      console.error('Failed to create payee:', error);
+      // TODO: Show error to user
+    } finally {
+      setCreatingPayee(false);
+    }
+  };
 
   // Calculate total from items
   const total = items.reduce((sum, item) => {
@@ -130,8 +203,17 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
           {showPayeeSelector && (
             <View style={styles.modal}>
               <Text style={styles.modalTitle}>Select Payee</Text>
+              
+              {/* Search field */}
+              <TextInput
+                value={payeeSearchQuery}
+                onChangeText={handlePayeeSearch}
+                placeholder="Search payees..."
+                style={styles.searchInput}
+              />
+              
               <ScrollView style={styles.modalList}>
-                {payees.map(payee => (
+                {searchedPayees.map(payee => (
                   <Pressable
                     key={payee.id}
                     style={({ pressed }) => [
@@ -141,6 +223,7 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
                     onPress={() => {
                       setSelectedPayeeId(payee.id);
                       setShowPayeeSelector(false);
+                      setPayeeSearchQuery('');
                     }}
                   >
                     <Text style={styles.modalItemText}>{payee.name}</Text>
@@ -149,12 +232,68 @@ export const TransactionScreen: React.FC<TransactionScreenProps> = ({
                     </Text>
                   </Pressable>
                 ))}
+                
+                {searchedPayees.length === 0 && (
+                  <Text style={styles.emptyText}>No payees found</Text>
+                )}
               </ScrollView>
+              
+              {/* Add New Payee button */}
+              {onCreatePayee && (
+                <Button
+                  title="+ Add New Payee"
+                  variant="outline"
+                  onPress={() => {
+                    setShowPayeeSelector(false);
+                    setShowCreatePayeeModal(true);
+                  }}
+                  style={styles.addNewButton}
+                />
+              )}
+              
               <Button
                 title="Cancel"
                 variant="outline"
-                onPress={() => setShowPayeeSelector(false)}
+                onPress={() => {
+                  setShowPayeeSelector(false);
+                  setPayeeSearchQuery('');
+                  setSearchedPayees(payees);
+                }}
               />
+            </View>
+          )}
+          
+          {/* Create Payee Modal */}
+          {showCreatePayeeModal && (
+            <View style={styles.modal}>
+              <Text style={styles.modalTitle}>Create New Payee</Text>
+              
+              <TextInput
+                value={newPayeeName}
+                onChangeText={setNewPayeeName}
+                placeholder="Enter payee name"
+                autoFocus
+              />
+              
+              <View style={styles.modalActions}>
+                <Button
+                  title="Create"
+                  onPress={handleCreatePayee}
+                  loading={creatingPayee}
+                  disabled={!newPayeeName.trim() || creatingPayee}
+                  style={styles.modalActionButton}
+                />
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={() => {
+                    setShowCreatePayeeModal(false);
+                    setNewPayeeName('');
+                  }}
+                  disabled={creatingPayee}
+                  style={styles.modalActionButton}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -421,5 +560,19 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  searchInput: {
+    marginBottom: theme.spacing.md,
+  },
+  addNewButton: {
+    marginBottom: theme.spacing.sm,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+  },
+  modalActionButton: {
+    flex: 1,
   },
 });
