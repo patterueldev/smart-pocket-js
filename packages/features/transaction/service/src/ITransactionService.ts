@@ -49,4 +49,12 @@ export interface ITransactionService {
    * @returns Array of accounts
    */
   getAccounts(): Promise<Account[]>;
+  
+  /**
+   * Create new payee
+   * 
+   * @param name - Payee name
+   * @returns Created payee
+   */
+  createPayee(name: string): Promise<Payee>;
 }
