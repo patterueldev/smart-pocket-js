@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TransferScreen } from '@smart-pocket/transfer-ui';
 import type { TransferDraft, Account, Payee } from '@smart-pocket/shared-types';
-import { postApiV1Transfers } from './api/generated';
+import { postApiV1Transfers } from '../api/generated';
 
 // Mock services - will be replaced with real services
 const mockAccounts: Account[] = [
