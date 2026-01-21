@@ -1,0 +1,28 @@
+{
+  "name": "@smart-pocket/transfer-ui",
+  "version": "0.1.0",
+  "description": "Transfer UI screens for Smart Pocket",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "smart-pocket",
+    "transfer",
+    "ui"
+  ],
+  "author": "Smart Pocket",
+  "license": "MIT",
+  "dependencies": {
+    "@smart-pocket/shared-types": "workspace:*",
+    "@smart-pocket/shared-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-native": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

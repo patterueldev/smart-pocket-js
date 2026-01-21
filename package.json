@@ -12,7 +12,6 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test -- --coverage",
     "postman:generate": "node scripts/generate-postman.js",
-    "api:generate": "orval",
     "mobile": "node scripts/log-command.js mobile && APP_VARIANT=development pnpm --filter @smart-pocket/mobile start",
     "mobile:quality": "node scripts/log-command.js mobile:quality && APP_VARIANT=quality pnpm --filter @smart-pocket/mobile start",
     "mobile:prod": "node scripts/log-command.js mobile:prod && APP_VARIANT=production pnpm --filter @smart-pocket/mobile start",

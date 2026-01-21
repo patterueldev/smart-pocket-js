@@ -142,6 +142,73 @@ export interface ItemCodeSuggestion {
   associatedPayees?: string[];
 }
 
+export interface Price {
+  /** Decimal value as string for exact precision */
+  amount: string;
+  /**
+   * ISO 4217 currency code
+   * @minLength 3
+   * @maxLength 3
+   */
+  currency: string;
+}
+
+/**
+ * - withdraw: Bank → Cash
+- transfer: Bank ↔ Bank/eWallet
+- deposit: Cash → Bank/eWallet
+
+ */
+export type TransferType = typeof TransferType[keyof typeof TransferType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TransferType = {
+  withdraw: 'withdraw',
+  transfer: 'transfer',
+  deposit: 'deposit',
+} as const;
+
+export interface TransferCreate {
+  date: string;
+  transferType: TransferType;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: Price;
+  fee?: Price;
+  /** Whether transfer has a fee */
+  hasFee: boolean;
+  /** Required for withdraw/deposit, optional for transfer */
+  atmPayeeId?: string;
+  notes?: string;
+}
+
+export interface Transfer {
+  id?: string;
+  date?: string;
+  transferType?: TransferType;
+  fromAccountId?: string;
+  fromAccountName?: string;
+  toAccountId?: string;
+  toAccountName?: string;
+  amount?: Price;
+  fee?: Price;
+  atmPayeeId?: string;
+  atmPayeeName?: string;
+  /** ID of synced transaction in Actual Budget */
+  actualBudgetId?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TransferList {
+  transfers?: Transfer[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
+
 export type GetHealth200 = {
   status?: string;
 };
@@ -183,6 +250,13 @@ export type GetApiV1Transactions200 = {
   total?: number;
   limit?: number;
   offset?: number;
+};
+
+export type GetApiV1TransfersParams = {
+limit?: number;
+offset?: number;
+startDate?: string;
+endDate?: string;
 };
 
 export type GetApiV1PayeesParams = {
@@ -653,6 +727,137 @@ export const deleteApiV1TransactionsId = async (id: string, options?: RequestIni
   {      
     ...options,
     method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+/**
+ * @summary List transfers
+ */
+export type getApiV1TransfersResponse200 = {
+  data: TransferList
+  status: 200
+}
+    
+export type getApiV1TransfersResponseSuccess = (getApiV1TransfersResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getApiV1TransfersResponse = (getApiV1TransfersResponseSuccess)
+
+export const getGetApiV1TransfersUrl = (params?: GetApiV1TransfersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/transfers?${stringifiedParams}` : `/api/v1/transfers`
+}
+
+export const getApiV1Transfers = async (params?: GetApiV1TransfersParams, options?: RequestInit): Promise<getApiV1TransfersResponse> => {
+  
+  return httpClient<getApiV1TransfersResponse>(getGetApiV1TransfersUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+/**
+ * Creates transfer between accounts, stores in PostgreSQL, and syncs to Actual Budget
+ * @summary Create transfer transaction
+ */
+export type postApiV1TransfersResponse201 = {
+  data: Transfer
+  status: 201
+}
+
+export type postApiV1TransfersResponse400 = {
+  data: Error
+  status: 400
+}
+    
+export type postApiV1TransfersResponseSuccess = (postApiV1TransfersResponse201) & {
+  headers: Headers;
+};
+export type postApiV1TransfersResponseError = (postApiV1TransfersResponse400) & {
+  headers: Headers;
+};
+
+export type postApiV1TransfersResponse = (postApiV1TransfersResponseSuccess | postApiV1TransfersResponseError)
+
+export const getPostApiV1TransfersUrl = () => {
+
+
+  
+
+  return `/api/v1/transfers`
+}
+
+export const postApiV1Transfers = async (transferCreate: TransferCreate, options?: RequestInit): Promise<postApiV1TransfersResponse> => {
+  
+  return httpClient<postApiV1TransfersResponse>(getPostApiV1TransfersUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      transferCreate,)
+  }
+);}
+
+
+
+/**
+ * @summary Get transfer by ID
+ */
+export type getApiV1TransfersIdResponse200 = {
+  data: Transfer
+  status: 200
+}
+
+export type getApiV1TransfersIdResponse404 = {
+  data: Error
+  status: 404
+}
+    
+export type getApiV1TransfersIdResponseSuccess = (getApiV1TransfersIdResponse200) & {
+  headers: Headers;
+};
+export type getApiV1TransfersIdResponseError = (getApiV1TransfersIdResponse404) & {
+  headers: Headers;
+};
+
+export type getApiV1TransfersIdResponse = (getApiV1TransfersIdResponseSuccess | getApiV1TransfersIdResponseError)
+
+export const getGetApiV1TransfersIdUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1/transfers/${id}`
+}
+
+export const getApiV1TransfersId = async (id: string, options?: RequestInit): Promise<getApiV1TransfersIdResponse> => {
+  
+  return httpClient<getApiV1TransfersIdResponse>(getGetApiV1TransfersIdUrl(id),
+  {      
+    ...options,
+    method: 'GET'
     
     
   }

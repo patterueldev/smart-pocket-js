@@ -30,6 +30,7 @@
     "@smart-pocket/shared-types": "workspace:*",
     "@smart-pocket/transaction-service": "workspace:*",
     "@smart-pocket/transaction-ui": "workspace:*",
+    "@smart-pocket/transfer-ui": "workspace:*",
     "expo": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",

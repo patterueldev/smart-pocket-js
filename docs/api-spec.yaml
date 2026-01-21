@@ -293,6 +293,126 @@ components:
             type: string
           description: Merchants where this code was seen
 
+    Price:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          description: Decimal value as string for exact precision
+          example: "3.99"
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          example: USD
+          minLength: 3
+          maxLength: 3
+
+    TransferType:
+      type: string
+      enum:
+        - withdraw
+        - transfer
+        - deposit
+      description: |
+        - withdraw: Bank → Cash
+        - transfer: Bank ↔ Bank/eWallet
+        - deposit: Cash → Bank/eWallet
+
+    TransferCreate:
+      type: object
+      required:
+        - date
+        - transferType
+        - fromAccountId
+        - toAccountId
+        - amount
+        - hasFee
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2025-12-15'
+        transferType:
+          $ref: '#/components/schemas/TransferType'
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          $ref: '#/components/schemas/Price'
+        fee:
+          $ref: '#/components/schemas/Price'
+        hasFee:
+          type: boolean
+          description: Whether transfer has a fee
+        atmPayeeId:
+          type: string
+          format: uuid
+          description: Required for withdraw/deposit, optional for transfer
+        notes:
+          type: string
+
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        transferType:
+          $ref: '#/components/schemas/TransferType'
+        fromAccountId:
+          type: string
+          format: uuid
+        fromAccountName:
+          type: string
+        toAccountId:
+          type: string
+          format: uuid
+        toAccountName:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Price'
+        fee:
+          $ref: '#/components/schemas/Price'
+        atmPayeeId:
+          type: string
+          format: uuid
+        atmPayeeName:
+          type: string
+        actualBudgetId:
+          type: string
+          description: ID of synced transaction in Actual Budget
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TransferList:
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
 security:
   - ApiKeyAuth: []
 
@@ -569,6 +689,85 @@ paths:
           description: Transaction deleted
         '404':
           description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/transfers:
+    get:
+      summary: List transfers
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of transfers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferList'
+
+    post:
+      summary: Create transfer transaction
+      description: Creates transfer between accounts, stores in PostgreSQL, and syncs to Actual Budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferCreate'
+      responses:
+        '201':
+          description: Transfer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/transfers/{id}:
+    get:
+      summary: Get transfer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transfer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '404':
+          description: Transfer not found
           content:
             application/json:
               schema:

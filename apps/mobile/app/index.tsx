@@ -26,6 +26,11 @@ export default function DashboardScreen() {
     router.push('/transaction');
   };
 
+  const handleTransfer = () => {
+    console.log('Transfer pressed');
+    router.push('/transfer');
+  };
+
   const handleGoogleSheetsSync = () => {
     router.push('/google-sheets-sync');
   };
@@ -129,6 +134,10 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        <View style={styles.section}>
+          <Button title="↔️ Transfer Money" onPress={handleTransfer} variant="secondary" />
+        </View>
+
         {googleSheetsSyncEnabled && (
           <View style={styles.section}>
             <Button title="📊 Google Sheets Sync" onPress={handleGoogleSheetsSync} variant="secondary" />
@@ -140,6 +149,9 @@ export default function DashboardScreen() {
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <Pressable style={styles.quickAction} onPress={handleManualTransaction}>
               <Text style={styles.quickActionText}>• Manual Transaction</Text>
+            </Pressable>
+            <Pressable style={styles.quickAction} onPress={handleTransfer}>
+              <Text style={styles.quickActionText}>• Transfer Money</Text>
             </Pressable>
             <Pressable style={styles.quickAction}>
               <Text style={styles.quickActionText}>• View All Transactions</Text>
