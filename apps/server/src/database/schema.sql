@@ -40,8 +40,20 @@ CREATE INDEX IF NOT EXISTS idx_accounts_actual_budget_id ON accounts(actual_budg
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     date DATE NOT NULL,
-    payee_id UUID NOT NULL REFERENCES payees(id),
-    account_id UUID NOT NULL REFERENCES accounts(id),
+    
+    -- Transaction type: expense, transfer, income
+    transaction_type VARCHAR(20) DEFAULT 'expense' CHECK (transaction_type IN ('expense', 'transfer', 'income')),
+    
+    -- For expense/income transactions
+    payee_id UUID REFERENCES payees(id),
+    account_id UUID REFERENCES accounts(id),
+    
+    -- For transfer transactions
+    transfer_type VARCHAR(20) CHECK (transfer_type IN ('withdraw', 'transfer', 'deposit')),
+    from_account_id UUID REFERENCES accounts(id),
+    to_account_id UUID REFERENCES accounts(id),
+    transfer_fee JSONB, -- {"amount": "5.00", "currency": "PHP"}
+    
     total JSONB NOT NULL, -- {"amount": "45.67", "currency": "USD"}
     actual_budget_id VARCHAR(255), -- Synced transaction ID in Actual Budget
     notes TEXT,
@@ -52,12 +64,38 @@ CREATE TABLE IF NOT EXISTS transactions (
         total ? 'amount' AND 
         total ? 'currency' AND
         length(total->>'currency') = 3
+    ),
+    
+    CONSTRAINT valid_transfer_fee_structure CHECK (
+        transfer_fee IS NULL OR (
+            transfer_fee ? 'amount' AND 
+            transfer_fee ? 'currency' AND
+            length(transfer_fee->>'currency') = 3
+        )
+    ),
+    
+    -- For expense/income: require payee_id and account_id
+    CONSTRAINT check_expense_fields CHECK (
+        transaction_type != 'expense' OR (payee_id IS NOT NULL AND account_id IS NOT NULL)
+    ),
+    
+    -- For transfers: require from/to accounts and they must be different
+    CONSTRAINT check_transfer_fields CHECK (
+        transaction_type != 'transfer' OR (
+            from_account_id IS NOT NULL AND 
+            to_account_id IS NOT NULL AND 
+            from_account_id != to_account_id AND
+            transfer_type IS NOT NULL
+        )
     )
 );
 
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
 CREATE INDEX IF NOT EXISTS idx_transactions_payee ON transactions(payee_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_from_account ON transactions(from_account_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_to_account ON transactions(to_account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_total_amount ON transactions((total->>'amount'));
 
 -- =================================================================

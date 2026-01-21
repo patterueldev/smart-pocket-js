@@ -14,6 +14,7 @@ const healthRoutes = require('./routes/health');
 const authRoutes = require('./routes/auth');
 const ocrRoutes = require('./routes/ocr');
 const transactionRoutes = require('./routes/transactions');
+const transferRoutes = require('./routes/transfers');
 const payeeRoutes = require('./routes/payees');
 const accountRoutes = require('./routes/accounts');
 const productRoutes = require('./routes/products');
@@ -55,6 +56,7 @@ app.use('/api/v1', authRoutes);
 // Protected routes (require bearer token)
 app.use('/api/v1/ocr', authenticate, ocrRoutes);
 app.use('/api/v1/transactions', authenticate, transactionRoutes);
+app.use('/api/v1/transfers', authenticate, transferRoutes);
 app.use('/api/v1/payees', authenticate, payeeRoutes);
 app.use('/api/v1/accounts', authenticate, accountRoutes);
 app.use('/api/v1/products', authenticate, productRoutes);
