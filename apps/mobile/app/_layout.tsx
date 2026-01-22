@@ -10,6 +10,8 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { SessionProvider, useSession } from '@/hooks/useSession';
 import { ocrEnabled, variant } from '@/config/env';
+import { authService } from '@/services/authService';
+import { clearHttpClientConfig } from '@/api/httpClient';
 
 /**
  * Environment banner - displays visual indicator for non-production builds
@@ -47,6 +49,23 @@ function RootLayoutNav() {
   const { session, loading } = useSession();
   const router = useRouter();
   const segments = useSegments();
+
+  // Configure httpClient with session credentials on mount
+  useEffect(() => {
+    if (!loading && session?.connected) {
+      console.log('[_layout] Session loaded, configuring httpClient...', {
+        serverUrl: session.serverUrl,
+        hasToken: !!session.token,
+        hasApiKey: !!session.apiKey,
+      });
+      authService.getSession().catch((err) => {
+        console.error('Failed to configure httpClient on session load:', err);
+      });
+    } else if (!loading && !session) {
+      console.log('[_layout] No session, clearing httpClient config');
+      clearHttpClientConfig();
+    }
+  }, [loading, session]);
 
   // Handle navigation based on session state
   useEffect(() => {

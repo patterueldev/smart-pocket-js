@@ -9,6 +9,8 @@
     "start": "node src/index.js",
     "build": "echo 'Build step - copy src to dist for now'",
     "migrate": "node -e \"require('./src/database/migrations').runMigrations().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); })\"",
+    "migrate:status": "node src/database/migrations-cli.js list",
+    "migrate:reset": "node src/database/migrations-cli.js reset",
     "db:test": "node -e \"require('./src/database/migrations').testConnection().then(() => process.exit(0)).catch(() => process.exit(1))\"",
     "test": "jest",
     "test:watch": "jest --watch",

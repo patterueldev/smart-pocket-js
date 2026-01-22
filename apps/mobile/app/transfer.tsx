@@ -7,18 +7,18 @@ import { postApiV1Transfers } from '../api/generated';
 
 // Mock services - will be replaced with real services
 const mockAccounts: Account[] = [
-  { id: '1', name: 'BPI Checking', actualBudgetId: 'bpi-1' },
-  { id: '2', name: 'Cash', actualBudgetId: 'cash-1' },
-  { id: '3', name: 'GCash', actualBudgetId: 'gcash-1' },
-  { id: '4', name: 'Maya', actualBudgetId: 'maya-1' },
+  { id: '00000000-0000-0000-0000-000000000001', name: 'BPI Checking', actualBudgetId: 'bpi-1' },
+  { id: '00000000-0000-0000-0000-000000000002', name: 'Cash', actualBudgetId: 'cash-1' },
+  { id: '00000000-0000-0000-0000-000000000003', name: 'GCash', actualBudgetId: 'gcash-1' },
+  { id: '00000000-0000-0000-0000-000000000004', name: 'Maya', actualBudgetId: 'maya-1' },
 ];
 
 const mockPayees: Payee[] = [
-  { id: '1', name: 'BPI ATM', transactionCount: 15 },
-  { id: '2', name: 'BDO ATM', transactionCount: 8 },
-  { id: '3', name: 'Security Bank', transactionCount: 5 },
-  { id: '4', name: 'GCash', transactionCount: 20 },
-  { id: '5', name: 'Maya', transactionCount: 12 },
+  { id: '00000000-0000-0000-0000-000000000001', name: 'BPI ATM', transactionCount: 15 },
+  { id: '00000000-0000-0000-0000-000000000002', name: 'BDO ATM', transactionCount: 8 },
+  { id: '00000000-0000-0000-0000-000000000003', name: 'Security Bank', transactionCount: 5 },
+  { id: '00000000-0000-0000-0000-000000000004', name: 'GCash', transactionCount: 20 },
+  { id: '00000000-0000-0000-0000-000000000005', name: 'Maya', transactionCount: 12 },
 ];
 
 export default function TransferRoute() {

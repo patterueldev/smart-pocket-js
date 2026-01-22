@@ -102,6 +102,36 @@ type HttpClientOptions = RequestInit & {
   skipAuthRefresh?: boolean;
 };
 
+const generateCurlCommand = (
+  finalUrl: string,
+  options: HttpClientOptions,
+  headers: Record<string, string>
+): string => {
+  const method = options?.method || 'GET';
+  let curl = `curl -X ${method}`;
+
+  Object.entries(headers).forEach(([key, value]) => {
+    const redactedValue = ['authorization', 'x-api-key'].includes(key.toLowerCase())
+      ? '***REDACTED***'
+      : value;
+    curl += ` -H '${key}: ${redactedValue}'`;
+  });
+
+  if (options?.body) {
+    let bodyStr: string;
+    if (typeof options.body === 'string') {
+      bodyStr = options.body;
+    } else {
+      bodyStr = JSON.stringify(options.body);
+    }
+    curl += ` -d '${bodyStr.replace(/'/g, "'\\''")}'`;
+  }
+
+  curl += ` '${finalUrl}'`;
+
+  return curl;
+};
+
 const performRequest = async (
   finalUrl: string,
   options: HttpClientOptions,
@@ -115,6 +145,8 @@ const performRequest = async (
     hasApiKey: !!headers['X-API-Key'],
     hasAuthToken: !!headers['Authorization'],
   });
+
+  console.log('[httpClient] cURL command:', generateCurlCommand(finalUrl, options, headers));
 
   const response = await fetch(finalUrl, {
     ...options,

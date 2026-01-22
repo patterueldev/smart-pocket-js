@@ -1,10 +1,13 @@
--- Smart Pocket Database Schema
+-- Smart Pocket Database Schema - Initial Setup
 -- PostgreSQL 16+
--- Extensions and initial schema setup
+-- This file creates the base table structure
+-- Migrations will add additional columns and constraints
+
+BEGIN;
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For fuzzy text matching
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- =================================================================
 -- PAYEES TABLE
@@ -12,7 +15,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For fuzzy text matching
 CREATE TABLE IF NOT EXISTS payees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL UNIQUE,
-    actual_budget_id VARCHAR(255), -- Linked payee in Actual Budget
+    actual_budget_id VARCHAR(255),
     transaction_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -26,8 +29,8 @@ CREATE INDEX IF NOT EXISTS idx_payees_name ON payees(name);
 CREATE TABLE IF NOT EXISTS accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL UNIQUE,
-    actual_budget_id VARCHAR(255) NOT NULL UNIQUE, -- Linked account in Actual Budget
-    type VARCHAR(50), -- checking, credit, cash, etc.
+    actual_budget_id VARCHAR(255) NOT NULL UNIQUE,
+    type VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -40,71 +43,25 @@ CREATE INDEX IF NOT EXISTS idx_accounts_actual_budget_id ON accounts(actual_budg
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     date DATE NOT NULL,
-    
-    -- Transaction type: expense, transfer, income
-    transaction_type VARCHAR(20) DEFAULT 'expense' CHECK (transaction_type IN ('expense', 'transfer', 'income')),
-    
-    -- For expense/income transactions
     payee_id UUID REFERENCES payees(id),
     account_id UUID REFERENCES accounts(id),
-    
-    -- For transfer transactions
-    transfer_type VARCHAR(20) CHECK (transfer_type IN ('withdraw', 'transfer', 'deposit')),
-    from_account_id UUID REFERENCES accounts(id),
-    to_account_id UUID REFERENCES accounts(id),
-    transfer_fee JSONB, -- {"amount": "5.00", "currency": "PHP"}
-    
-    total JSONB NOT NULL, -- {"amount": "45.67", "currency": "USD"}
-    actual_budget_id VARCHAR(255), -- Synced transaction ID in Actual Budget
+    total JSONB NOT NULL,
+    actual_budget_id VARCHAR(255),
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    CONSTRAINT valid_total_structure CHECK (
-        total ? 'amount' AND 
-        total ? 'currency' AND
-        length(total->>'currency') = 3
-    ),
-    
-    CONSTRAINT valid_transfer_fee_structure CHECK (
-        transfer_fee IS NULL OR (
-            transfer_fee ? 'amount' AND 
-            transfer_fee ? 'currency' AND
-            length(transfer_fee->>'currency') = 3
-        )
-    ),
-    
-    -- For expense/income: require payee_id and account_id
-    CONSTRAINT check_expense_fields CHECK (
-        transaction_type != 'expense' OR (payee_id IS NOT NULL AND account_id IS NOT NULL)
-    ),
-    
-    -- For transfers: require from/to accounts and they must be different
-    CONSTRAINT check_transfer_fields CHECK (
-        transaction_type != 'transfer' OR (
-            from_account_id IS NOT NULL AND 
-            to_account_id IS NOT NULL AND 
-            from_account_id != to_account_id AND
-            transfer_type IS NOT NULL
-        )
-    )
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
-CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(transaction_type);
 CREATE INDEX IF NOT EXISTS idx_transactions_payee ON transactions(payee_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_from_account ON transactions(from_account_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_to_account ON transactions(to_account_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_total_amount ON transactions((total->>'amount'));
 
 -- =================================================================
--- PRODUCTS TABLE (Canonical product catalog)
+-- PRODUCTS TABLE
 -- =================================================================
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(500) NOT NULL,
-    normalized_name VARCHAR(500), -- Lowercase, normalized for fuzzy matching
     category VARCHAR(255),
     brand VARCHAR(255),
     description TEXT,
@@ -113,59 +70,39 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
-CREATE INDEX IF NOT EXISTS idx_products_normalized ON products(normalized_name);
-CREATE INDEX IF NOT EXISTS idx_products_normalized_trgm ON products USING gin(normalized_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 
 -- =================================================================
--- STORE_ITEMS TABLE (Store-specific product codes)
+-- STORE_ITEMS TABLE
 -- =================================================================
 CREATE TABLE IF NOT EXISTS store_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-    payee_id UUID NOT NULL REFERENCES payees(id) ON DELETE CASCADE, -- The store (payee IS the store)
-    code_name VARCHAR(255) NOT NULL, -- Store-specific product code
-    store_product_name VARCHAR(500), -- How this store labels it
-    current_price JSONB, -- {"amount": "3.99", "currency": "USD"}
-    first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    frequency INTEGER DEFAULT 1, -- Number of times purchased
+    payee_id UUID NOT NULL REFERENCES payees(id) ON DELETE CASCADE,
+    code_name VARCHAR(255) NOT NULL,
+    store_product_name VARCHAR(500),
+    current_price JSONB,
+    frequency INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    UNIQUE(payee_id, code_name),
-    
-    CONSTRAINT valid_current_price_structure CHECK (
-        current_price IS NULL OR (
-            current_price ? 'amount' AND 
-            current_price ? 'currency' AND
-            length(current_price->>'currency') = 3
-        )
-    )
+    UNIQUE(payee_id, code_name)
 );
 
 CREATE INDEX IF NOT EXISTS idx_store_items_product ON store_items(product_id);
 CREATE INDEX IF NOT EXISTS idx_store_items_payee ON store_items(payee_id);
 CREATE INDEX IF NOT EXISTS idx_store_items_code_name ON store_items(code_name);
-CREATE INDEX IF NOT EXISTS idx_store_items_frequency ON store_items(frequency DESC);
 
 -- =================================================================
--- LINE_ITEMS TABLE (Transaction line items)
+-- LINE_ITEMS TABLE
 -- =================================================================
 CREATE TABLE IF NOT EXISTS line_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-    store_item_id UUID REFERENCES store_items(id), -- Link to store-specific item (optional)
-    code_name VARCHAR(255) NOT NULL, -- Store-specific product code from receipt
-    readable_name VARCHAR(500) NOT NULL, -- Product name as written on receipt
-    price JSONB NOT NULL, -- {"amount": "3.99", "currency": "USD"}
+    store_item_id UUID REFERENCES store_items(id),
+    code_name VARCHAR(255) NOT NULL,
+    readable_name VARCHAR(500) NOT NULL,
+    price JSONB NOT NULL,
     quantity DECIMAL(10, 3) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    CONSTRAINT valid_price_structure CHECK (
-        price ? 'amount' AND 
-        price ? 'currency' AND
-        length(price->>'currency') = 3
-    )
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_line_items_transaction ON line_items(transaction_id);
@@ -173,109 +110,49 @@ CREATE INDEX IF NOT EXISTS idx_line_items_code_name ON line_items(code_name);
 CREATE INDEX IF NOT EXISTS idx_line_items_store_item ON line_items(store_item_id);
 
 -- =================================================================
--- PRICE_HISTORY TABLE (Track price changes)
+-- PRICE_HISTORY TABLE
 -- =================================================================
 CREATE TABLE IF NOT EXISTS price_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     store_item_id UUID NOT NULL REFERENCES store_items(id) ON DELETE CASCADE,
-    price JSONB NOT NULL, -- {"amount": "3.99", "currency": "USD"}
+    price JSONB NOT NULL,
     recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    transaction_id UUID REFERENCES transactions(id), -- Source transaction
-    
-    CONSTRAINT valid_price_history_structure CHECK (
-        price ? 'amount' AND 
-        price ? 'currency' AND
-        length(price->>'currency') = 3
-    )
+    transaction_id UUID REFERENCES transactions(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_price_history_store_item ON price_history(store_item_id);
 CREATE INDEX IF NOT EXISTS idx_price_history_recorded ON price_history(recorded_at);
-CREATE INDEX IF NOT EXISTS idx_price_history_amount ON price_history((price->>'amount'));
 
 -- =================================================================
--- OCR_METADATA TABLE (Store OCR data for ML training)
+-- OCR_METADATA TABLE
 -- =================================================================
 CREATE TABLE IF NOT EXISTS ocr_metadata (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-    raw_text TEXT NOT NULL, -- Original OCR output
-    remarks TEXT, -- User's notes about OCR quality/issues
-    confidence_score DECIMAL(3, 2), -- OCR confidence (0-1)
-    parsing_confidence DECIMAL(3, 2), -- AI parsing confidence (0-1)
-    image_url TEXT, -- Optional: stored receipt image
-    corrections JSONB, -- Track what user corrected from AI suggestions
+    raw_text TEXT NOT NULL,
+    remarks TEXT,
+    confidence_score DECIMAL(3, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_ocr_transaction ON ocr_metadata(transaction_id);
 
 -- =================================================================
--- TRIGGER: Auto-update normalized_name on products
--- =================================================================
-CREATE OR REPLACE FUNCTION update_normalized_name()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.normalized_name := lower(regexp_replace(NEW.name, '[^a-zA-Z0-9\s]', '', 'g'));
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER trg_products_normalize
-    BEFORE INSERT OR UPDATE ON products
-    FOR EACH ROW
-    EXECUTE FUNCTION update_normalized_name();
-
--- =================================================================
--- TRIGGER: Auto-update timestamps
--- =================================================================
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER trg_payees_updated_at
-    BEFORE UPDATE ON payees
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE OR REPLACE TRIGGER trg_accounts_updated_at
-    BEFORE UPDATE ON accounts
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE OR REPLACE TRIGGER trg_transactions_updated_at
-    BEFORE UPDATE ON transactions
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE OR REPLACE TRIGGER trg_products_updated_at
-    BEFORE UPDATE ON products
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- =================================================================
 -- SEED DATA (Development/Testing)
 -- =================================================================
 
--- Sample payees
 INSERT INTO payees (name, transaction_count) VALUES
     ('Walmart', 0),
     ('Target', 0),
     ('Costco', 0)
 ON CONFLICT (name) DO NOTHING;
 
--- Sample accounts (mock Actual Budget IDs)
 INSERT INTO accounts (name, actual_budget_id, type) VALUES
     ('Checking Account', 'actual-account-1', 'checking'),
     ('Credit Card', 'actual-account-2', 'credit'),
     ('Cash', 'actual-account-3', 'cash')
 ON CONFLICT (name) DO NOTHING;
 
--- Sample products
 INSERT INTO products (name, category, brand) VALUES
     ('Fresh Milk 1 Gallon', 'Dairy', 'Nestle'),
     ('Organic Bananas', 'Produce', NULL),

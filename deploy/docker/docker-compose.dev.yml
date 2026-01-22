@@ -76,7 +76,7 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: postgres://smart_pocket:dev_password_change_me@postgres:5432/smart_pocket_dev
+      DATABASE_URL: smart-pocket-postgres-dev://smart_pocket:dev_password_change_me@postgres:5432/smart_pocket_dev
       DATABASE_SSL: false
       ACTUAL_BUDGET_URL: http://actual-budget:5006
       ACTUAL_BUDGET_PASSWORD: ${ACTUAL_BUDGET_PASSWORD:-}
