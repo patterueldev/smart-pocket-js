@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import type {
   Account,
   Payee,
   Price,
+  CustomAccountType,
 } from '@smart-pocket/shared-types';
 
 export interface TransferScreenProps {
@@ -22,27 +23,37 @@ export interface TransferScreenProps {
    * Available accounts for selection
    */
   accounts: Account[];
-  
+
   /**
    * Available payees (for ATM/source selection)
    */
   payees: Payee[];
-  
+
+  /**
+   * Account type mappings from settings
+   */
+  enabledAccountIds: string[];
+
+  /**
+   * Bank ATM payee IDs from settings
+   */
+  bankAtmPayeeIds: string[];
+
   /**
    * Called when transfer is submitted
    */
   onSubmit: (draft: TransferDraft) => void;
-  
+
   /**
    * Called when user cancels
    */
   onCancel: () => void;
-  
+
   /**
    * Loading state during submission
    */
   loading?: boolean;
-  
+
   /**
    * Default currency
    */
@@ -62,6 +73,8 @@ export interface TransferScreenProps {
 export const TransferScreen: React.FC<TransferScreenProps> = ({
   accounts,
   payees,
+  enabledAccountIds,
+  bankAtmPayeeIds,
   onSubmit,
   onCancel,
   loading = false,
@@ -82,9 +95,27 @@ export const TransferScreen: React.FC<TransferScreenProps> = ({
   const selectedFromAccount = accounts.find(a => a.id === fromAccountId);
   const selectedToAccount = accounts.find(a => a.id === toAccountId);
   const selectedAtmPayee = payees.find(p => p.id === atmPayeeId);
-  
-  // ATM/Source field is required for withdraw/deposit, not for transfer
+
+  const CASH_TYPES: CustomAccountType[] = ['cash'];
+  const TRANSFER_TYPES: CustomAccountType[] = ['bank', 'ewallet', 'credit', 'savings', 'other'];
+
+  const cashAccounts = accounts.filter(a => a.id && CASH_TYPES.includes(a.id as CustomAccountType));
+  const transferAccounts = accounts.filter(a =>
+    TRANSFER_TYPES.includes(a.id as CustomAccountType)
+  );
+
+  const fromAccountOptions = transferType === 'deposit' ? cashAccounts : transferAccounts;
+  const toAccountOptions = transferType === 'withdraw' ? cashAccounts : transferAccounts;
+
   const requiresAtmPayee = transferType !== 'transfer';
+
+  useEffect(() => {
+    if (transferType === 'withdraw' && cashAccounts.length === 1) {
+      setToAccountId(cashAccounts[0].id);
+    } else if (transferType === 'deposit' && cashAccounts.length === 1) {
+      setFromAccountId(cashAccounts[0].id);
+    }
+  }, [transferType, cashAccounts]);
 
   const handleSubmit = () => {
     // Validation
@@ -191,60 +222,76 @@ export const TransferScreen: React.FC<TransferScreenProps> = ({
         {/* Source Account */}
         <View style={styles.field}>
           <Text style={styles.label}>Source Account</Text>
-          <Pressable
-            style={styles.selector}
-            onPress={() => setShowFromAccount(!showFromAccount)}
-          >
-            <Text style={selectedFromAccount ? styles.selectorText : styles.selectorPlaceholder}>
-              {selectedFromAccount?.name || 'Select account'}
-            </Text>
-            <Text style={styles.selectorArrow}>▼</Text>
-          </Pressable>
-          {showFromAccount && (
-            <Card style={styles.dropdown}>
-              {accounts.map((account) => (
-                <Pressable
-                  key={account.id}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setFromAccountId(account.id);
-                    setShowFromAccount(false);
-                  }}
-                >
-                  <Text style={styles.dropdownText}>{account.name}</Text>
-                </Pressable>
-              ))}
-            </Card>
+          {fromAccountOptions.length === 1 ? (
+            <View style={[styles.selector, styles.disabledSelector]}>
+              <Text style={styles.selectorText}>{fromAccountOptions[0].name}</Text>
+            </View>
+          ) : (
+            <>
+              <Pressable
+                style={styles.selector}
+                onPress={() => setShowFromAccount(!showFromAccount)}
+              >
+                <Text style={selectedFromAccount ? styles.selectorText : styles.selectorPlaceholder}>
+                  {selectedFromAccount?.name || 'Select account'}
+                </Text>
+                <Text style={styles.selectorArrow}>▼</Text>
+              </Pressable>
+              {showFromAccount && (
+                <Card style={styles.dropdown}>
+                  {fromAccountOptions.map((account) => (
+                    <Pressable
+                      key={account.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setFromAccountId(account.id);
+                        setShowFromAccount(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>{account.name}</Text>
+                    </Pressable>
+                  ))}
+                </Card>
+              )}
+            </>
           )}
         </View>
 
         {/* Destination Account */}
         <View style={styles.field}>
           <Text style={styles.label}>Destination Account</Text>
-          <Pressable
-            style={styles.selector}
-            onPress={() => setShowToAccount(!showToAccount)}
-          >
-            <Text style={selectedToAccount ? styles.selectorText : styles.selectorPlaceholder}>
-              {selectedToAccount?.name || 'Select account'}
-            </Text>
-            <Text style={styles.selectorArrow}>▼</Text>
-          </Pressable>
-          {showToAccount && (
-            <Card style={styles.dropdown}>
-              {accounts.map((account) => (
-                <Pressable
-                  key={account.id}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setToAccountId(account.id);
-                    setShowToAccount(false);
-                  }}
-                >
-                  <Text style={styles.dropdownText}>{account.name}</Text>
-                </Pressable>
-              ))}
-            </Card>
+          {toAccountOptions.length === 1 ? (
+            <View style={[styles.selector, styles.disabledSelector]}>
+              <Text style={styles.selectorText}>{toAccountOptions[0].name}</Text>
+            </View>
+          ) : (
+            <>
+              <Pressable
+                style={styles.selector}
+                onPress={() => setShowToAccount(!showToAccount)}
+              >
+                <Text style={selectedToAccount ? styles.selectorText : styles.selectorPlaceholder}>
+                  {selectedToAccount?.name || 'Select account'}
+                </Text>
+                <Text style={styles.selectorArrow}>▼</Text>
+              </Pressable>
+              {showToAccount && (
+                <Card style={styles.dropdown}>
+                  {toAccountOptions.map((account) => (
+                    <Pressable
+                      key={account.id}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setToAccountId(account.id);
+                        setShowToAccount(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>{account.name}</Text>
+                    </Pressable>
+                  ))}
+                </Card>
+              )}
+            </>
           )}
         </View>
 
@@ -426,6 +473,10 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     backgroundColor: '#fff',
+  },
+  disabledSelector: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e0e0e0',
   },
   selectorText: {
     fontSize: 16,

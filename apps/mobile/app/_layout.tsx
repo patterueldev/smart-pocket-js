@@ -77,7 +77,7 @@ function RootLayoutNav() {
     const isConnected = session?.connected;
     
     // Don't interfere with feature routes
-    const featureRoutes = ['transaction', 'google-sheets-sync'];
+    const featureRoutes = ['transaction', 'google-sheets-sync', 'settings', 'transfer'];
     if (ocrEnabled) {
       featureRoutes.push('receipt-scan');
     }
@@ -161,6 +161,8 @@ function RootLayoutNav() {
           <Stack.Screen name="receipt-scan" options={{ headerShown: true, title: 'Scan Receipt' }} />
         ) : null}
         <Stack.Screen name="transaction" options={{ headerShown: true, title: 'Transaction' }} />
+        <Stack.Screen name="transfer" options={{ headerShown: true, title: 'Transfer' }} />
+        <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         <Stack.Screen name="google-sheets-sync" options={{ headerShown: true, title: 'Google Sheets Sync' }} />
       </Stack>
       <StatusBar style="light" backgroundColor={headerBackground} />

@@ -70,8 +70,7 @@ export default function DashboardScreen() {
 
   const handleSettings = () => {
     setMenuVisible(false);
-    // TODO: Navigate to settings screen
-    Alert.alert('Settings', 'Settings screen coming soon!');
+    router.push('/settings');
   };
 
   const handleDisconnectFromMenu = () => {

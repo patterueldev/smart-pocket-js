@@ -3,23 +3,12 @@ import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TransferScreen } from '@smart-pocket/transfer-ui';
 import type { TransferDraft, Account, Payee } from '@smart-pocket/shared-types';
-import { postApiV1Transfers } from '../api/generated';
-
-// Mock services - will be replaced with real services
-const mockAccounts: Account[] = [
-  { id: '00000000-0000-0000-0000-000000000001', name: 'BPI Checking', actualBudgetId: 'bpi-1' },
-  { id: '00000000-0000-0000-0000-000000000002', name: 'Cash', actualBudgetId: 'cash-1' },
-  { id: '00000000-0000-0000-0000-000000000003', name: 'GCash', actualBudgetId: 'gcash-1' },
-  { id: '00000000-0000-0000-0000-000000000004', name: 'Maya', actualBudgetId: 'maya-1' },
-];
-
-const mockPayees: Payee[] = [
-  { id: '00000000-0000-0000-0000-000000000001', name: 'BPI ATM', transactionCount: 15 },
-  { id: '00000000-0000-0000-0000-000000000002', name: 'BDO ATM', transactionCount: 8 },
-  { id: '00000000-0000-0000-0000-000000000003', name: 'Security Bank', transactionCount: 5 },
-  { id: '00000000-0000-0000-0000-000000000004', name: 'GCash', transactionCount: 20 },
-  { id: '00000000-0000-0000-0000-000000000005', name: 'Maya', transactionCount: 12 },
-];
+import {
+  postApiV1Transfers,
+  getApiV1Accounts,
+  getApiV1Payees,
+  getApiV1SettingsTransfer,
+} from '../api/generated';
 
 export default function TransferRoute() {
   const router = useRouter();
@@ -34,15 +23,29 @@ export default function TransferRoute() {
 
   const loadData = async () => {
     try {
-      // TODO: Replace with real service calls
-      // const [accountsData, payeesData] = await Promise.all([
-      //   accountService.getAccounts(),
-      //   payeeService.getPayees(),
-      // ]);
-      
-      // Using mock data for now
-      setAccounts(mockAccounts);
-      setPayees(mockPayees);
+      const [accountsResponse, payeesResponse, transferSettingsResponse] = await Promise.all([
+        getApiV1Accounts(),
+        getApiV1Payees(),
+        getApiV1SettingsTransfer(),
+      ]);
+
+      const accountsData = accountsResponse.accounts || [];
+      const payeesData = payeesResponse.payees || [];
+      const transferSettings = transferSettingsResponse.transferSettings || {
+        enabledAccountIds: [],
+        bankAtmPayeeIds: [],
+      };
+
+      const enabledAccounts = accountsData.filter(acc =>
+        transferSettings.enabledAccountIds.includes(acc.id || '')
+      );
+
+      const bankAtmPayees = payeesData.filter(payee =>
+        transferSettings.bankAtmPayeeIds.includes(payee.id || '')
+      );
+
+      setAccounts(enabledAccounts);
+      setPayees(bankAtmPayees);
     } catch (error) {
       console.error('Failed to load data:', error);
       Alert.alert('Error', 'Failed to load data. Please try again.');
@@ -54,31 +57,15 @@ export default function TransferRoute() {
   const handleSubmit = async (draft: TransferDraft) => {
     setLoading(true);
     try {
-      console.log('Creating transfer:', draft);
-      
-      // Call API
-      await postApiV1Transfers({
-        date: draft.date,
-        transferType: draft.transferType,
-        fromAccountId: draft.fromAccountId,
-        toAccountId: draft.toAccountId,
-        amount: draft.amount,
-        fee: draft.fee,
-        hasFee: draft.hasFee,
-        atmPayeeId: draft.atmPayeeId,
-        notes: draft.notes,
-      });
-      
+      await postApiV1Transfers(draft);
+
       Alert.alert(
         'Success',
         'Transfer created successfully!',
         [
           {
             text: 'OK',
-            onPress: () => {
-              // Navigate back to dashboard
-              router.replace('/(tabs)');
-            },
+            onPress: () => router.back(),
           },
         ]
       );
@@ -91,22 +78,11 @@ export default function TransferRoute() {
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      'Discard Transfer',
-      'Are you sure you want to discard this transfer?',
-      [
-        { text: 'Keep Editing', style: 'cancel' },
-        {
-          text: 'Discard',
-          style: 'destructive',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    router.back();
   };
 
   if (initializing) {
-    return null; // Or show loading spinner
+    return null;
   }
 
   return (
