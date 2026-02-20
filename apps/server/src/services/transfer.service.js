@@ -300,8 +300,74 @@ async function getBankFeeCategoryId() {
   }
 }
 
+/**
+ * Get transfer settings based on transfer type
+ * Returns available accounts and other settings
+ */
+async function getTransferSettings(transferType) {
+  try {
+    const query = `
+      SELECT 
+        id,
+        name,
+        actual_budget_id
+      FROM accounts
+      ORDER BY name ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    return {
+      accounts: result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        actualBudgetId: row.actual_budget_id,
+      })),
+      transferType,
+      defaultCurrency: process.env.DEFAULT_CURRENCY || 'USD',
+    };
+  } catch (error) {
+    logger.error('Failed to get transfer settings', { error: error.message, transferType });
+    throw error;
+  }
+}
+
+/**
+ * Load account details for transfer
+ */
+async function loadAccount(accountId, transferType) {
+  try {
+    const query = `
+      SELECT 
+        id,
+        name,
+        actual_budget_id
+      FROM accounts
+      WHERE id = $1
+    `;
+    
+    const result = await pool.query(query, [accountId]);
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      actualBudgetId: row.actual_budget_id,
+    };
+  } catch (error) {
+    logger.error('Failed to load account', { error: error.message, accountId, transferType });
+    throw error;
+  }
+}
+
 module.exports = {
   createTransfer,
   getTransfers,
   getTransferById,
+  getTransferSettings,
+  loadAccount,
 };

@@ -203,22 +203,36 @@ async function deleteTransaction(actualBudgetId) {
  */
 async function syncAccounts() {
   try {
-    // TODO: Implement actual budget API call to fetch accounts
-    logger.info('Syncing accounts from Actual Budget (mock)');
+    return withBudget(async () => {
+      logger.info('Fetching accounts from Actual Budget');
 
-    // Mock accounts
-    return [
-      {
-        actualBudgetId: 'actual-account-1',
-        name: 'Checking Account',
-        type: 'checking',
-      },
-      {
-        actualBudgetId: 'actual-account-2',
-        name: 'Credit Card',
-        type: 'credit',
-      },
-    ];
+      const { data: accounts } = await aqlQuery(
+        q('accounts')
+          .select(['id', 'name', 'type'])
+          .options({ splits: 'inline' })
+      );
+
+      logger.info(`Found ${accounts.length} accounts in Actual Budget`);
+
+      const accountService = require('./account.service');
+
+      for (const account of accounts) {
+        try {
+          await accountService.upsertAccount({
+            actualBudgetId: account.id,
+            name: account.name,
+            type: account.type || 'other',
+          });
+          logger.debug('Synced account:', { id: account.id, name: account.name });
+        } catch (error) {
+          logger.error('Failed to sync account:', { account, error: error.message });
+        }
+      }
+
+      logger.info(`Successfully synced ${accounts.length} accounts to PostgreSQL`);
+
+      return accounts;
+    });
   } catch (error) {
     logger.error('Error syncing accounts from Actual Budget', {
       error: error.message,

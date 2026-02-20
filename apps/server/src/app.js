@@ -19,6 +19,7 @@ const payeeRoutes = require('./routes/payees');
 const accountRoutes = require('./routes/accounts');
 const productRoutes = require('./routes/products');
 const googleSheetsRoutes = require('./routes/google-sheets');
+const settingsRoutes = require('./routes/settings');
 
 // Middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -61,6 +62,7 @@ app.use('/api/v1/payees', authenticate, payeeRoutes);
 app.use('/api/v1/accounts', authenticate, accountRoutes);
 app.use('/api/v1/products', authenticate, productRoutes);
 app.use('/api/v1/google-sheets', authenticate, googleSheetsRoutes);
+app.use('/api/v1/settings', authenticate, settingsRoutes);
 
 // 404 handler
 app.use((req, res) => {

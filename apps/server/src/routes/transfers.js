@@ -28,6 +28,57 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/v1/transfers/settings
+ * Get transfer settings based on transfer type
+ */
+router.get('/settings', asyncHandler(async (req, res) => {
+  const { transferType } = req.query;
+
+  if (!transferType) {
+    return res.status(400).json({
+      error: 'validation_error',
+      message: 'transferType is required',
+    });
+  }
+
+  const result = await transferService.getTransferSettings(transferType);
+  res.json(result);
+}));
+
+/**
+ * GET /api/v1/transfers/load
+ * Load account details for transfer
+ */
+router.get('/load', asyncHandler(async (req, res) => {
+  const { accountId, transferType } = req.query;
+
+  if (!accountId) {
+    return res.status(400).json({
+      error: 'validation_error',
+      message: 'accountId is required',
+    });
+  }
+
+  if (!transferType) {
+    return res.status(400).json({
+      error: 'validation_error',
+      message: 'transferType is required',
+    });
+  }
+
+  const result = await transferService.loadAccount(accountId, transferType);
+
+  if (!result) {
+    return res.status(404).json({
+      error: 'not_found',
+      message: 'Account not found',
+    });
+  }
+
+  res.json(result);
+}));
+
+/**
  * GET /api/v1/transfers/:id
  * Get transfer by ID
  */

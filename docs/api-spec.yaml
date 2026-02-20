@@ -413,6 +413,44 @@ components:
         offset:
           type: integer
 
+    TransferSettingsAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        actualBudgetId:
+          type: string
+          description: Linked Actual Budget account ID
+
+    TransferSettingsResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferSettingsAccount'
+        transferType:
+          $ref: '#/components/schemas/TransferType'
+        defaultCurrency:
+          type: string
+          description: Default currency for the server
+          example: USD
+
+    AccountInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        actualBudgetId:
+          type: string
+          description: Linked Actual Budget account ID
+
 security:
   - ApiKeyAuth: []
 
@@ -689,61 +727,6 @@ paths:
           description: Transaction deleted
         '404':
           description: Transaction not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/transfers:
-    get:
-      summary: List transfers
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 50
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: startDate
-          in: query
-          schema:
-            type: string
-            format: date
-        - name: endDate
-          in: query
-          schema:
-            type: string
-            format: date
-      responses:
-        '200':
-          description: List of transfers
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransferList'
-
-    post:
-      summary: Create transfer transaction
-      description: Creates transfer between accounts, stores in PostgreSQL, and syncs to Actual Budget
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransferCreate'
-      responses:
-        '201':
-          description: Transfer created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transfer'
-        '400':
-          description: Validation error
           content:
             application/json:
               schema:
