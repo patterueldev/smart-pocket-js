@@ -2,7 +2,7 @@ const pool = require('../config/database');
 const { logger } = require('../utils/logger');
 
 /**
- * Get all payees (with optional search)
+ * Get all payees (with optional search/fuzzy matching)
  */
 async function getPayees(search = null) {
   try {
@@ -16,15 +16,42 @@ async function getPayees(search = null) {
     const params = [];
 
     if (search) {
-      query += ` WHERE name ILIKE $1`;
-      params.push(`%${search}%`);
+      // Use fuzzy matching with PostgreSQL's similarity function
+      // This requires pg_trgm extension to be enabled
+      // Falls back to ILIKE if pg_trgm is not available
+      query += `
+        WHERE 
+          name ILIKE $1 
+          OR similarity(name, $2) > 0.3
+        ORDER BY 
+          similarity(name, $2) DESC,
+          transaction_count DESC,
+          name ASC
+      `;
+      params.push(`%${search}%`, search);
+    } else {
+      query += ` ORDER BY transaction_count DESC, name ASC`;
     }
-
-    query += ` ORDER BY transaction_count DESC, name ASC`;
 
     const result = await pool.query(query, params);
     return result.rows;
   } catch (error) {
+    // If similarity function fails (pg_trgm not enabled), fall back to ILIKE only
+    if (error.message.includes('similarity') && search) {
+      logger.warn('pg_trgm extension not available, falling back to ILIKE only');
+      const fallbackQuery = `
+        SELECT 
+          id,
+          name,
+          transaction_count
+        FROM payees
+        WHERE name ILIKE $1
+        ORDER BY transaction_count DESC, name ASC
+      `;
+      const result = await pool.query(fallbackQuery, [`%${search}%`]);
+      return result.rows;
+    }
+    
     logger.error('Error fetching payees', { error: error.message, search });
     throw error;
   }

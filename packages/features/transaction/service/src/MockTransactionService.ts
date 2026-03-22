@@ -122,4 +122,17 @@ export class MockTransactionService implements ITransactionService {
     await new Promise(resolve => setTimeout(resolve, 500));
     return this.mockAccounts;
   }
+
+  async createPayee(name: string): Promise<Payee> {
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const newPayee: Payee = {
+      id: `payee-${Date.now()}`,
+      name,
+      transactionCount: 0,
+    };
+    
+    this.mockPayees.push(newPayee);
+    return newPayee;
+  }
 }

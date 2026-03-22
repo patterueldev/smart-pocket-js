@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { TransactionScreen } from '@smart-pocket/transaction-ui';
-import { MockTransactionService } from '@smart-pocket/transaction-service';
+import { RealTransactionService } from '@smart-pocket/transaction-service';
 import type { TransactionDraft, Payee, Account, LineItem } from '@smart-pocket/shared-types';
 
-const transactionService = new MockTransactionService();
+const transactionService = new RealTransactionService();
 
 export default function TransactionRoute() {
   const router = useRouter();
@@ -130,6 +130,28 @@ export default function TransactionRoute() {
     );
   };
 
+  const handleCreatePayee = async (name: string): Promise<Payee> => {
+    try {
+      const newPayee = await transactionService.createPayee(name);
+      // Refresh payees list
+      const updatedPayees = await transactionService.getPayees();
+      setPayees(updatedPayees);
+      return newPayee;
+    } catch (error) {
+      console.error('Failed to create payee:', error);
+      throw error;
+    }
+  };
+
+  const handleSearchPayees = async (search: string): Promise<Payee[]> => {
+    try {
+      return await transactionService.getPayees(search);
+    } catch (error) {
+      console.error('Failed to search payees:', error);
+      return [];
+    }
+  };
+
   if (initializing) {
     console.log('🔵 TransactionRoute returning null (initializing)');
     return null; // Or show loading spinner
@@ -146,6 +168,8 @@ export default function TransactionRoute() {
       initialDraft={initialDraft}
       onSave={handleSave}
       onCancel={handleCancel}
+      onCreatePayee={handleCreatePayee}
+      onSearchPayees={handleSearchPayees}
       payees={payees}
       accounts={accounts}
       loading={loading}
