@@ -1,6 +1,9 @@
 name: Deploy Server to QA
 
 on:
+  push:
+    branches:
+      - upgrade # Trigger on pushes to the 'upgrade' branch temporarily; TODO: REMOVE
   pull_request:
     types: [closed]
     branches:
