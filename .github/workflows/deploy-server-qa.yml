@@ -20,9 +20,6 @@ concurrency:
 jobs:
   build-and-push:
     name: QA Server - Build Docker Image
-    if: |
-      github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'qa-server')
     runs-on: ubuntu-latest
     permissions:
       contents: read
