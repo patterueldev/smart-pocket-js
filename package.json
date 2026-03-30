@@ -1,6 +1,6 @@
 {
   "name": "smart-pocket",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "buildNumber": 10,
   "private": true,
   "description": "Smart Pocket - Personal finance management with OCR receipt scanning",
@@ -12,7 +12,7 @@
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test -- --coverage",
     "postman:generate": "node scripts/generate-postman.js",
-    "api:generate": "orval",
+    "api:generate": "node scripts/log-command.js api:generate && orval",
     "mobile": "node scripts/log-command.js mobile && APP_VARIANT=development pnpm --filter @smart-pocket/mobile start",
     "mobile:quality": "node scripts/log-command.js mobile:quality && APP_VARIANT=quality pnpm --filter @smart-pocket/mobile start",
     "mobile:prod": "node scripts/log-command.js mobile:prod && APP_VARIANT=production pnpm --filter @smart-pocket/mobile start",
@@ -33,8 +33,7 @@
     "docker:rebuild": "node scripts/log-command.js docker:rebuild && bash ./deploy/scripts/rebuild-dev.sh",
     "docker:build": "node scripts/log-command.js docker:build && ./deploy/scripts/build.sh",
     "docker:migrate": "node scripts/log-command.js docker:migrate && ./deploy/scripts/migrate.sh",
-    "test:api": "node scripts/log-command.js test:api && ./deploy/scripts/test-api.sh",
-    "api:generate": "node scripts/log-command.js api:generate && orval"
+    "test:api": "node scripts/log-command.js test:api && ./deploy/scripts/test-api.sh"
   },
   "keywords": [
     "finance",
@@ -59,7 +58,7 @@
     "jest": "catalog:",
     "jest-environment-jsdom": "catalog:",
     "js-yaml": "catalog:",
-    "orval": "^7.17.2",
+    "orval": "^7.21.0",
     "pnpm": "catalog:",
     "react-test-renderer": "catalog:"
   }
