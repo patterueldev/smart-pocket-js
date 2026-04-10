@@ -142,9 +142,16 @@ export const httpClient = async <T>(
   url: string,
   options: HttpClientOptions = {}
 ): Promise<T> => {
+  const defaultBaseUrl =
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined' &&
+    typeof window.location?.origin === 'string'
+      ? window.location.origin
+      : 'http://localhost:3001';
+
   const finalUrl = url.startsWith('http')
     ? url
-    : `${globalConfig.baseUrl || 'http://localhost:3001'}${url}`;
+    : `${globalConfig.baseUrl || defaultBaseUrl}${url}`;
 
   // Build headers for initial attempt
   const buildHeaders = (overrideToken?: string) => {

@@ -117,10 +117,13 @@ deploy/
 ## Services
 
 ### smart-pocket-server
-- **Image**: Custom Node.js Alpine
+- **Image**: Custom Node.js + Nginx (single container)
 - **Port**: 3001
 - **Health Check**: GET /health every 30s
 - **Resources** (prod): 512MB-1GB memory
+- **Routing**:
+  - Frontend (React web): `/`
+  - Backend API proxy: `/api/*` → internal Node server
 
 ### postgres
 - **Image**: postgres:16-alpine
