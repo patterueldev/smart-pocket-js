@@ -46,7 +46,9 @@ WORKDIR /app
 COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx /etc/nginx /etc/nginx
 COPY --from=nginx /usr/lib/nginx /usr/lib/nginx
-RUN mkdir -p /run /run/nginx /var/log/nginx /var/lib/nginx/tmp
+COPY --from=nginx /usr/lib/libpcre2-8.so.* /usr/lib/
+RUN mkdir -p /run /run/nginx /var/log/nginx /var/lib/nginx/tmp /var/cache/nginx/client_temp
+RUN addgroup -S nginx && adduser -S -D -H -h /var/cache/nginx -s /sbin/nologin -G nginx nginx
 
 # App runtime files
 COPY --from=builder /app/package*.json ./
@@ -64,6 +66,7 @@ COPY --from=builder /app/apps/mobile/dist /usr/share/nginx/html
 COPY deploy/docker/server/nginx.conf /etc/nginx/http.d/default.conf
 COPY deploy/docker/server/start-container.sh /start-container.sh
 RUN chmod +x /start-container.sh
+RUN nginx -t
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD node -e "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"

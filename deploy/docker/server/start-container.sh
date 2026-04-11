@@ -34,7 +34,7 @@ terminate() {
 trap terminate INT TERM
 
 while kill -0 "$NODE_PID" 2>/dev/null && kill -0 "$NGINX_PID" 2>/dev/null; do
-  sleep 1
+  sleep 0.2
 done
 
 terminate
