@@ -143,8 +143,7 @@ export const httpClient = async <T>(
   options: HttpClientOptions = {}
 ): Promise<T> => {
   const defaultBaseUrl =
-    typeof window !== 'undefined' &&
-    typeof document !== 'undefined'
+    typeof window !== 'undefined'
       ? window.location.origin
       : 'http://localhost:3001';
 

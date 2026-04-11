@@ -11,7 +11,7 @@ NODE_PID=$!
 
 nginx
 
-for _ in 1 2 3 4 5 6 7 8 9 10; do
+for _ in $(seq 1 10); do
   if [ -f /run/nginx.pid ]; then
     break
   fi
