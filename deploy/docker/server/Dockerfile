@@ -11,7 +11,6 @@ RUN npm install -g pnpm
 
 # Copy full workspace for consistent dependency resolution
 COPY . .
-RUN find . -type d -name node_modules -prune -exec rm -rf '{}' +
 
 # Development stage (server only)
 FROM base AS development
