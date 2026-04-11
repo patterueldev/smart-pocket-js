@@ -1,95 +1,76 @@
-# Smart Pocket Server Dockerfile
-# Multi-stage build for production optimization
+# Smart Pocket Server + Web Dockerfile
+# Multi-stage build:
+# - development: server-only dev workflow (used by compose dev/test)
+# - production: nginx serves web app, proxies /api + /health to Node backend
 
-# Base stage with all dependencies
 FROM node:20-alpine AS base
 
 WORKDIR /app
 
-# Install build dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++
-
-# Copy workspace files
-COPY package*.json pnpm-workspace.yaml ./
-COPY apps/server ./apps/server
-COPY docs ./docs
-
-# Copy shared packages when they exist (for future monorepo structure)
-# COPY packages/shared ./packages/shared
-# COPY packages/core ./packages/core
-
-# Install pnpm
 RUN npm install -g pnpm
 
-# Development stage (includes dev dependencies)
+# Copy full workspace for consistent dependency resolution
+COPY . .
+
+# Development stage (server only)
 FROM base AS development
 
-# Install all dependencies (including dev dependencies)
-RUN pnpm install --no-frozen-lockfile
-
-# Force rebuild better-sqlite3 for current architecture
-# This is needed because @actual-app/api depends on it
-RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && npm run build-release || true
+RUN pnpm install --no-frozen-lockfile --config.confirmModulesPurge=false
 
 WORKDIR /app/apps/server
 
-# Expose dev server and debugger ports
 EXPOSE 3001 9229
 
 CMD ["npm", "run", "dev"]
 
-# Builder stage for production
+# Builder stage for production artifacts
 FROM base AS builder
 
-# Install all dependencies for build
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile --config.confirmModulesPurge=false
 
-# Build server (if needed)
-WORKDIR /app/apps/server
-RUN npm run build || echo "No build step needed"
+# Build backend artifact placeholder and web static files
+RUN pnpm --filter @smart-pocket/server build || echo "No build step needed"
+RUN pnpm --filter @smart-pocket/mobile build:web
 
-# Generate pnpm-lock.yaml for production stage
-WORKDIR /app
-RUN pnpm install --lockfile-only
+# Prune to production dependencies only
+RUN pnpm prune --prod --config.confirmModulesPurge=false
 
-# Production stage
+FROM nginx:1.27-alpine AS nginx
+
+# Production stage (single image: nginx + node backend)
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install build dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++
+# Copy nginx runtime from nginx image (avoids extra package installs)
+COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=nginx /etc/nginx /etc/nginx
+COPY --from=nginx /usr/lib/nginx /usr/lib/nginx
+COPY --from=nginx /usr/lib/libpcre2-8.so.* /usr/lib/
+RUN mkdir -p /run /run/nginx /var/log/nginx /var/lib/nginx/tmp /var/cache/nginx/client_temp
+RUN addgroup -S nginx && adduser -S -D -H -h /var/cache/nginx -s /sbin/nologin -G nginx nginx
 
-# Install production dependencies only
+# App runtime files
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/apps/server/package*.json ./apps/server/
-COPY --from=builder /app/apps/server/src ./apps/server/src
-
-# Copy shared packages when they exist (for future monorepo structure)
-# COPY --from=builder /app/packages/shared ./packages/shared
-
-# Install production dependencies
-RUN npm install -g pnpm
-# Install from workspace root to handle monorepo structure correctly
-RUN pnpm install --prod --no-frozen-lockfile
-
-# Force rebuild better-sqlite3 for the target architecture
-# This ensures native bindings match the container's architecture
-RUN cd node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 && \
-    npm run build-release || true
-
-# Copy docs folder for API spec
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/server ./apps/server
+COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/docs ./docs
 
-# Set working directory to server package
-WORKDIR /app/apps/server
+# Web static build output
+COPY --from=builder /app/apps/mobile/dist /usr/share/nginx/html
 
-# Health check
+# Nginx and process startup config
+COPY deploy/docker/server/nginx.conf /etc/nginx/http.d/default.conf
+COPY deploy/docker/server/start-container.sh /start-container.sh
+RUN chmod +x /start-container.sh
+RUN nginx -t
+
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD node -e "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
 EXPOSE 3001
 
-CMD ["node", "src/index.js"]
+CMD ["/start-container.sh"]

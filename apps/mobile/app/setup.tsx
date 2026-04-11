@@ -15,8 +15,11 @@ import { isDevelopment, prefilledApiBaseUrl, prefilledApiKey } from '@/config/en
  */
 export default function SetupScreen() {
   const { saveSession } = useSession();
+  const defaultServerUrl =
+    prefilledApiBaseUrl ||
+    (Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : '');
   // Priority: GitHub Secrets prefilled values > empty (user enters)
-  const [serverUrl, setServerUrl] = useState(prefilledApiBaseUrl || '');
+  const [serverUrl, setServerUrl] = useState(defaultServerUrl);
   const [apiKey, setApiKey] = useState(prefilledApiKey || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

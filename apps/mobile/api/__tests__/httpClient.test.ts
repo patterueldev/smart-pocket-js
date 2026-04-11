@@ -124,7 +124,7 @@ describe('httpClient', () => {
       await httpClient('/test');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/test',
+        `${window.location.origin}/test`,
         expect.any(Object)
       );
     });

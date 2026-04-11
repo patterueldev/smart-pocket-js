@@ -142,9 +142,15 @@ export const httpClient = async <T>(
   url: string,
   options: HttpClientOptions = {}
 ): Promise<T> => {
+  const defaultBaseUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      // Default used by React Native local development/tests when no explicit baseUrl is configured.
+      : 'http://localhost:3001';
+
   const finalUrl = url.startsWith('http')
     ? url
-    : `${globalConfig.baseUrl || 'http://localhost:3001'}${url}`;
+    : `${globalConfig.baseUrl || defaultBaseUrl}${url}`;
 
   // Build headers for initial attempt
   const buildHeaders = (overrideToken?: string) => {

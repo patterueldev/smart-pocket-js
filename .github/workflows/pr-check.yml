@@ -40,9 +40,10 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
             docker:
+              - 'apps/mobile/**'
               - 'apps/server/src/**'
               - 'apps/server/package.json'
-              - 'packages/shared/src/**'
+              - 'packages/**'
               - 'deploy/docker/**'
               - 'deploy/scripts/*.sh'
               - 'docker-compose*.yml'
